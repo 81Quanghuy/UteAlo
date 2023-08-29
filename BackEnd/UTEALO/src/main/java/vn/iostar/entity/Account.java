@@ -23,7 +23,7 @@ public class Account implements Serializable{
     
     private String password;
     
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "userId")
     private User user;
      
