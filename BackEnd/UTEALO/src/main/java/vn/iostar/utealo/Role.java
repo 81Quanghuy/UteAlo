@@ -1,4 +1,4 @@
-package vn.iostar.entity;
+package vn.iostar.utealo;
 
 import java.io.Serializable;
 
@@ -8,29 +8,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "FRIENDS")
-public class Friend implements Serializable{
-
+@Table(name = "ROLE")
+public class Role implements Serializable{
+	
 	private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int friendId;
+    private int roleId;
     
-    @ManyToOne
-    @JoinColumn(name = "userId1")
-    private User user1;
+    private String roleName;
     
-    @ManyToOne
-    @JoinColumn(name = "userId2")
-    private User user2;
-    
-    private String status;
-
 }
 

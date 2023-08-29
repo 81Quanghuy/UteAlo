@@ -1,6 +1,7 @@
-package vn.iostar.entity;
+package vn.iostar.utealo;
 
 import java.io.Serializable;
+
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,22 +9,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "ROLE")
-public class Role implements Serializable{
-	
+@Table(name = "PROFILES")
+public class Profile implements Serializable{
+
 	private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int roleId;
+    private int profileId;
     
-    private String roleName;
+    @OneToOne
+    @JoinColumn(name = "userId")
+    private User user;
+    
+    private String bio;
+    private String avatar;
+    private String background;
     
 }
-
