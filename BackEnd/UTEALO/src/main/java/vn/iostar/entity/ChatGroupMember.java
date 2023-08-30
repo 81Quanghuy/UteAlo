@@ -1,4 +1,4 @@
-package vn.iostar.utealo;
+package vn.iostar.entity;
 
 import java.io.Serializable;
 import java.util.List;
