@@ -1,6 +1,7 @@
-package vn.iostar.entity;
+package vn.iostar.utealo;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,24 +14,26 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "FRIENDS")
-public class Friend implements Serializable{
-
+@Table(name = "MESSAGES")
+public class Message implements Serializable{
+	
 	private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int friendId;
+    private int messageId;
+    
+    private String messageType;
+    private String contentType;
+    private Date createTime;
     
     @ManyToOne
-    @JoinColumn(name = "userId1")
-    private User user1;
+    @JoinColumn(name = "userFrom")
+    private User userFrom;
     
     @ManyToOne
-    @JoinColumn(name = "userId2")
-    private User user2;
+    @JoinColumn(name = "userTo")
+    private User userTo;
     
-    private String status;
-
 }
 

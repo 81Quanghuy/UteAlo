@@ -1,7 +1,8 @@
-package vn.iostar.entity;
+package vn.iostar.utealo;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,18 @@ public class ChatGroup implements Serializable{
     
     private String groupName;
     private Date createDate;
+    
+    @OneToMany(mappedBy = "chatGroup")
+	List<ChatMessage> chatMessages;
+    
+    @ManyToMany
+	@JoinTable(
+			name = "chatGroup_chatGroupMember",
+			joinColumns = @JoinColumn(name = "chatGroupId"),
+			inverseJoinColumns = @JoinColumn(name = "memberId")
+	)
+	List<ChatGroupMember> chatGroupMembers;
+    
     
 }
 
