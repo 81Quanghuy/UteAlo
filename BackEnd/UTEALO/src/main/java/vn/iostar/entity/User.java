@@ -42,13 +42,22 @@ public class User implements Serializable{
 	private Profile profile;
     
     @OneToOne(mappedBy = "user1")
-	private Friend friend;
+	private Friend friend1;
+    
+    @OneToOne(mappedBy = "user2")
+	private Friend friend2;
     
     @OneToMany(mappedBy = "userFrom")
-	List<FriendRequest> friendRequests;
+	List<FriendRequest> friendRequests1;
+    
+    @OneToMany(mappedBy = "userTo")
+	List<FriendRequest> friendRequests2;
     
     @OneToMany(mappedBy = "userFrom")
-	List<Message> messages;
+	List<Message> messages1;
+    
+    @OneToMany(mappedBy = "userTo")
+	List<Message> messages2;
     
     @OneToMany(mappedBy = "user")
 	List<Like> likes;
