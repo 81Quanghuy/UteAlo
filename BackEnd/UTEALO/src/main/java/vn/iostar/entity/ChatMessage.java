@@ -1,4 +1,4 @@
-package vn.iostar.utealo;
+package vn.iostar.entity;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,25 +14,28 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "COMMENTS")
-public class Comment implements Serializable{
+@Table(name = "CHATMESSAGES")
+public class ChatMessage implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int commentId;
-    
-    @ManyToOne
-    @JoinColumn(name = "postId")
-    private Post post;
+    private int chatId;
     
     private String content;
     private Date createTime;
-    private String photos;
+    private String messageType;
+    private String contentType;
     
     @ManyToOne
-    @JoinColumn(name = "userId")
-    private User user;
+    @JoinColumn(name = "userFrom")
+    private User userFrom;
     
+    @ManyToOne
+    @JoinColumn(name = "groupId")
+    private ChatGroup chatGroup;
+    
+
 }
+

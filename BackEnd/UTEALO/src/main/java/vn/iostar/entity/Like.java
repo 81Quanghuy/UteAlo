@@ -1,7 +1,6 @@
-package vn.iostar.utealo;
+package vn.iostar.entity;
 
 import java.io.Serializable;
-import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,23 +13,28 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "CHATGROUPMEMBER")
-public class ChatGroupMember implements Serializable{
+@Table(name = "LIKES")
+public class Like implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int memberId;
+    private int likeId;
     
-    @ManyToMany(mappedBy = "chatGroupMembers")
-    private List<ChatGroup> chatGroup;
+    @ManyToOne
+    @JoinColumn(name = "postId")
+    private Post post;
     
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
     
-    private String role;
+    private String status;
     
+    @ManyToOne
+    @JoinColumn(name = "commentId")
+    private Comment comment;
+
 }
 

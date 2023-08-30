@@ -1,6 +1,7 @@
-package vn.iostar.utealo;
+package vn.iostar.entity;
 
 import java.io.Serializable;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,22 +9,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "ROLE")
-public class Role implements Serializable{
-	
+@Table(name = "CHATGROUPMEMBER")
+public class ChatGroupMember implements Serializable{
+
 	private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int roleId;
+    private int memberId;
     
-    private String roleName;
+    @ManyToMany(mappedBy = "chatGroupMembers")
+    private List<ChatGroup> chatGroup;
+    
+    @ManyToOne
+    @JoinColumn(name = "userId")
+    private User user;
+    
+    private String role;
     
 }
 
