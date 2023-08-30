@@ -2,18 +2,20 @@ package vn.iostar.entity;
 
 import java.io.Serializable;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;	
 
-@Getter
-@Setter
-@Entity
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "ACCOUNTS")
+@Builder
 public class Account implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
