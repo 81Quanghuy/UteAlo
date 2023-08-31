@@ -33,9 +33,9 @@ public class PostGroup implements Serializable{
    			joinColumns = @JoinColumn(name = "postGroupId"),
    			inverseJoinColumns = @JoinColumn(name = "memberId")
    	)
-   	List<PostGroupMember> postGroupMembers;
+    private List<PostGroupMember> postGroupMembers;
     
     @OneToMany(mappedBy = "postGroup")
-	List<Post> posts;
+    private List<Post> posts;
     
 }

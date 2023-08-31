@@ -1,14 +1,21 @@
 package vn.iostar.controller;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,9 +30,14 @@ import org.thymeleaf.context.Context;
 
 import jakarta.validation.Valid;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.LoginDTO;
 import vn.iostar.dto.RegisterRequest;
 import vn.iostar.dto.TokenRequest;
+import vn.iostar.entity.Account;
+import vn.iostar.entity.RefreshToken;
+import vn.iostar.exception.UserNotFoundException;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.security.UserDetail;
 import vn.iostar.service.AccountService;
 import vn.iostar.service.RefreshTokenService;
 
@@ -51,6 +63,51 @@ public class AuthController {
 
 	@Autowired
 	TemplateEngine templateEngine;
+	
+	@PostMapping("/login")
+    @Transactional
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO) {
+
+        if (userService.findByEmail(loginDTO.getCredentialId()).isEmpty() && userService.findByPhone(loginDTO.getCredentialId()).isEmpty())
+            throw new UserNotFoundException("Account does not exist");
+        Optional<Account> optionalUser = userService.findByEmail(loginDTO.getCredentialId());
+        if (optionalUser.isPresent() && !optionalUser.get().isVerified()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder()
+                    .success(false)
+                    .message("Your account is not verified!")
+                    .result(null)
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDTO.getCredentialId(),
+                        loginDTO.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetail userDetail = (UserDetail) authentication.getPrincipal();
+        String accessToken = jwtTokenProvider.generateAccessToken(userDetail);
+        RefreshToken refreshToken = new RefreshToken();
+        String token = jwtTokenProvider.generateRefreshToken(userDetail);
+        refreshToken.setToken(token);
+        refreshToken.setUser(userDetail.getUser().getUser());
+        //invalid all refreshToken before
+        refreshTokenService.revokeRefreshToken(userDetail.getUserId());
+        refreshTokenService.save(refreshToken);
+        Map<String, String> tokenMap = new HashMap<>();
+        tokenMap.put("accessToken", accessToken);
+        tokenMap.put("refreshToken", token);
+
+        if (optionalUser.isPresent()) {
+            optionalUser.get().setLastLoginAt(new Date());
+            userService.save(optionalUser.get());
+        }
+
+        return ResponseEntity.ok().body(GenericResponse.builder()
+                .success(true)
+                .message("Login successfully!")
+                .result(tokenMap)
+                .statusCode(HttpStatus.OK.value())
+                .build());
+    }
 
 	@PostMapping("/register")
 	public ResponseEntity<GenericResponse> registerProcess(@RequestBody @Valid RegisterRequest registerRequest,

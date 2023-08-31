@@ -30,6 +30,9 @@ public class User implements Serializable {
 	private String gender;
 	private Date dayOfBirth;
 	private boolean isActive = true;
+	
+	@Column(nullable = true)
+    private boolean isVerified = false;
 
 	@OneToOne
 	@JoinColumn(name = "roleId")
@@ -48,31 +51,31 @@ public class User implements Serializable {
 	private Friend friend2;
 
 	@OneToMany(mappedBy = "userFrom")
-	List<FriendRequest> friendRequests1;
+	private List<FriendRequest> friendRequests1;
 
 	@OneToMany(mappedBy = "userTo")
-	List<FriendRequest> friendRequests2;
+	private List<FriendRequest> friendRequests2;
 
 	@OneToMany(mappedBy = "userFrom")
-	List<Message> messages1;
+	private List<Message> messages1;
 
 	@OneToMany(mappedBy = "userTo")
-	List<Message> messages2;
+	private List<Message> messages2;
 
 	@OneToMany(mappedBy = "user")
-	List<Like> likes;
+	private List<Like> likes;
 
 	@OneToMany(mappedBy = "user")
-	List<Comment> comments;
+	private List<Comment> comments;
 
 	@OneToMany(mappedBy = "user")
-	List<Post> posts;
+	private List<Post> posts;
 
 	@OneToMany(mappedBy = "user")
-	List<PostGroupMember> postGroupMembers;
+	private List<PostGroupMember> postGroupMembers;
 
 	@OneToMany(mappedBy = "user")
-	List<ChatGroupMember> chatGroupMembers;
+	private List<ChatGroupMember> chatGroupMembers;
 
 	@OneToMany(mappedBy = "user")
 	private List<RefreshToken> refreshTokens;

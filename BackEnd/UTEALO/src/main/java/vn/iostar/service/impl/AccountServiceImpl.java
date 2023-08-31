@@ -12,8 +12,10 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.RegisterRequest;
 import vn.iostar.entity.Account;
 import vn.iostar.entity.User;
+import vn.iostar.entity.VerificationToken;
 import vn.iostar.repository.AccountRepository;
 import vn.iostar.repository.UserRepository;
+import vn.iostar.repository.VerificationTokenRepository;
 import vn.iostar.service.AccountService;
 import vn.iostar.service.EmailVerificationService;
 
@@ -28,6 +30,9 @@ public class AccountServiceImpl implements AccountService {
 
 	@Autowired
 	EmailVerificationService emailVerificationService;
+	
+	@Autowired
+    VerificationTokenRepository tokenRepository;
 
 	@Override
 	public List<Account> findAll() {
@@ -76,18 +81,27 @@ public class AccountServiceImpl implements AccountService {
 		return accountRepository.save(entity);
 	}
 
-	private Optional<Account> findByEmail(String email) {
+	public Optional<Account> findByEmail(String email) {
 		return accountRepository.findByEmail(email);
 	}
 
-	private Optional<Account> findByPhone(String phone) {
+	public Optional<Account> findByPhone(String phone) {
 		return accountRepository.findByPhone(phone);
 	}
 
 	@Override
 	public String validateVerificationAccount(String token) {
-		// TODO Auto-generated method stub
-		return null;
+		VerificationToken verificationToken = tokenRepository.findByToken(token);
+        if (verificationToken == null) {
+            return "Invalid token, please check the token again!";
+        }
+        User user = verificationToken.getUser();
+        user.setVerified(true);
+        userRepository.save(user);
+        return "Account verification successful, please login!";
 	}
+
+
+
 
 }

@@ -34,4 +34,6 @@ public class RefreshToken {
 	@JoinColumn(name = "userId")
 	@JsonBackReference
 	private User user;
+
+	
 }

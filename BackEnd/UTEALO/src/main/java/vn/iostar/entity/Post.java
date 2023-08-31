@@ -37,10 +37,10 @@ public class Post implements Serializable{
     private PostGroup postGroup;
     
     @OneToMany(mappedBy = "post")
-	List<Like> likes;
+    private List<Like> likes;
     
     @OneToMany(mappedBy = "post")
-	List<Comment> comments;
+    private List<Comment> comments;
     
     
 }

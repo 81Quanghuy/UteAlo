@@ -28,7 +28,7 @@ public class ChatGroup implements Serializable{
     private Date createDate;
     
     @OneToMany(mappedBy = "chatGroup")
-	List<ChatMessage> chatMessages;
+    private List<ChatMessage> chatMessages;
     
     @ManyToMany
 	@JoinTable(
@@ -36,7 +36,7 @@ public class ChatGroup implements Serializable{
 			joinColumns = @JoinColumn(name = "chatGroupId"),
 			inverseJoinColumns = @JoinColumn(name = "memberId")
 	)
-	List<ChatGroupMember> chatGroupMembers;
+    private List<ChatGroupMember> chatGroupMembers;
     
     
 }
