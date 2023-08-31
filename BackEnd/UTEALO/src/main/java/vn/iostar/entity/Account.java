@@ -5,7 +5,13 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,5 +52,4 @@ public class Account implements Serializable {
 	@OneToOne
 	@JoinColumn(name = "userId")
 	private User user;
-
 }

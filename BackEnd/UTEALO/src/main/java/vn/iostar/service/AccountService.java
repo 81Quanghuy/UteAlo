@@ -15,4 +15,5 @@ public interface AccountService {
 	ResponseEntity<GenericResponse> userRegister(@Valid RegisterRequest registerRequest);
 
 	String validateVerificationAccount(String token);
+
 }
