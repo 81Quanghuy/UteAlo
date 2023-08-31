@@ -13,19 +13,21 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+
 public class AccountDTO {
 	private String accountId;
 	private String email;
 	private String phone;
 	private String password;
 	private UserDTO user;
-	private boolean isActive = true;
+	@Builder.Default
+	private Boolean isActive = true;
 
 	private Date createdAt;
 
 	private Date updatedAt;
 
 	private Date lastLoginAt;
-
-	private boolean isVerified = false;
+	@Builder.Default
+	private Boolean isVerified = false;
 }

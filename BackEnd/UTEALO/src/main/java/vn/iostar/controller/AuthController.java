@@ -79,7 +79,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout-all")
-	public ResponseEntity<?> logoutAll(@RequestHeader("Authorization") String authorizationHeader,
+	public ResponseEntity<GenericResponse> logoutAll(@RequestHeader("Authorization") String authorizationHeader,
 			@RequestParam("refreshToken") String refreshToken) {
 		String accessToken = authorizationHeader.substring(7);
 		if (jwtTokenProvider.getUserIdFromJwt(accessToken)
@@ -96,7 +96,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/refresh-access-token")
-	public ResponseEntity<?> refreshAccessToken(@RequestBody TokenRequest tokenRequest) {
+	public ResponseEntity<GenericResponse> refreshAccessToken(@RequestBody TokenRequest tokenRequest) {
 		String refreshToken = tokenRequest.getRefreshToken();
 		return refreshTokenService.refreshAccessToken(refreshToken);
 	}

@@ -41,7 +41,7 @@ public class CustomHttpServletRequestWrapper extends HttpServletRequestWrapper {
 	public String[] getParameterValues(String name) {
 		String[] values = super.getParameterValues(name);
 		if (values == null)
-			return null;
+			return values;
 
 		for (int i = 0; i < values.length; i++) {
 			values[i] = filterXSS(values[i].trim());
@@ -53,7 +53,7 @@ public class CustomHttpServletRequestWrapper extends HttpServletRequestWrapper {
 	public Map<String, String[]> getParameterMap() {
 		Map<String, String[]> originalMap = super.getParameterMap();
 		if (originalMap == null)
-			return null;
+			return originalMap;
 		return originalMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 				entry -> Arrays.stream(entry.getValue()).map(Encode::forHtml).toArray(String[]::new)));
 	}
