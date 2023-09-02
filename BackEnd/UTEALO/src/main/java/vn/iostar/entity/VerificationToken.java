@@ -23,6 +23,9 @@ public class VerificationToken implements Serializable {
     private String token;
 
     @OneToOne
+    @JoinColumn(name = "userId")
     private User user;
+    
+    
 
 }

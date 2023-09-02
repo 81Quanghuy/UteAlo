@@ -100,13 +100,14 @@ public class AuthController {
             optionalUser.get().setLastLoginAt(new Date());
             userService.save(optionalUser.get());
         }
-
+        
         return ResponseEntity.ok().body(GenericResponse.builder()
                 .success(true)
                 .message("Login successfully!")
                 .result(tokenMap)
                 .statusCode(HttpStatus.OK.value())
                 .build());
+ 
     }
 
 	@PostMapping("/register")

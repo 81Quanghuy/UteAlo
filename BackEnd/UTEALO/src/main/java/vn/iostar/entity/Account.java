@@ -55,5 +55,7 @@ public class Account implements Serializable {
 	@JoinColumn(name = "userId")
 	private User user;
 	
+	
+	
 
 }
