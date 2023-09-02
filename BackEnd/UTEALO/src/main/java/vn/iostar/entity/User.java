@@ -34,7 +34,7 @@ public class User implements Serializable {
 	@Column(nullable = true)
     private boolean isVerified = false;
 
-	@OneToOne
+	@ManyToOne
 	@JoinColumn(name = "roleId")
 	private Role role;
 

@@ -12,10 +12,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.entity.Account;
 import vn.iostar.entity.RefreshToken;
 import vn.iostar.entity.User;
 import vn.iostar.repository.AccountRepository;
 import vn.iostar.repository.RefreshTokenRepository;
+import vn.iostar.repository.UserRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.security.UserDetail;
 import vn.iostar.security.UserDetailService;
@@ -26,7 +28,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 	@Autowired
 	RefreshTokenRepository refreshTokenRepository;
 	@Autowired
-	AccountRepository userRepository;
+	UserRepository userRepository;
+	@Autowired
+	AccountRepository accountRepository;
 	@Autowired
 	UserDetailService userDetailService;
 	@Autowired
@@ -41,7 +45,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 	public ResponseEntity<GenericResponse> refreshAccessToken(String refreshToken) {
 		try {
 			String userId = jwtTokenProvider.getUserIdFromRefreshToken(refreshToken);
-			Optional<User> optionalUser = userRepository.findByUserUserId(userId);
+			Optional<Account> optionalUser = accountRepository.findByUserUserId(userId);
 			if (optionalUser.isPresent() && optionalUser.get().isActive()) {
 				// List<RefreshToken> refreshTokens =
 				// refreshTokenRepository.findAllByUser_UserIdAndExpiredIsFalseAndRevokedIsFalse(userId);
@@ -76,10 +80,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 	@Override
 	public void revokeRefreshToken(String userId) {
 		try {
-			Optional<User> optionalUser = userRepository.findByUserUserId(userId);
+			Optional<User> optionalUser = userRepository.findById(userId);
 			if (optionalUser.isPresent() && optionalUser.get().isActive()) {
 				List<RefreshToken> refreshTokens = refreshTokenRepository
 						.findAllByUser_UserIdAndExpiredIsFalseAndRevokedIsFalse(userId);
+				
 				if (refreshTokens.isEmpty()) {
 					return;
 				}

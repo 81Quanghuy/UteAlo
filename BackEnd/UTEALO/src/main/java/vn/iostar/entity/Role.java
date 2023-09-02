@@ -1,6 +1,7 @@
 package vn.iostar.entity;
 
 import java.io.Serializable;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,9 @@ public class Role implements Serializable{
     private int roleId;
     
     private String roleName;
+    
+    @OneToMany(mappedBy = "role")
+	private List<User> users;
     
 }
 
