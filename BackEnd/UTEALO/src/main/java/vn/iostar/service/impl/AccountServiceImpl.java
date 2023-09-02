@@ -1,12 +1,16 @@
 package vn.iostar.service.impl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.RegisterRequest;
@@ -27,6 +31,8 @@ public class AccountServiceImpl implements AccountService {
 	UserRepository userRepository;
 
 	@Autowired
+	PasswordEncoder passwordEncoder;
+	@Autowired
 	EmailVerificationService emailVerificationService;
 
 	@Override
@@ -42,30 +48,20 @@ public class AccountServiceImpl implements AccountService {
 		Optional<Account> userOptional = findByPhone(registerRequest.getPhone());
 		if (userOptional.isPresent())
 			return ResponseEntity.status(409)
-					.body(GenericResponse.builder().success(true).message("Phone number already in use").result(null)
+					.body(GenericResponse.builder().success(false).message("Phone number already in use").result(null)
 							.statusCode(HttpStatus.CONFLICT.value()).build());
 
 		userOptional = findByEmail(registerRequest.getEmail());
 		if (userOptional.isPresent())
-			return ResponseEntity.status(409).body(GenericResponse.builder().success(true)
+			return ResponseEntity.status(409).body(GenericResponse.builder().success(false)
 					.message("Email already in use").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
 
 		if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword()))
 			return ResponseEntity.status(409)
-					.body(GenericResponse.builder().success(true).message("Password and confirm password do not match")
+					.body(GenericResponse.builder().success(false).message("Password and confirm password do not match")
 							.result(null).statusCode(HttpStatus.CONFLICT.value()).build());
 
-		Account account = new Account();
-		account.setPassword(registerRequest.getPassword());
-		account.setPhone(registerRequest.getPhone());
-		account.setEmail(registerRequest.getEmail());
-		User user = new User();
-		user.setPhone(registerRequest.getPhone());
-		user.setUserName(registerRequest.getFullName());
-
-		save(account);
-		userRepository.save(user);
-
+		saveUserAndAccount(registerRequest);
 		emailVerificationService.sendOtp(registerRequest.getEmail());
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Sign Up Success").result(null)
@@ -90,4 +86,22 @@ public class AccountServiceImpl implements AccountService {
 		return null;
 	}
 
+	public void saveUserAndAccount(RegisterRequest registerRequest) {
+		User user = new User();
+		user.setPhone(registerRequest.getPhone());
+		user.setUserName(registerRequest.getFullName());
+		userRepository.save(user);
+
+		Account account = new Account();
+		account.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+		account.setPhone(registerRequest.getPhone());
+		account.setEmail(registerRequest.getEmail());
+
+		Date createDate = new Date();
+		account.setCreatedAt(createDate);
+		account.setUpdatedAt(createDate);
+
+		account.setUser(user);
+		accountRepository.save(account);
+	}
 }
