@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import vn.iostar.contants.Gender;
 
 @Getter
 @Setter
@@ -27,7 +28,9 @@ public class User implements Serializable {
 	private String userName;
 	private String address;
 	private String phone;
-	private String gender;
+	
+	@Enumerated(EnumType.STRING)
+	private Gender gender;
 	private Date dayOfBirth;
 	private boolean isActive = true;
 	
