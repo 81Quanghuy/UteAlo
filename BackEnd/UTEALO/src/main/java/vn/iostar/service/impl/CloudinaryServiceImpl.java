@@ -19,30 +19,31 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
 	@Override
 	public String uploadImage(MultipartFile imageFile) throws IOException {
+		
 		if (imageFile == null) {
 			throw new IllegalArgumentException("File is null. Please upload a valid file.");
 		}
 		if (!imageFile.getContentType().startsWith("image/")) {
 			throw new IllegalArgumentException("Only image files are allowed.");
 		}
-		Map<String, String> params = ObjectUtils.asMap("folder", "Recruiment Assets/User", "resource_type", "image");
+		
+		Map<String, String> params = ObjectUtils.asMap("folder", "Social Media/User", "resource_type", "image");
 		Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), params);
-//        return cloudinary.url().format().generate(uploadResult.get("public_id").toString());
 		return (String) uploadResult.get("secure_url");
 	}
 
 	@Override
 	public void deleteImage(String imageUrl) throws IOException {
-		Map<String, String> params = ObjectUtils.asMap("folder", "Recruiment Assets/User", "resource_type", "image");
+		Map<String, String> params = ObjectUtils.asMap("folder", "Social Media/User", "resource_type", "image");
 		Map result = cloudinary.uploader().destroy(getPublicIdImage(imageUrl), params);
 		System.out.println(result.get("result").toString());
 	}
 	
 	public String getPublicIdImage(String imageUrl)  {
         String imageName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1, imageUrl.lastIndexOf("."));
-        String publicId = "Recruiment Assets/User/" + imageName;
+        String publicId = "Social Media/User/" + imageName;
         return publicId;
-}
+	}
 	
 	
 }
