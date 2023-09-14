@@ -2,7 +2,6 @@ package vn.iostar.controller;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,7 +35,6 @@ import vn.iostar.dto.RegisterRequest;
 import vn.iostar.dto.TokenRequest;
 import vn.iostar.entity.Account;
 import vn.iostar.entity.RefreshToken;
-import vn.iostar.entity.User;
 import vn.iostar.exception.UserNotFoundException;
 import vn.iostar.repository.AccountRepository;
 import vn.iostar.repository.RefreshTokenRepository;
