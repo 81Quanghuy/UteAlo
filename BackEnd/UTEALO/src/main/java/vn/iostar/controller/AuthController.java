@@ -102,6 +102,7 @@ public class AuthController {
 		Map<String, String> tokenMap = new HashMap<>();
 		tokenMap.put("accessToken", accessToken);
 		tokenMap.put("refreshToken", token);
+		tokenMap.put("userId", userDetail.getUserId());
 
 		if (optionalUser.isPresent()) {
 			optionalUser.get().setLastLoginAt(new Date());

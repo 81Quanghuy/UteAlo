@@ -1,8 +1,11 @@
 package vn.iostar.controller.user;
 
+import java.io.Console;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.AccessDeniedException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +34,7 @@ import jakarta.validation.Valid;
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PasswordResetRequest;
+import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.User;
 import vn.iostar.exception.UserNotFoundException;
@@ -44,9 +49,9 @@ public class UserController {
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
-	
-    @Autowired
-    CloudinaryService cloudinaryService;
+
+	@Autowired
+	CloudinaryService cloudinaryService;
 
 	@Autowired
 	JavaMailSender javaMailSender;
@@ -73,6 +78,25 @@ public class UserController {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
 		return userService.getProfile(userId);
+	}
+
+	@GetMapping("/profile/{userId}")
+	public ResponseEntity<GenericResponse> getInformation(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("userId") String userId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(userId);
+		if (user.isEmpty()) {
+			throw new RuntimeException("User not found.");
+		} else if (currentUserId.equals(userId)) {
+			return ResponseEntity.ok(GenericResponse.builder().success(true)
+					.message("Retrieving user profile successfully and access update")
+					.result(new UserProfileResponse(user.get())).statusCode(HttpStatus.OK.value()).build());
+		} else {
+			return ResponseEntity.ok(GenericResponse.builder().success(true)
+					.message("Retrieving user profile successfully and access update denied")
+					.result(new UserProfileResponse(user.get())).statusCode(HttpStatus.OK.value()).build());
+		}
 	}
 
 	@PutMapping("/change-password")
