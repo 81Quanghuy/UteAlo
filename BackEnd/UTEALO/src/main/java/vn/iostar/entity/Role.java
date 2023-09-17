@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import vn.iostar.contants.RoleName;
 
 
 @Getter
@@ -23,8 +24,9 @@ public class Role implements Serializable{
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int roleId;
-    
-    private String roleName;
+	
+	@Enumerated(EnumType.STRING)
+    private RoleName roleName;
     
     @OneToMany(mappedBy = "role")
 	private List<User> users;

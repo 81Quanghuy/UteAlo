@@ -25,4 +25,8 @@ public class RegisterRequest {
 
 	@NotEmpty(message = "Confirm Password is required")
 	private String confirmPassword;
+
+	private String groupName;
+
+	private String roleUserGroup;
 }
