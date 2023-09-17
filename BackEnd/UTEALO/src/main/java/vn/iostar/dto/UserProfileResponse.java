@@ -16,6 +16,7 @@ public class UserProfileResponse {
 	private String email;
 	private String fullName;
 	private String avatar;
+	private String background;
 	private String address;
 	private Date dateOfBirth;
 	private String about;
@@ -32,6 +33,7 @@ public class UserProfileResponse {
         this.email = user.getAccount().getEmail();
         this.fullName = user.getUserName();
         this.avatar = user.getProfile().getAvatar();
+        this.background = user.getProfile().getBackground();
         this.address = user.getAddress();
         this.dateOfBirth = user.getDayOfBirth();
         this.about = user.getProfile().getBio();

@@ -196,6 +196,8 @@ public class UserServiceImpl implements UserService {
             throw new Exception("Invalid date of birth");
 
         user.get().setUserName(request.getFullName());
+        user.get().setPhone(request.getPhone());
+        user.get().setGender(request.getGender());
         user.get().setDayOfBirth(request.getDateOfBirth());
         user.get().setAddress(request.getAddress());
         user.get().getProfile().setBio(request.getAbout());
