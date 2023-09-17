@@ -23,8 +23,9 @@ public class Post implements Serializable{
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int postId;
-    
     private Date postTime;
+    
+    @Column(columnDefinition = "nvarchar(255)")
     private String content;
     private String photos;
     

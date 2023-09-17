@@ -25,6 +25,7 @@ public class PostGroup implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int postGroupId;
 
+	@Column(columnDefinition = "nvarchar(255)")
 	private String postGroupName;
 	private Date createDate;
 

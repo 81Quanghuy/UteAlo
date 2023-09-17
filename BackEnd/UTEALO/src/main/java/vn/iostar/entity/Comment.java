@@ -26,7 +26,7 @@ public class Comment implements Serializable{
     @ManyToOne
     @JoinColumn(name = "postId")
     private Post post;
-    
+    @Column(columnDefinition = "nvarchar(255)")
     private String content;
     private Date createTime;
     private String photos;

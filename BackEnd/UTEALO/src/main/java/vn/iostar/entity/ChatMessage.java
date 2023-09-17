@@ -3,6 +3,7 @@ package vn.iostar.entity;
 import java.io.Serializable;
 import java.util.Date;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,7 +29,8 @@ public class ChatMessage implements Serializable{
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int chatId;
-    
+	
+	@Column(columnDefinition = "nvarchar(255)")
     private String content;
     private Date createTime;
     private String messageType;

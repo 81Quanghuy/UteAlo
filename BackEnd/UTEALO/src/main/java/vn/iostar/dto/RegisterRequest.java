@@ -3,6 +3,7 @@ package vn.iostar.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+import vn.iostar.contants.Gender;
 
 @Data
 public class RegisterRequest {
@@ -19,6 +20,8 @@ public class RegisterRequest {
 
 	@NotEmpty(message = "Phone is required")
 	private String phone;
+	
+	private Gender gender;
 
 	@NotEmpty(message = "Password is required")
 	private String password;
@@ -27,6 +30,4 @@ public class RegisterRequest {
 	private String confirmPassword;
 
 	private String groupName;
-
-	private String roleUserGroup;
 }
