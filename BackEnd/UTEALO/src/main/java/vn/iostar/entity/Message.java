@@ -24,7 +24,8 @@ public class Message implements Serializable{
     private int messageId;
     
     private String messageType;
-    private String contentType;
+    @Column(columnDefinition = "nvarchar(255)")
+    private String content;
     private Date createTime;
     
     @ManyToOne

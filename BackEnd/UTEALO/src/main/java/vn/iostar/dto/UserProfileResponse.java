@@ -6,6 +6,7 @@ import java.util.List;
 
 import lombok.Data;
 import vn.iostar.contants.Gender;
+import vn.iostar.contants.RoleName;
 import vn.iostar.entity.User;
 
 @Data
@@ -24,7 +25,7 @@ public class UserProfileResponse {
 	private boolean isActive;
 	private Date createdAt;
 	private Date updatedAt;
-	private String role;
+	private RoleName role;
 	private List<String> friends = new ArrayList<>();
 
 	public UserProfileResponse(User user) {

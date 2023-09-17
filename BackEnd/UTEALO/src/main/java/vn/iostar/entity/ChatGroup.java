@@ -24,7 +24,7 @@ public class ChatGroup implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int groupId;
-
+	@Column(columnDefinition = "nvarchar(255)")
 	private String groupName;
 	private Date createDate;
 

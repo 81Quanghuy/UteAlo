@@ -64,6 +64,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 					Map<String, String> resultMap = new HashMap<>();
 					resultMap.put("accessToken", accessToken);
 					resultMap.put("refreshToken", refreshToken);
+					resultMap.put("userId", userDetail.getUserId());
 					return ResponseEntity.status(200).body(GenericResponse.builder().success(true).message("")
 							.result(resultMap).statusCode(HttpStatus.OK.value()).build());
 				}

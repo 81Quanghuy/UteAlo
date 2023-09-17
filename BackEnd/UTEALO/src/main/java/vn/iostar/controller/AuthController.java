@@ -121,15 +121,17 @@ public class AuthController {
 
 			return ResponseEntity.status(500)
 					.body(new GenericResponse(false, errorMessage, null, HttpStatus.INTERNAL_SERVER_ERROR.value()));
+		} else {
+			return userService.userRegister(registerRequest);
 		}
-		return userService.userRegister(registerRequest);
+
 	}
 
 	@PostMapping("/logout")
 	public ResponseEntity<?> logout(@RequestHeader("Authorization") String authorizationHeader,
 			@RequestParam("refreshToken") String refreshToken) {
 		String accessToken = authorizationHeader.substring(7);
-		
+
 		if (jwtTokenProvider.getUserIdFromJwt(accessToken)
 				.equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
 			return refreshTokenService.logout(refreshToken);

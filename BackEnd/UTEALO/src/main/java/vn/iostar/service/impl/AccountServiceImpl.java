@@ -19,6 +19,7 @@ import vn.iostar.entity.ChatGroup;
 import vn.iostar.entity.ChatGroupMember;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.PostGroupMember;
+import vn.iostar.entity.Profile;
 import vn.iostar.entity.Role;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
@@ -27,6 +28,7 @@ import vn.iostar.repository.ChatGroupMemberRepository;
 import vn.iostar.repository.ChatGroupRepository;
 import vn.iostar.repository.PostGroupMemberRepository;
 import vn.iostar.repository.PostGroupRepository;
+import vn.iostar.repository.ProfileRepository;
 import vn.iostar.repository.RoleRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.repository.VerificationTokenRepository;
@@ -56,6 +58,9 @@ public class AccountServiceImpl implements AccountService {
 
 	@Autowired
 	UserRepository userRepository;
+	
+	@Autowired
+	ProfileRepository profileRepository;
 
 	@Autowired
 	PasswordEncoder passwordEncoder;
@@ -101,14 +106,14 @@ public class AccountServiceImpl implements AccountService {
 
 		Optional<PostGroup> poOptional = postGroupRepository.findByPostGroupName(registerRequest.getGroupName());
 		Optional<ChatGroup> chatOptional = chatGroupRepository.findByGroupName(registerRequest.getGroupName());
-		if (poOptional.isPresent() || chatOptional.isPresent()) {
+		if (!poOptional.isPresent() || !chatOptional.isPresent()) {
 			return ResponseEntity.status(409).body(GenericResponse.builder().success(false)
-					.message("Group name already in use").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
+					.message("Group name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
 		}
 
 		saveUserAndAccount(registerRequest, role.get());
 		if (registerRequest.getRoleName().equals(RoleName.SinhVien.name())) {
-			saveGroupandRole(registerRequest);
+			saveGroupandRole(registerRequest,poOptional,chatOptional);
 		}
 		emailVerificationService.sendOtp(registerRequest.getEmail());
 
@@ -116,26 +121,26 @@ public class AccountServiceImpl implements AccountService {
 				.statusCode(200).build());
 	}
 
-	private void saveGroupandRole(RegisterRequest registerRequest) {
+	private void saveGroupandRole(RegisterRequest registerRequest,Optional<PostGroup> poOptional,Optional<ChatGroup> chatOptional) {
 		Date createDate = new Date();
 
-		ChatGroup chatGroup = new ChatGroup();
+		ChatGroup chatGroup = chatOptional.get();
 		chatGroup.setGroupName(registerRequest.getGroupName());
 		chatGroup.setCreateDate(createDate);
 
 		ChatGroupMember chatGroupMember = new ChatGroupMember();
-		chatGroupMember.setRoleUserGroup(RoleUserGroup.valueOf(registerRequest.getRoleUserGroup()));
 		chatGroupMember.setUser(userRegister);
+		chatGroupMember.setRoleUserGroup(RoleUserGroup.Member);
 		chatGroupMember.getChatGroup().add(chatGroup);
 		chatGroup.getChatGroupMembers().add(chatGroupMember);
 
-		PostGroup postGroup = new PostGroup();
+		PostGroup postGroup = poOptional.get();
 		postGroup.setCreateDate(createDate);
 		postGroup.setPostGroupName(registerRequest.getGroupName());
 
 		PostGroupMember postGroupMember = new PostGroupMember();
-		postGroupMember.setRoleUserGroup(RoleUserGroup.valueOf(registerRequest.getRoleUserGroup()));
 		postGroupMember.setUser(userRegister);
+		postGroupMember.setRoleUserGroup(RoleUserGroup.Member);
 		postGroupMember.getPostGroup().add(postGroup);
 		postGroup.getPostGroupMembers().add(postGroupMember);
 
@@ -175,6 +180,7 @@ public class AccountServiceImpl implements AccountService {
 		user.setPhone(registerRequest.getPhone());
 		user.setUserName(registerRequest.getFullName());
 		user.setRole(role);
+		user.setGender(registerRequest.getGender());
 		userRegister = user;
 		userRepository.save(user);
 
@@ -189,6 +195,13 @@ public class AccountServiceImpl implements AccountService {
 
 		account.setUser(user);
 		accountRepository.save(account);
+		
+		Profile profile = new Profile();
+		profile.setAvatar("https://res.cloudinary.com/ddccjvlbf/image/upload/v1694968172/Social%20Media/User/rtizxwfzimf8mcerqmwa.png");
+		profile.setUser(user);
+		profile.setBackground("https://res.cloudinary.com/ddccjvlbf/image/upload/v1694967910/Social%20Media/User/dzonp4ntntp4rccl1faw.jpg");
+		profileRepository.save(profile);
+		
 
 	}
 

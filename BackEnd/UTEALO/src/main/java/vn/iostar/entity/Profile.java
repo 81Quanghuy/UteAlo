@@ -27,6 +27,7 @@ public class Profile implements Serializable{
     @JoinColumn(name = "userId")
     private User user;
     
+    @Column(columnDefinition = "nvarchar(255)")
     private String bio;
     private String avatar;
     private String background;

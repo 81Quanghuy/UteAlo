@@ -25,7 +25,9 @@ public class User implements Serializable {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String userId;
 
+	@Column(columnDefinition = "nvarchar(255)")
 	private String userName;
+	@Column(columnDefinition = "nvarchar(255)")
 	private String address;
 	private String phone;
 	

@@ -153,6 +153,7 @@ public class UserController {
 				.result("Send Otp successfully!").statusCode(HttpStatus.OK.value()).build();
 	}
 
+	@SuppressWarnings("unchecked")
 	@PutMapping("/reset-password")
 	public ResponseEntity<?> resetPassword(@RequestParam("token") String token,
 			@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
