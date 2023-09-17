@@ -17,6 +17,7 @@ public class UserProfileResponse {
 	private String email;
 	private String fullName;
 	private String avatar;
+	private String background;
 	private String address;
 	private Date dateOfBirth;
 	private String about;
@@ -29,18 +30,19 @@ public class UserProfileResponse {
 
 	public UserProfileResponse(User user) {
 		this.userId = user.getUserId();
-		this.phone = user.getPhone();
-		this.email = user.getAccount().getEmail();
-		this.fullName = user.getUserName();
-		this.avatar = user.getProfile().getAvatar();
-		this.address = user.getAddress();
-		this.dateOfBirth = user.getDayOfBirth();
-		this.about = user.getProfile().getBio();
-		this.gender = user.getGender();
-		this.isActive = user.isActive();
-		this.createdAt = user.getAccount().getCreatedAt();
-		this.updatedAt = user.getAccount().getUpdatedAt();
-		this.role = user.getRole().getRoleName();
+        this.phone = user.getPhone();
+        this.email = user.getAccount().getEmail();
+        this.fullName = user.getUserName();
+        this.avatar = user.getProfile().getAvatar();
+        this.background = user.getProfile().getBackground();
+        this.address = user.getAddress();
+        this.dateOfBirth = user.getDayOfBirth();
+        this.about = user.getProfile().getBio();
+        this.gender = user.getGender();
+        this.isActive = user.isActive();
+        this.createdAt = user.getAccount().getCreatedAt();
+        this.updatedAt = user.getAccount().getUpdatedAt();
+        this.role = user.getRole().getRoleName();    
 	}
 
 }

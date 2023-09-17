@@ -2,6 +2,8 @@ package vn.iostar.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import vn.iostar.contants.Gender;
+
 import org.hibernate.annotations.Nationalized;
 
 import java.util.Date;
@@ -17,6 +19,12 @@ public class UserUpdateRequest {
     private String address;
 
     private Date dateOfBirth;
+    
+    @Nationalized
+    private String phone;
+    
+    @Nationalized
+    private Gender gender;
 
     @Nationalized
     private String about;

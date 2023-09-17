@@ -98,6 +98,21 @@ public class UserController {
 					.result(new UserProfileResponse(user.get())).statusCode(HttpStatus.OK.value()).build());
 		}
 	}
+	
+
+	@PutMapping("/update")
+	public ResponseEntity<Object> updateUser(@RequestBody @Valid UserUpdateRequest request,
+			@RequestHeader("Authorization") String authorizationHeader, BindingResult bindingResult) throws Exception {
+		if (bindingResult.hasErrors()) {
+			throw new Exception(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
+		}
+
+		String token = authorizationHeader.substring(7);
+		String userIdFromToken = jwtTokenProvider.getUserIdFromJwt(token);
+
+		return userService.updateProfile(userIdFromToken, request);
+
+	}
 
 	@PutMapping("/change-password")
 	public ResponseEntity<GenericResponse> changePassword(@RequestBody @Valid ChangePasswordRequest request,
@@ -156,19 +171,6 @@ public class UserController {
 		}
 	}
 
-	@PutMapping("/update")
-	public ResponseEntity<Object> updateUser(@RequestBody @Valid UserUpdateRequest request,
-			@RequestHeader("Authorization") String authorizationHeader, BindingResult bindingResult) throws Exception {
-		if (bindingResult.hasErrors()) {
-			throw new Exception(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
-		}
-
-		String token = authorizationHeader.substring(7);
-		String userIdFromToken = jwtTokenProvider.getUserIdFromJwt(token);
-
-		return userService.updateProfile(userIdFromToken, request);
-
-	}
 
 	@PutMapping("/avatar")
 	public ResponseEntity<?> uploadAvatar(@RequestParam MultipartFile imageFile,
@@ -187,6 +189,28 @@ public class UserController {
 		// delete old avatar
 		if (avatarOld != null) {
 			cloudinaryService.deleteImage(avatarOld);
+		}
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Upload successfully")
+				.result(user.getProfile().getAvatar()).statusCode(HttpStatus.OK.value()).build());
+	}
+	
+	@PutMapping("/background")
+	public ResponseEntity<?> uploadBackgroundPicture(@RequestParam MultipartFile imageFile,
+			@RequestHeader("Authorization") String token) throws IOException {
+
+		String jwt = token.substring(7);
+		String userId = jwtTokenProvider.getUserIdFromJwt(jwt);
+
+		User user = userService.findById(userId).get();
+		String backgroundOld = user.getProfile().getBackground();
+
+		// upload new avatar
+		user.getProfile().setBackground(cloudinaryService.uploadImage(imageFile));
+		userService.save(user);
+
+		// delete old avatar
+		if (backgroundOld != null) {
+			cloudinaryService.deleteImage(backgroundOld);
 		}
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Upload successfully")
 				.result(user.getProfile().getAvatar()).statusCode(HttpStatus.OK.value()).build());
