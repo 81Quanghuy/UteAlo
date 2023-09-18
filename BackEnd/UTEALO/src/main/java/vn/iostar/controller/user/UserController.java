@@ -1,9 +1,7 @@
 package vn.iostar.controller.user;
 
-import java.io.Console;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -134,7 +132,7 @@ public class UserController {
 
 		String otp = UUID.randomUUID().toString();
 		userService.createPasswordResetOtpForUser(user, otp);
-		String url = "http://localhost:8089/forget-password/confirm-password?token=" + otp;
+		String url = "http://localhost:3000/reset-password?token=" + otp;
 		String subject = "Change Password For JobPost";
 		Context context = new Context();
 		context.setVariable("url", url);

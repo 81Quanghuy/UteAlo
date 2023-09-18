@@ -1,5 +1,5 @@
 package vn.iostar.contants;
 
 public enum RoleName {
-	SinhVien, GiangVien, Admin, PhuHuynh
+	SinhVien, GiangVien, Admin, PhuHuynh,NhanVien
 }

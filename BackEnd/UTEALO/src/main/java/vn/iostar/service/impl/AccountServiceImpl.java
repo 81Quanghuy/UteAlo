@@ -103,16 +103,14 @@ public class AccountServiceImpl implements AccountService {
 			return ResponseEntity.status(404).body(GenericResponse.builder().success(false)
 					.message("Role name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
 		}
-
-		Optional<PostGroup> poOptional = postGroupRepository.findByPostGroupName(registerRequest.getGroupName());
-		Optional<ChatGroup> chatOptional = chatGroupRepository.findByGroupName(registerRequest.getGroupName());
-		if (!poOptional.isPresent() || !chatOptional.isPresent()) {
-			return ResponseEntity.status(409).body(GenericResponse.builder().success(false)
-					.message("Group name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
-		}
-
 		saveUserAndAccount(registerRequest, role.get());
-		if (registerRequest.getRoleName().equals(RoleName.SinhVien.name())) {
+		if(registerRequest.getRoleName().equals(RoleName.SinhVien.name())) {
+			Optional<PostGroup> poOptional = postGroupRepository.findByPostGroupName(registerRequest.getGroupName());
+			Optional<ChatGroup> chatOptional = chatGroupRepository.findByGroupName(registerRequest.getGroupName());
+			if (!poOptional.isPresent() || !chatOptional.isPresent()) {
+				return ResponseEntity.status(409).body(GenericResponse.builder().success(false)
+						.message("Group name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
+			}	
 			saveGroupandRole(registerRequest,poOptional,chatOptional);
 		}
 		emailVerificationService.sendOtp(registerRequest.getEmail());
