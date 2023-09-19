@@ -50,7 +50,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 			String mailContent = templateEngine.process("send-otp", context);
 
 			helper.setText(mailContent, true);
-			helper.setSubject("The verification token for JobPort");
+			helper.setSubject("The verification token for UTEALO");
 			mailSender.send(message);
 
 			LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(5);
