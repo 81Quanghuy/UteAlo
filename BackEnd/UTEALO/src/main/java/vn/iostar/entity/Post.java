@@ -18,12 +18,17 @@ import lombok.Setter;
 @Table(name = "POSTS")
 public class Post implements Serializable{
 
+	 
+
 	private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int postId;
     private Date postTime;
+    
+    private Date updateAt;
+    private String location;
     
     @Column(columnDefinition = "nvarchar(255)")
     private String content;
@@ -42,7 +47,7 @@ public class Post implements Serializable{
     
     @OneToMany(mappedBy = "post")
     private List<Comment> comments;
+
     
     
 }
-

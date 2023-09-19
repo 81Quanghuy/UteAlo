@@ -1,9 +1,7 @@
 package vn.iostar.controller.user;
 
-import java.io.Console;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,6 +39,7 @@ import vn.iostar.exception.UserNotFoundException;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.AccountService;
 import vn.iostar.service.CloudinaryService;
+import vn.iostar.service.PostService;
 import vn.iostar.service.UserService;
 
 @RestController
@@ -58,6 +57,9 @@ public class UserController {
 
 	@Autowired
 	UserService userService;
+
+	@Autowired
+	PostService postService;
 
 	@Autowired
 	AccountService accountService;
@@ -98,7 +100,6 @@ public class UserController {
 					.result(new UserProfileResponse(user.get())).statusCode(HttpStatus.OK.value()).build());
 		}
 	}
-	
 
 	@PutMapping("/update")
 	public ResponseEntity<Object> updateUser(@RequestBody @Valid UserUpdateRequest request,
@@ -171,7 +172,6 @@ public class UserController {
 		}
 	}
 
-
 	@PutMapping("/avatar")
 	public ResponseEntity<?> uploadAvatar(@RequestParam MultipartFile imageFile,
 			@RequestHeader("Authorization") String token) throws IOException {
@@ -193,7 +193,7 @@ public class UserController {
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Upload successfully")
 				.result(user.getProfile().getAvatar()).statusCode(HttpStatus.OK.value()).build());
 	}
-	
+
 	@PutMapping("/background")
 	public ResponseEntity<?> uploadBackgroundPicture(@RequestParam MultipartFile imageFile,
 			@RequestHeader("Authorization") String token) throws IOException {
@@ -215,4 +215,13 @@ public class UserController {
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Upload successfully")
 				.result(user.getProfile().getAvatar()).statusCode(HttpStatus.OK.value()).build());
 	}
+
+	@PutMapping("/delete")
+	public ResponseEntity<GenericResponse> deleteUser(@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String userIdFromToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return userService.deleteUser(userIdFromToken);
+
+	}
+
 }

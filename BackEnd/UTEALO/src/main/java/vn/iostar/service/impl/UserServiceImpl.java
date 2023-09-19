@@ -1,6 +1,6 @@
 package vn.iostar.service.impl;
 
-import java.io.IOException;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -13,10 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.GenericResponse;
@@ -212,6 +209,58 @@ public class UserServiceImpl implements UserService {
                         .build()
         );
     }
+	
+	@Override
+	public ResponseEntity<GenericResponse> deleteUser(String idFromToken) {
+		try {
+            Optional<User> optionalUser = findById(idFromToken);
+            /// tìm thấy user với id 
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                //không xóa user , chỉ cập nhật active về flase
+                user.getAccount().setActive(false);
+                
+                User updatedUser = userRepository.save(user);
+                /// nếu cập nhật active về false
+                if (updatedUser != null) {
+                    return ResponseEntity.ok().body(new GenericResponse(
+                            true,
+                            "Delete Successful!",
+                            updatedUser,
+                            HttpStatus.OK.value()));
+                }
+                /// cập nhật không thành công
+                else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GenericResponse(
+                            false,
+                            "Update Failed!",
+                            null,
+                            HttpStatus.INTERNAL_SERVER_ERROR.value()));
+                }
+            }
+            /// khi không tìm thấy user với id 
+            else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GenericResponse(
+                        false,
+                        "Cannot found user!",
+                        null,
+                        HttpStatus.NOT_FOUND.value()));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new GenericResponse(
+                    false,
+                    "Invalid arguments!",
+                    null,
+                    HttpStatus.BAD_REQUEST.value()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GenericResponse(
+                    false,
+                    "An internal server error occurred!",
+                    null,
+                    HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        }
+    }
+
 	
 
 

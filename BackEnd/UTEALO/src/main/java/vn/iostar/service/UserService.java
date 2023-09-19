@@ -47,4 +47,6 @@ public interface UserService {
 	void changeUserPassword(User user, String newPassword, String confirmPassword);
 	
 	ResponseEntity<Object> updateProfile(String userId, UserUpdateRequest request) throws Exception;
+	
+	ResponseEntity<GenericResponse> deleteUser(String idFromToken);
 }
