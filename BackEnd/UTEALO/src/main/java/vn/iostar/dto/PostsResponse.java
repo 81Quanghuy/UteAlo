@@ -4,8 +4,6 @@ import java.util.Date;
 import java.util.List;
 
 import lombok.Data;
-import vn.iostar.entity.Comment;
-import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
 
 

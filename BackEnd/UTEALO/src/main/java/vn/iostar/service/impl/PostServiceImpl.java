@@ -241,7 +241,7 @@ public class PostServiceImpl implements PostService {
 		PostsResponse postsResponse = new PostsResponse(post);
 		postsResponse.setComments(getIdComment(post.getComments()));
 		postsResponse.setLikes(getIdLikes(post.getLikes()));
-		return postsResponse;
+		return postsResponse; 	
 	}
 
 }
