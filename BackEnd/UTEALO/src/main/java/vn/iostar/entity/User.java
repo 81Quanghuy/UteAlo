@@ -30,14 +30,14 @@ public class User implements Serializable {
 	@Column(columnDefinition = "nvarchar(255)")
 	private String address;
 	private String phone;
-	
+
 	@Enumerated(EnumType.STRING)
 	private Gender gender;
 	private Date dayOfBirth;
 	private boolean isActive = true;
-	
+
 	@Column(nullable = true)
-    private boolean isVerified = false;
+	private boolean isVerified = false;
 
 	@ManyToOne
 	@JoinColumn(name = "roleId")
@@ -49,11 +49,11 @@ public class User implements Serializable {
 	@OneToOne(mappedBy = "user")
 	private Profile profile;
 
-	@OneToOne(mappedBy = "user1")
-	private Friend friend1;
+	@OneToMany(mappedBy = "user1")
+	private List<Friend> friend1;
 
-	@OneToOne(mappedBy = "user2")
-	private Friend friend2;
+	@OneToMany(mappedBy = "user2")
+	private List<Friend> friend2;
 
 	@OneToMany(mappedBy = "userFrom")
 	private List<FriendRequest> friendRequests1;
@@ -84,7 +84,7 @@ public class User implements Serializable {
 
 	@OneToMany(mappedBy = "user")
 	private List<RefreshToken> refreshTokens;
-	
+
 	@OneToOne(mappedBy = "user")
 	private VerificationToken verificationToken;
 }
