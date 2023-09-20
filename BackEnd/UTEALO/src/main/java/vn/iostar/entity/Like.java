@@ -22,7 +22,7 @@ public class Like implements Serializable{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int likeId;
     
-    @ManyToOne
+	@ManyToOne
     @JoinColumn(name = "postId")
     private Post post;
     

@@ -1,9 +1,7 @@
 package vn.iostar.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -62,10 +60,6 @@ public class PasswordResetOtp implements Serializable {
         this.otp = otp;
         this.expiryDate = calculateExpiryDate(EXPIRATION);
     }
-
-    //
-
-
 
 
 }

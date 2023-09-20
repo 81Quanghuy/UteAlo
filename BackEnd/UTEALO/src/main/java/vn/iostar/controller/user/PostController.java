@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
-import vn.iostar.dto.PostResponse;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Post;

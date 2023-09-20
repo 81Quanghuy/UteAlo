@@ -166,9 +166,13 @@ public class PostServiceImpl implements PostService {
 
 		// Tiếp tục xử lý tạo bài đăng
 		save(post);
+		PostsResponse postsResponse = new PostsResponse(post);
+		List<Integer> count = new ArrayList<>();
+		postsResponse.setComments(count);
+		postsResponse.setLikes(count);
 
 		GenericResponse response = GenericResponse.builder().success(true).message("Post Created Successfully")
-				.result(post).statusCode(200).build();
+				.result(postsResponse).statusCode(200).build();
 
 		return ResponseEntity.ok(response);
 	}

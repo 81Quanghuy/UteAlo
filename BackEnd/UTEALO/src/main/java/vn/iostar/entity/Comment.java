@@ -23,7 +23,7 @@ public class Comment implements Serializable{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int commentId;
     
-    @ManyToOne
+	@ManyToOne
     @JoinColumn(name = "postId")
     private Post post;
     @Column(columnDefinition = "nvarchar(255)")
