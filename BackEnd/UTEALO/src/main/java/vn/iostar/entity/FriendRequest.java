@@ -11,7 +11,7 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "FRIEND_REQUESTS")
+@Table(name = "FRIEND_REQUESTS",uniqueConstraints = {@UniqueConstraint(columnNames = {"userTo", "userFrom"})})
 public class FriendRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
