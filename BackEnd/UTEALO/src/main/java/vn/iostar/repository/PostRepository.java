@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 import vn.iostar.entity.Post;
 
 @Repository
-public interface PostRepository extends JpaRepository<Post, String>{
+public interface PostRepository extends JpaRepository<Post, Integer>{
 	List<Post> findByUserUserId(String userId);
 }

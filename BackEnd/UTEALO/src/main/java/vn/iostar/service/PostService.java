@@ -17,27 +17,25 @@ public interface PostService {
 
 	void delete(Post entity);
 
-	void deleteById(String id);
+	void deleteById(Integer id);
 
 	long count();
 
 	List<Post> findAll();
 
-	Optional<Post> findById(String id);
+	Optional<Post> findById(Integer id);
 
 	<S extends Post> S save(S entity);
 
-	ResponseEntity<GenericResponse> getPost(String userId);
+	ResponseEntity<GenericResponse> getPost(Integer postId);
 
-	ResponseEntity<Object> updatePost(String postId, PostUpdateRequest request) throws Exception;
+	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request) throws Exception;
 
-	ResponseEntity<GenericResponse> deletePost(String idFromToken);
+	ResponseEntity<GenericResponse> deletePost(Integer postId);
 	
 	ResponseEntity<Object> createUserPost(String token,CreatePostRequestDTO requestDTO );
 
 	public List<PostsResponse> findUserPosts(String userId);
-	
-	Post likePost(String postId, String userId);
 
 	PostsResponse getPost(Post post);
 

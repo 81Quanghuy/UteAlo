@@ -56,7 +56,7 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public void deleteById(String id) {
+	public void deleteById(Integer id) {
 		postRepository.deleteById(id);
 	}
 
@@ -71,8 +71,8 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> getPost(String userId) {
-		Optional<Post> post = postRepository.findById(userId);
+	public ResponseEntity<GenericResponse> getPost(Integer postId) {
+		Optional<Post> post = postRepository.findById(postId);
 		if (post.isEmpty())
 			throw new RuntimeException("Post not found");
 
@@ -81,12 +81,12 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public Optional<Post> findById(String id) {
+	public Optional<Post> findById(Integer id) {
 		return postRepository.findById(id);
 	}
 
 	@Override
-	public ResponseEntity<Object> updatePost(String postId, PostUpdateRequest request) throws Exception {
+	public ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request) throws Exception {
 
 		Optional<Post> post = findById(postId);
 		if (post.isEmpty())
@@ -105,7 +105,7 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> deletePost(String postId) {
+	public ResponseEntity<GenericResponse> deletePost(Integer postId) {
 		try {
 			Optional<Post> optionalPost = findById(postId);
 			// tìm thấy bài post với postId
@@ -208,37 +208,7 @@ public class PostServiceImpl implements PostService {
 		return idComments;
 	}
 
-	@Override
-	public Post likePost(String postId, String userId) {
-		// Tìm bài post cần like
-		Post post = postRepository.findById(postId).orElse(null);
-		if (post == null) {
-			// Xử lý trường hợp không tìm thấy bài post
-			return null;
-		}
-
-		// Kiểm tra xem người dùng đã like bài post này chưa
-		boolean isLiked = post.getLikes().stream().anyMatch(like -> like.getUser().getUserId() == userId);
-
-		if (!isLiked) {
-			// Nếu chưa like, thêm một like mới
-			Like like = new Like();
-			like.setPost(post);
-			// Gán userId vào like
-			// Đặt các giá trị khác cho like nếu cần
-			post.getLikes().add(like);
-
-			// Cập nhật post
-			post = postRepository.save(post);
-		} else {
-			// Nếu đã like, xử lý việc unlike
-			post.getLikes().removeIf(like -> like.getUser().getUserId() == userId);
-			// Cập nhật post
-			post = postRepository.save(post);
-		}
-
-		return post;
-	}
+	
 
 	@Override
 	public PostsResponse getPost(Post post) {

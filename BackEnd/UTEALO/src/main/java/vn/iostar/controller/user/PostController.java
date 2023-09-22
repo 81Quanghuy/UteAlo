@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -42,7 +41,7 @@ public class PostController {
 
 	@GetMapping("/{postId}")
 	public ResponseEntity<GenericResponse> getPost(@RequestHeader("Authorization") String authorizationHeader,
-			@PathVariable("postId") String postId) {
+			@PathVariable("postId") Integer postId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Optional<Post> post = postService.findById(postId);
@@ -89,7 +88,7 @@ public class PostController {
 
 	@PutMapping("/update/{postId}")
 	public ResponseEntity<Object> updateUser(@RequestBody @Valid PostUpdateRequest request,
-			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") String postId,
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
 			BindingResult bindingResult) throws Exception {
 		if (bindingResult.hasErrors()) {
 			throw new Exception(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
@@ -101,7 +100,7 @@ public class PostController {
 
 	@PutMapping("/delete/{postId}")
 	public ResponseEntity<GenericResponse> deleteUser(@RequestHeader("Authorization") String authorizationHeader,
-			@PathVariable("postId") String postId) {
+			@PathVariable("postId") Integer postId,@RequestBody String userId) {
 		return postService.deletePost(postId);
 
 	}
@@ -112,9 +111,6 @@ public class PostController {
 		return postService.createUserPost(token, requestDTO);
 	}
 	
-	 @PostMapping("/{postId}/like")
-	    public Post likePost(@RequestHeader("Authorization") String authorizationHeader,@PathVariable String postId, @RequestParam String userId) {
-	        return postService.likePost(postId, userId);
-	    }
+	 
 
 }
