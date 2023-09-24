@@ -12,6 +12,8 @@ import vn.iostar.entity.Post;
 import vn.iostar.entity.User;
 
 
+
+
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Integer>{
 	
@@ -22,4 +24,6 @@ public interface LikeRepository extends JpaRepository<Like, Integer>{
 	List<Like> findByCommentCommentId(int postId);
 	
 	Optional<Like> findByCommentAndUser(Comment comment, User user);
+	
+	void deleteByCommentCommentId(Integer comment);
 }
