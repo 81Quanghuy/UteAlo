@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy JAR app to Azure Web App - UteAlo-backend
+name: Build and deploy JAR app to Azure Web App - utealo-backend
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'UteAlo-backend'
+          app-name: 'utealo-backend'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1453EB36B0C54826A4C2A4826D3D839E }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_68E62F469A8B438CAC837F57CA8955E2 }}
           package: '*.jar'
