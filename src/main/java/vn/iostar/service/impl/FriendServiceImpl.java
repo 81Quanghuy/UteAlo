@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Friend;
 import vn.iostar.entity.User;
@@ -25,8 +27,8 @@ public class FriendServiceImpl implements FriendService {
 	UserRepository userRepository;
 
 	@Override
-	public List<String> findFriendUserIdsByUserId(String userId) {
-		return friendRepository.findFriendUserIdsByUserId(userId);
+	public List<FriendRequestResponse> findFriendUserIdsByUserId(String userId,Pageable pageable) {
+		return friendRepository.findFriendUserIdsByUserId(userId,pageable);
 	}
 
 	@Override
