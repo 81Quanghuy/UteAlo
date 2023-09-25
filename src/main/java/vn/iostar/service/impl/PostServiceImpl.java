@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -20,6 +21,8 @@ import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.User;
+import vn.iostar.repository.CommentRepository;
+import vn.iostar.repository.LikeRepository;
 import vn.iostar.repository.PostRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.PostGroupService;
@@ -39,6 +42,12 @@ public class PostServiceImpl implements PostService {
 
 	@Autowired
 	PostGroupService postGroupService;
+
+	@Autowired
+	LikeRepository likeRepository;
+	
+	@Autowired
+	CommentRepository commentRepository;
 
 	@Override
 	public <S extends Post> S save(S entity) {
@@ -105,29 +114,37 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> deletePost(Integer postId) {
-		try {
+	@Transactional
+	public ResponseEntity<GenericResponse> deletePost(Integer postId, String token, String userId) {
+		
+			String jwt = token.substring(7);
+			String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
+			if (!currentUserId.equals(userId.replaceAll("^\"|\"$", ""))) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));
+			}
 			Optional<Post> optionalPost = findById(postId);
 			// tìm thấy bài post với postId
 			if (optionalPost.isPresent()) {
 				Post post = optionalPost.get();
+
+				// Xóa tất cả các like liên quan đến post này
+				likeRepository.deleteByPostPostId(post.getPostId());
+
+				// Xóa tất cả các comment liên quan đến post này
+				commentRepository.deleteByPostPostId(post.getPostId());
+
 				// xóa luôn bài post đó
 				postRepository.delete(post);
 				return ResponseEntity.ok()
 						.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
 			}
-			// Khi không tìm thấy user với id
+			// Khi không tìm thấy bài post với id
 			else {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new GenericResponse(false, "Cannot found post!", null, HttpStatus.NOT_FOUND.value()));
 			}
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest()
-					.body(new GenericResponse(false, "Invalid arguments!", null, HttpStatus.BAD_REQUEST.value()));
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GenericResponse(false,
-					"An internal server error occurred!", null, HttpStatus.INTERNAL_SERVER_ERROR.value()));
-		}
+		
 	}
 
 	@Override
@@ -208,14 +225,12 @@ public class PostServiceImpl implements PostService {
 		return idComments;
 	}
 
-	
-
 	@Override
 	public PostsResponse getPost(Post post) {
 		PostsResponse postsResponse = new PostsResponse(post);
 		postsResponse.setComments(getIdComment(post.getComments()));
 		postsResponse.setLikes(getIdLikes(post.getLikes()));
-		return postsResponse; 	
+		return postsResponse;
 	}
 
 }

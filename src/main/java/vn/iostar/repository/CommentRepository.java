@@ -14,4 +14,5 @@ import vn.iostar.entity.User;
 public interface CommentRepository extends JpaRepository<Comment, Integer>{
 	List<Comment> findByPostPostId(int postId);
 	Optional<Comment> findByPostAndUser(Post post, User user);
+	void deleteByPostPostId(Integer postId);
 }

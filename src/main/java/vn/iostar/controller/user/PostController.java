@@ -99,9 +99,9 @@ public class PostController {
 	}
 
 	@PutMapping("/delete/{postId}")
-	public ResponseEntity<GenericResponse> deleteUser(@RequestHeader("Authorization") String authorizationHeader,
+	public ResponseEntity<GenericResponse> deleteUser(@RequestHeader("Authorization") String token,
 			@PathVariable("postId") Integer postId,@RequestBody String userId) {
-		return postService.deletePost(postId);
+		return postService.deletePost(postId,token,userId);
 
 	}
 

@@ -13,6 +13,7 @@ public class CommentPostResponse {
 	private String photos;
 	private String userName;
 	private int postId;
+	private String userAvatar;
 	
 	public CommentPostResponse(Comment comment) {
 		super();
@@ -22,6 +23,7 @@ public class CommentPostResponse {
 		this.photos = comment.getPhotos();
 		this.userName = comment.getUser().getUserName();
 		this.postId = comment.getPost().getPostId();
+		this.userAvatar = comment.getUser().getProfile().getAvatar();
 	}
 
 	public CommentPostResponse(int commentId, String content, Date createTime, String photos, String userName,
