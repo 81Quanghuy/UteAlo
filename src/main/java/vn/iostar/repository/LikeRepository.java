@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
@@ -25,5 +26,7 @@ public interface LikeRepository extends JpaRepository<Like, Integer>{
 	
 	Optional<Like> findByCommentAndUser(Comment comment, User user);
 	
-	void deleteByCommentCommentId(Integer comment);
+	void deleteByCommentCommentId(Integer commentId);
+	
+	void deleteByPostPostId(Integer postId);
 }
