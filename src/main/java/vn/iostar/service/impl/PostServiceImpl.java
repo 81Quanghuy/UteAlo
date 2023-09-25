@@ -109,8 +109,6 @@ public class PostServiceImpl implements PostService {
 		try {
 			String jwt = token.substring(7);
 			String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
-			System.out.println("currentUserId"+currentUserId);
-			System.out.println("userId"+userId.replaceAll("^\"|\"$", ""));
 			if(!currentUserId.equals(userId.replaceAll("^\"|\"$", ""))) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new GenericResponse(false, "User not found!", null, HttpStatus.NOT_FOUND.value()));
