@@ -105,8 +105,14 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> deletePost(Integer postId) {
+	public ResponseEntity<GenericResponse> deletePost(Integer postId,String token,String userId) {
 		try {
+			String jwt = token.substring(7);
+			String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
+			if(!currentUserId.equals(userId)) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new GenericResponse(false, "User not found!", null, HttpStatus.NOT_FOUND.value()));
+			}
 			Optional<Post> optionalPost = findById(postId);
 			// tìm thấy bài post với postId
 			if (optionalPost.isPresent()) {
@@ -116,7 +122,7 @@ public class PostServiceImpl implements PostService {
 				return ResponseEntity.ok()
 						.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
 			}
-			// Khi không tìm thấy user với id
+			// Khi không tìm thấy bài post với id
 			else {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(new GenericResponse(false, "Cannot found post!", null, HttpStatus.NOT_FOUND.value()));
