@@ -31,7 +31,7 @@ public interface PostService {
 
 	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request) throws Exception;
 
-	ResponseEntity<GenericResponse> deletePost(Integer postId);
+	ResponseEntity<GenericResponse> deletePost(Integer postId,String token,String userId);
 	
 	ResponseEntity<Object> createUserPost(String token,CreatePostRequestDTO requestDTO );
 
