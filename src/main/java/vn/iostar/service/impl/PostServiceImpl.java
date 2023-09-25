@@ -121,7 +121,7 @@ public class PostServiceImpl implements PostService {
 			String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
 			if (!currentUserId.equals(userId.replaceAll("^\"|\"$", ""))) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new GenericResponse(false, "User not found!", null, HttpStatus.NOT_FOUND.value()));
+						.body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));
 			}
 			Optional<Post> optionalPost = findById(postId);
 			// tìm thấy bài post với postId
