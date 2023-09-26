@@ -1,6 +1,7 @@
 package vn.iostar.controller.user;
 
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +11,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -19,7 +23,7 @@ import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CommentService;
 
 @RestController
-@RequestMapping("/api/v1/post/comment")
+@RequestMapping(value = "/api/v1/post/comment", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
 public class CommentPostController {
 
 	@Autowired

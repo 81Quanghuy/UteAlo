@@ -1,5 +1,6 @@
 package vn.iostar.service.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import vn.iostar.dto.CommentPostResponse;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
@@ -23,6 +25,7 @@ import vn.iostar.entity.User;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.LikeRepository;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.CommentService;
 import vn.iostar.service.PostService;
 import vn.iostar.service.UserService;
@@ -37,11 +40,14 @@ public class CommentServiceImpl implements CommentService {
 	JwtTokenProvider jwtTokenProvider;
 
 	@Autowired
+	CloudinaryService cloudinaryService;
+
+	@Autowired
 	UserService userService;
 
 	@Autowired
 	PostService postService;
-	
+
 	@Autowired
 	LikeRepository likeRepository;
 
@@ -139,7 +145,7 @@ public class CommentServiceImpl implements CommentService {
 		comment.setPost(post.get());
 		comment.setCreateTime(new Date());
 		comment.setContent(requestDTO.getContent());
-		comment.setPhotos(requestDTO.getPhotos());
+		comment.setPhotos("");
 		comment.setUser(user.get());
 		save(comment);
 		GenericResponse response = GenericResponse.builder().success(true).message("Comment Post Successfully")
@@ -153,27 +159,27 @@ public class CommentServiceImpl implements CommentService {
 	@Override
 	@Transactional
 	public ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId) {
-		
-			Optional<Comment> optionalComment = findById(commentId);
-			
-			// tìm thấy bài comment với commentId
-			if (optionalComment.isPresent()) {
-				Comment comment = optionalComment.get();
-			
-				// Xóa tất cả các like liên quan đến bình luận này
-	            likeRepository.deleteByCommentCommentId(comment.getCommentId());
-	            
-				// xóa luôn bài comment đó
-				commentRepository.delete(comment);
-				return ResponseEntity.ok()
-						.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
-			}
-			// Khi không tìm thấy comment với id
-			else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
-			}
-		
+
+		Optional<Comment> optionalComment = findById(commentId);
+
+		// tìm thấy bài comment với commentId
+		if (optionalComment.isPresent()) {
+			Comment comment = optionalComment.get();
+
+			// Xóa tất cả các like liên quan đến bình luận này
+			likeRepository.deleteByCommentCommentId(comment.getCommentId());
+
+			// xóa luôn bài comment đó
+			commentRepository.delete(comment);
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		}
+		// Khi không tìm thấy comment với id
+		else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
+		}
+
 	}
 
 }
