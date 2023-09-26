@@ -76,11 +76,11 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "user")
 	private List<Post> posts;
 
-	@OneToMany(mappedBy = "user")
-	private List<PostGroupMember> postGroupMembers;
+	@OneToOne(mappedBy = "user")
+	private PostGroupMember postGroupMembers;
 
-	@OneToMany(mappedBy = "user")
-	private List<ChatGroupMember> chatGroupMembers;
+	@OneToOne(mappedBy = "user")
+	private ChatGroupMember chatGroupMembers;
 
 	@OneToMany(mappedBy = "user")
 	private List<RefreshToken> refreshTokens;

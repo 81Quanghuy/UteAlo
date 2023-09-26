@@ -7,7 +7,6 @@ import java.util.List;
 import lombok.Data;
 import vn.iostar.contants.Gender;
 import vn.iostar.contants.RoleName;
-import vn.iostar.entity.Post;
 import vn.iostar.entity.User;
 
 @Data
@@ -27,8 +26,8 @@ public class UserProfileResponse {
 	private Date createdAt;
 	private Date updatedAt;
 	private RoleName role;
-	private List<String> friends = new ArrayList<>();
-	private List<String> postGroupMember = new ArrayList<>();
+	private List<FriendRequestResponse> friends = new ArrayList<>();
+	private List<GroupPostResponse> postGroup;
 
 	public UserProfileResponse(User user) {
 		this.userId = user.getUserId();

@@ -1,6 +1,6 @@
 package vn.iostar.service.impl;
 
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -214,6 +214,21 @@ public class PostServiceImpl implements PostService {
 		}
 		return simplifiedUserPosts;
 	}
+	
+	public List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user) {
+		List<Post> userPosts = postRepository.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user);
+		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+		for (Post post : userPosts) {
+
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedUserPosts.add(postsResponse);
+		}
+		return simplifiedUserPosts;
+	}
 
 	private List<Integer> getIdLikes(List<Like> likes) {
 		List<Integer> idComments = new ArrayList<>();
@@ -238,5 +253,7 @@ public class PostServiceImpl implements PostService {
 		postsResponse.setLikes(getIdLikes(post.getLikes()));
 		return postsResponse;
 	}
+
+	
 
 }

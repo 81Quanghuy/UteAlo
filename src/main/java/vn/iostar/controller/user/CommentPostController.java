@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
 
 import vn.iostar.dto.CreateCommentPostRequestDTO;
@@ -36,12 +34,12 @@ public class CommentPostController {
 	CommentService commentService;
 
 	@GetMapping("/{postId}")
-	public ResponseEntity<GenericResponse> getLikeOfPost(@PathVariable("postId") int postId) {
+	public ResponseEntity<GenericResponse> getCommentOfPost(@PathVariable("postId") int postId) {
 		return commentService.getCommentOfPost(postId);
 	}
 	
 	@GetMapping("/number/{postId}") 
-	public ResponseEntity<GenericResponse> getNumberLikeOfPost(
+	public ResponseEntity<GenericResponse> getCountCommentOfPost(
 			@PathVariable("postId") int postId) {
 			return commentService.getCountCommentOfPost(postId);
 	}

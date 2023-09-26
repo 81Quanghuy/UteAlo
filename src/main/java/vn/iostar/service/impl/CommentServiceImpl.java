@@ -1,6 +1,6 @@
 package vn.iostar.service.impl;
 
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import vn.iostar.dto.CommentPostResponse;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
@@ -97,7 +97,7 @@ public class CommentServiceImpl implements CommentService {
 		if (post.isEmpty())
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("Post not found").result(false)
 					.statusCode(HttpStatus.OK.value()).build());
-		List<Comment> comments = commentRepository.findByPostPostId(postId);
+		List<Comment> comments = commentRepository.findByPostPostIdOrderByCreateTimeDesc(postId);
 		if (comments.isEmpty())
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("This post has no comment")
 					.result(false).statusCode(HttpStatus.OK.value()).build());
@@ -116,7 +116,7 @@ public class CommentServiceImpl implements CommentService {
 		Optional<Post> post = postService.findById(postId);
 		if (post.isEmpty())
 			throw new RuntimeException("Post not found");
-		List<Comment> comments = commentRepository.findByPostPostId(postId);
+		List<Comment> comments = commentRepository.findByPostPostIdOrderByCreateTimeDesc(postId);
 		if (comments.isEmpty())
 			throw new RuntimeException("This post has no comment");
 		List<CommentPostResponse> commentPostResponses = new ArrayList<>();

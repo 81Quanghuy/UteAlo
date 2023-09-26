@@ -8,6 +8,9 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -88,16 +91,18 @@ public class UserController {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Optional<User> user = userService.findById(userId);
+		Pageable pageable = PageRequest.of(0, 5);
+		UserProfileResponse profileResponse = userService.getFullProfile(user,pageable);
 		if (user.isEmpty()) {
 			throw new RuntimeException("User not found.");
 		} else if (currentUserId.equals(userId)) {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
 					.message("Retrieving user profile successfully and access update")
-					.result(new UserProfileResponse(user.get())).statusCode(HttpStatus.OK.value()).build());
+					.result(profileResponse).statusCode(HttpStatus.OK.value()).build());
 		} else {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
 					.message("Retrieving user profile successfully and access update denied")
-					.result(new UserProfileResponse(user.get())).statusCode(HttpStatus.OK.value()).build());
+					.result(profileResponse).statusCode(HttpStatus.OK.value()).build());
 		}
 	}
 
