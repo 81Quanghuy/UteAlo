@@ -1,9 +1,11 @@
 package vn.iostar.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -33,7 +35,7 @@ public interface PostService {
 
 	ResponseEntity<GenericResponse> deletePost(Integer postId,String token,String userId);
 	
-	ResponseEntity<Object> createUserPost(String token,CreatePostRequestDTO requestDTO );
+	ResponseEntity<Object> createUserPost(String token,CreatePostRequestDTO requestDTO);
 
 	public List<PostsResponse> findUserPosts(String userId);
 

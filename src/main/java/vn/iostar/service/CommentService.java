@@ -7,6 +7,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -34,7 +35,7 @@ public interface CommentService {
 	 
 	 ResponseEntity<GenericResponse> getCountCommentOfPost(int postId);
 	 
-	 ResponseEntity<Object> createCommentPost(String token,CreateCommentPostRequestDTO requestDTO );
+	 ResponseEntity<Object> createCommentPost(String token,CreateCommentPostRequestDTO requestDTO) ;
 
 	 ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId);
 }
