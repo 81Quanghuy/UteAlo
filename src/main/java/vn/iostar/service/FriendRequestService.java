@@ -3,8 +3,10 @@ package vn.iostar.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
+import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.FriendRequest;
 
@@ -22,7 +24,7 @@ public interface FriendRequestService {
 
 	<S extends FriendRequest> S save(S entity);
 
-	List<String> findUserFromUserIdByUserToUserId(String userId);
+	List<FriendRequestResponse> findUserFromUserIdByUserToUserIdPageable(String userId,Pageable pageable);
 	
 	ResponseEntity<GenericResponse> deleteFriendRequest (String userFromId, String userToId);
 	
