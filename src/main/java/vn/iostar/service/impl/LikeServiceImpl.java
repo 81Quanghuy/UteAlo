@@ -253,4 +253,31 @@ public class LikeServiceImpl implements LikeService {
 		}
 	}
 
+	@Override
+	public ResponseEntity<Object> checkUserLikeComment(String token, Integer commentId) {
+		String jwt = token.substring(7);
+		String userId = jwtTokenProvider.getUserIdFromJwt(jwt);
+		Optional<User> user = userService.findById(userId);
+		if (!user.isPresent()) {
+			return ResponseEntity.badRequest().body("User not found");
+		}
+		Optional<Comment> comment = commentService.findById(commentId);
+		if (!comment.isPresent()) {
+			return ResponseEntity.badRequest().body("Comment not found");
+		}
+		// Kiểm tra xem cặp giá trị postId và userId đã tồn tại trong bảng Like chưa
+		Optional<Like> existingLike = findByCommentAndUser(comment.get(), user.get());
+
+		if (existingLike.isPresent()) {
+			// Nếu đã tồn tại, trả về true
+			GenericResponse response = GenericResponse.builder().success(true).message("Is Liked").result(true)
+					.statusCode(200).build();
+			return ResponseEntity.ok(response);
+		} else {
+			GenericResponse response = GenericResponse.builder().success(true).message("Not Like").result(false)
+					.statusCode(200).build();
+			return ResponseEntity.ok(response);
+		}
+	}
+
 }
