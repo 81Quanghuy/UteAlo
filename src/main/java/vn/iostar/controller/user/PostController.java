@@ -1,9 +1,7 @@
 package vn.iostar.controller.user;
 
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +15,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import jakarta.validation.Valid;
 import vn.iostar.dto.CreatePostRequestDTO;
@@ -27,9 +24,11 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Post;
+import vn.iostar.entity.User;
+import vn.iostar.repository.PostRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.PostService;
-
+import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/post")
@@ -41,6 +40,11 @@ public class PostController {
 	@Autowired
 	PostService postService;
 
+	@Autowired
+	UserService userService;
+
+	@Autowired
+	PostRepository postRepository;
 
 	@GetMapping("/{postId}")
 	public ResponseEntity<GenericResponse> getPost(@RequestHeader("Authorization") String authorizationHeader,
@@ -57,54 +61,76 @@ public class PostController {
 							.result(userPosts).statusCode(HttpStatus.OK.value()).build());
 		} else {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieving post successfully and access update denied")
-					.result(userPosts).statusCode(HttpStatus.OK.value()).build());
+					.message("Retrieving post successfully and access update denied").result(userPosts)
+					.statusCode(HttpStatus.OK.value()).build());
 		}
 	}
-	
-	@GetMapping("/{userId}/posts")
+
+	@GetMapping("/{userId}/post")
 	public ResponseEntity<GenericResponse> getUserPosts(@RequestHeader("Authorization") String authorizationHeader,
-	        @PathVariable("userId") String userId) {
-	    String token = authorizationHeader.substring(7);
-	    String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-	    List<PostsResponse> userPosts = postService.findUserPosts(userId);
-	    
-	     	
-	    if(userId.isEmpty()) {
-	    	throw new RuntimeException("User not found.");
-	    }   
-	    else if (userPosts.isEmpty()) {
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                .body(GenericResponse.builder().success(false).message("No posts found for this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
-	    }
-	    else if (!currentUserId.equals(userId)) {
-	    	return ResponseEntity.ok(
-		            GenericResponse.builder().success(true).message("Retrieved user posts successfully and access update denied")
-		                    .result(userPosts).statusCode(HttpStatus.OK.value()).build());
-	    } else {
-	    	 return ResponseEntity.ok(
-	 	            GenericResponse.builder().success(true).message("Retrieved user posts successfully and access update")
-	 	                    .result(userPosts).statusCode(HttpStatus.OK.value()).build());
-	    }    
+			@PathVariable("userId") String userId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		List<PostsResponse> userPosts = postService.findUserPosts(userId);
+
+		if (!userId.equals(currentUserId)) {
+			throw new RuntimeException("User not found.");
+		} else if (userPosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No posts found for this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else if (!currentUserId.equals(userId)) {
+			return ResponseEntity.ok(GenericResponse.builder().success(true)
+					.message("Retrieved user posts successfully and access update denied").result(userPosts)
+					.statusCode(HttpStatus.OK.value()).build());
+		} else {
+			return ResponseEntity.ok(GenericResponse.builder().success(true)
+					.message("Retrieved user posts successfully and access update").result(userPosts)
+					.statusCode(HttpStatus.OK.value()).build());
+		}
 	}
 
+	@GetMapping("/{userId}/posts")
+	public ResponseEntity<GenericResponse> getPostsByUserAndFriendsAndGroups(
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("userId") String userId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+
+		Optional<User> user = userService.findById(currentUserId);
+
+		List<PostsResponse> userPosts = postService.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user.get());
+
+		if (!userId.equals(currentUserId)) {
+			throw new RuntimeException("User not found.");
+		} else if (userPosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No posts found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else
+			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved posts successfully")
+					.result(userPosts).statusCode(HttpStatus.OK.value()).build());
+
+	}
 
 	@PutMapping("/update/{postId}")
 	public ResponseEntity<Object> updateUser(@RequestBody @Valid PostUpdateRequest request,
-			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,@PathVariable("postId") String userId,
 			BindingResult bindingResult) throws Exception {
-		if (bindingResult.hasErrors()) {
-			throw new Exception(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
-		}
-
+		
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		
+		if(!userId.equals(currentUserId))
+			return ResponseEntity.badRequest().body("Update denied");
+//		if (bindingResult.hasErrors()) {
+//			throw new Exception(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
+//		}
 		return postService.updatePost(postId, request);
 
 	}
 
 	@PutMapping("/delete/{postId}")
 	public ResponseEntity<GenericResponse> deleteUser(@RequestHeader("Authorization") String token,
-			@PathVariable("postId") Integer postId,@RequestBody String userId) {
-		return postService.deletePost(postId,token,userId);
+			@PathVariable("postId") Integer postId, @RequestBody String userId) {
+		return postService.deletePost(postId, token, userId);
 
 	}
 
@@ -113,7 +139,5 @@ public class PostController {
 			@RequestHeader("Authorization") String token) {
 		return postService.createUserPost(token, requestDTO);
 	}
-	
-	 
 
 }

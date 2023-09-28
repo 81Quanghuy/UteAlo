@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,16 +17,21 @@ import org.springframework.stereotype.Service;
 
 
 import vn.iostar.dto.ChangePasswordRequest;
+import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
 import vn.iostar.repository.AccountRepository;
+import vn.iostar.repository.FriendRepository;
 import vn.iostar.repository.PasswordResetOtpRepository;
+import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.repository.VerificationTokenRepository;
+import vn.iostar.service.FriendService;
 import vn.iostar.service.UserService;
 
 @Service
@@ -33,12 +39,18 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	UserRepository userRepository;
+	
+	@Autowired
+	PostGroupRepository postGroupRepository;
 
 	@Autowired
 	AccountRepository accountRepository;
 
 	@Autowired
 	VerificationTokenRepository tokenRepository;
+	
+	@Autowired
+	FriendRepository friendRepository;
 
 	@Autowired
 	PasswordEncoder passwordEncoder;
@@ -260,6 +272,17 @@ public class UserServiceImpl implements UserService {
                     HttpStatus.INTERNAL_SERVER_ERROR.value()));
         }
     }
+
+	@Override
+	public UserProfileResponse getFullProfile(Optional<User> user,Pageable pageable) {
+		UserProfileResponse profileResponse = new UserProfileResponse(user.get());
+		List<FriendRequestResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId(),pageable);
+		profileResponse.setFriends(fResponse);
+		
+		List<GroupPostResponse> groupPostResponses = postGroupRepository.findPostGroupInfoByUserId(user.get().getUserId(), pageable);
+		profileResponse.setPostGroup(groupPostResponses);
+		return profileResponse;
+	}
 
 	
 

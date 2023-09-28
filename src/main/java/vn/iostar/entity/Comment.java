@@ -2,6 +2,7 @@ package vn.iostar.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -34,5 +35,8 @@ public class Comment implements Serializable{
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
+    
+    @OneToMany(mappedBy = "comment")
+    private List<Like> likes;
     
 }
