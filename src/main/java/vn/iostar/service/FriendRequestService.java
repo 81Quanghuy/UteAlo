@@ -26,9 +26,13 @@ public interface FriendRequestService {
 
 	List<FriendRequestResponse> findUserFromUserIdByUserToUserIdPageable(String userId,Pageable pageable);
 	
+	List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(String userId,Pageable pageable);
+	
 	ResponseEntity<GenericResponse> deleteFriendRequest (String userFromId, String userToId);
 	
 	ResponseEntity<GenericResponse> acceptRequest (String userFromId, String userToId);
 
 	List<FriendRequestResponse> findSuggestionListByUserId(String userId,Pageable pageable);
+	
+	ResponseEntity<GenericResponse> sendFriendRequest(String userId, String userIdToken);
 }

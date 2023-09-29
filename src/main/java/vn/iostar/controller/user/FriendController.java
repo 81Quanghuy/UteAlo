@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.FriendRequestService;
 import vn.iostar.service.FriendService;
+import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/friend")
@@ -34,13 +36,16 @@ public class FriendController {
 	@Autowired
 	FriendRequestService friendRequestService;
 	
+	@Autowired
+	UserService  userService;
+	
 	
 	@GetMapping("/list/{userId}")
 	public ResponseEntity<GenericResponse> getUserPosts(@Valid @PathVariable("userId") String userId) {
 		Pageable pageable = PageRequest.of(0, 5);
 		List<FriendRequestResponse> friend = friendService.findFriendUserIdsByUserId(userId,pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true)
-				.message("Retrieved user posts successfully and access update denied").result(friend)
+				.message("Get List Friend Successfully").result(friend)
 				.statusCode(HttpStatus.OK.value()).build());
 	}
 	
@@ -64,6 +69,38 @@ public class FriendController {
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
 		Pageable pageable = PageRequest.of(0, 5);
 		List<FriendRequestResponse> friend = friendRequestService.findUserFromUserIdByUserToUserIdPageable(userId,pageable);
+		return ResponseEntity.ok(GenericResponse.builder().success(true)
+				.message("Retrieved user posts successfully and access update denied").result(friend)
+				.statusCode(HttpStatus.OK.value()).build());
+	}	
+	
+	/**
+     * GET list FriendRequest by Authorization
+     *
+     * @param authorization The JWT (JSON Web Token) provided in the "Authorization" header for authentication.
+     * @return The resource if found, or a 404 Not Found response.
+     */
+	@PostMapping("/request/send/{userId}")
+	public ResponseEntity<GenericResponse> sendFriendRequest(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("userId") String userId) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return friendRequestService.sendFriendRequest(userId,userIdToken);
+		
+	}	
+	
+	/**
+     * GET list FriendRequest by Authorization
+     *
+     * @param authorization The JWT (JSON Web Token) provided in the "Authorization" header for authentication.
+     * @return The resource if found, or a 404 Not Found response.
+     */
+	@GetMapping("/requestFrom/list")
+	public ResponseEntity<GenericResponse> getRequestListFrom(@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String userId = jwtTokenProvider.getUserIdFromJwt(token);
+		Pageable pageable = PageRequest.of(0, 5);
+		List<FriendRequestResponse> friend = friendRequestService.findUserToUserIdByUserFromUserIdPageable(userId,pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true)
 				.message("Retrieved user posts successfully and access update denied").result(friend)
 				.statusCode(HttpStatus.OK.value()).build());
