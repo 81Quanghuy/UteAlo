@@ -47,4 +47,6 @@ public interface LikeService {
 	Optional<Like> findByCommentAndUser(Comment comment, User user);
 	
 	ResponseEntity<Object> checkUserLikePost(String token,Integer postId );
+	
+	ResponseEntity<Object> checkUserLikeComment(String token,Integer commentId );
 }

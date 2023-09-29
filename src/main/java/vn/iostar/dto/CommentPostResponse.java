@@ -1,6 +1,7 @@
 package vn.iostar.dto;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.Data;
 import vn.iostar.entity.Comment;
@@ -14,6 +15,9 @@ public class CommentPostResponse {
 	private String userName;
 	private int postId;
 	private String userAvatar;
+	private String userId;
+    private List<Integer> likes;
+	
 	
 	public CommentPostResponse(Comment comment) {
 		super();
@@ -24,6 +28,7 @@ public class CommentPostResponse {
 		this.userName = comment.getUser().getUserName();
 		this.postId = comment.getPost().getPostId();
 		this.userAvatar = comment.getUser().getProfile().getAvatar();
+		this.userId = comment.getUser().getUserId();
 	}
 
 	public CommentPostResponse(int commentId, String content, Date createTime, String photos, String userName,

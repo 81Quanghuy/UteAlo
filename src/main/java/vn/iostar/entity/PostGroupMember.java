@@ -28,7 +28,7 @@ public class PostGroupMember implements Serializable {
 	@ManyToMany(mappedBy = "postGroupMembers")
 	private List<PostGroup> postGroup = new ArrayList<>();
 
-	@ManyToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId")
 	private User user;
 

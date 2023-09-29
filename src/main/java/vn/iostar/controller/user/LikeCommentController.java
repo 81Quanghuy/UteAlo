@@ -43,4 +43,10 @@ public class LikeCommentController {
 			@RequestHeader("Authorization") String token) {
 		return likeService.toggleLikeComment(token, commentId);
 	}
+	
+	@GetMapping("/checkUser/{commentId}")
+	public ResponseEntity<Object> checkUserLikePost(@PathVariable("commentId") int commentId,
+			@RequestHeader("Authorization") String token) {
+		return likeService.checkUserLikeComment(token, commentId);
+	}
 }

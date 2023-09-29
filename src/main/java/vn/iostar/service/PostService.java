@@ -1,15 +1,18 @@
 package vn.iostar.service;
 
+
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Post;
+import vn.iostar.entity.User;
 
 public interface PostService {
 
@@ -33,9 +36,11 @@ public interface PostService {
 
 	ResponseEntity<GenericResponse> deletePost(Integer postId,String token,String userId);
 	
-	ResponseEntity<Object> createUserPost(String token,CreatePostRequestDTO requestDTO );
+	ResponseEntity<Object> createUserPost(String token,CreatePostRequestDTO requestDTO);
 
 	public List<PostsResponse> findUserPosts(String userId);
+	
+	List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
 
 	PostsResponse getPost(Post post);
 

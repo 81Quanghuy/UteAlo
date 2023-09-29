@@ -34,7 +34,7 @@ public interface CommentService {
 	 
 	 ResponseEntity<GenericResponse> getCountCommentOfPost(int postId);
 	 
-	 ResponseEntity<Object> createCommentPost(String token,CreateCommentPostRequestDTO requestDTO );
+	 ResponseEntity<Object> createCommentPost(String token,CreateCommentPostRequestDTO requestDTO) ;
 
 	 ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId);
 }

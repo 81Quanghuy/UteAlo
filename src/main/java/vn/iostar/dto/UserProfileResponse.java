@@ -26,7 +26,8 @@ public class UserProfileResponse {
 	private Date createdAt;
 	private Date updatedAt;
 	private RoleName role;
-	private List<String> friends = new ArrayList<>();
+	private List<FriendRequestResponse> friends = new ArrayList<>();
+	private List<GroupPostResponse> postGroup;
 
 	public UserProfileResponse(User user) {
 		this.userId = user.getUserId();
@@ -42,7 +43,7 @@ public class UserProfileResponse {
         this.isActive = user.isActive();
         this.createdAt = user.getAccount().getCreatedAt();
         this.updatedAt = user.getAccount().getUpdatedAt();
-        this.role = user.getRole().getRoleName();    
+        this.role = user.getRole().getRoleName();
 	}
 
 }

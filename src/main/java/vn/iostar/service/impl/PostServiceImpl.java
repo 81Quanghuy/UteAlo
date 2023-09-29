@@ -1,5 +1,6 @@
 package vn.iostar.service.impl;
 
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -25,6 +27,7 @@ import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.LikeRepository;
 import vn.iostar.repository.PostRepository;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.PostGroupService;
 import vn.iostar.service.PostService;
 import vn.iostar.service.UserService;
@@ -45,6 +48,9 @@ public class PostServiceImpl implements PostService {
 
 	@Autowired
 	LikeRepository likeRepository;
+	
+	@Autowired
+	CloudinaryService cloudinaryService;
 	
 	@Autowired
 	CommentRepository commentRepository;
@@ -152,7 +158,7 @@ public class PostServiceImpl implements PostService {
 		if (String.valueOf(requestDTO.getPostGroupId()) == null) {
 			return ResponseEntity.badRequest().body("Please select post group");
 		}
-		if (requestDTO.getLocation() == null && requestDTO.getContent() == null && requestDTO.getPhotos() == null) {
+		if (requestDTO.getLocation() == null && requestDTO.getContent() == null) {
 			return ResponseEntity.badRequest().body("Please provide all required fields.");
 		}
 
@@ -164,7 +170,7 @@ public class PostServiceImpl implements PostService {
 		Post post = new Post();
 		post.setLocation(requestDTO.getLocation());
 		post.setContent(requestDTO.getContent());
-		post.setPhotos(requestDTO.getPhotos());
+		post.setPhotos(requestDTO.getPhoto());
 		if (user.isEmpty()) {
 			return ResponseEntity.badRequest().body("User not found");
 		} else {
@@ -208,6 +214,21 @@ public class PostServiceImpl implements PostService {
 		}
 		return simplifiedUserPosts;
 	}
+	
+	public List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user) {
+		List<Post> userPosts = postRepository.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user);
+		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+		for (Post post : userPosts) {
+
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedUserPosts.add(postsResponse);
+		}
+		return simplifiedUserPosts;
+	}
 
 	private List<Integer> getIdLikes(List<Like> likes) {
 		List<Integer> idComments = new ArrayList<>();
@@ -232,5 +253,7 @@ public class PostServiceImpl implements PostService {
 		postsResponse.setLikes(getIdLikes(post.getLikes()));
 		return postsResponse;
 	}
+
+	
 
 }

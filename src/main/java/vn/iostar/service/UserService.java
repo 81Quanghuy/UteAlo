@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
@@ -49,4 +51,6 @@ public interface UserService {
 	ResponseEntity<Object> updateProfile(String userId, UserUpdateRequest request) throws Exception;
 	
 	ResponseEntity<GenericResponse> deleteUser(String idFromToken);
+
+	UserProfileResponse getFullProfile(Optional<User> user,Pageable pageable);
 }

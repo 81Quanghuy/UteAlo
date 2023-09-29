@@ -1,5 +1,6 @@
 package vn.iostar.service.impl;
 
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,15 +15,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import vn.iostar.dto.CommentPostResponse;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Comment;
+import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
 import vn.iostar.entity.User;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.LikeRepository;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.CommentService;
 import vn.iostar.service.PostService;
 import vn.iostar.service.UserService;
@@ -37,11 +41,14 @@ public class CommentServiceImpl implements CommentService {
 	JwtTokenProvider jwtTokenProvider;
 
 	@Autowired
+	CloudinaryService cloudinaryService;
+
+	@Autowired
 	UserService userService;
 
 	@Autowired
 	PostService postService;
-	
+
 	@Autowired
 	LikeRepository likeRepository;
 
@@ -91,18 +98,38 @@ public class CommentServiceImpl implements CommentService {
 		if (post.isEmpty())
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("Post not found").result(false)
 					.statusCode(HttpStatus.OK.value()).build());
-		List<Comment> comments = commentRepository.findByPostPostId(postId);
+		List<CommentPostResponse> comments = getCommentsOfPost(postId);
 		if (comments.isEmpty())
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("This post has no comment")
 					.result(false).statusCode(HttpStatus.OK.value()).build());
-		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
-		for (Comment comment : comments) {
-			commentPostResponses.add(new CommentPostResponse(comment));
-		}
+//		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
+//		for (Comment comment : comments) {
+//			commentPostResponses.add(new CommentPostResponse(comment));
+//		}
 
 		return ResponseEntity
 				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
-						.result(commentPostResponses).statusCode(HttpStatus.OK.value()).build());
+						.result(comments).statusCode(HttpStatus.OK.value()).build());
+	}
+	
+	public List<CommentPostResponse> getCommentsOfPost(int postId) {
+		List<Comment> commentPost = commentRepository.findByPostPostIdOrderByCreateTimeDesc(postId);
+		
+		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
+		for(Comment comment : commentPost) {
+			CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+			commentPostResponses.add(cPostResponse);
+		}
+		return commentPostResponses;
+	}
+	
+	private List<Integer> getIdLikes(List<Like> likes) {
+		List<Integer> idComments = new ArrayList<>();
+		for (Like like : likes) {
+			idComments.add(like.getLikeId());
+		}
+		return idComments;
 	}
 
 	@Override
@@ -110,7 +137,7 @@ public class CommentServiceImpl implements CommentService {
 		Optional<Post> post = postService.findById(postId);
 		if (post.isEmpty())
 			throw new RuntimeException("Post not found");
-		List<Comment> comments = commentRepository.findByPostPostId(postId);
+		List<Comment> comments = commentRepository.findByPostPostIdOrderByCreateTimeDesc(postId);
 		if (comments.isEmpty())
 			throw new RuntimeException("This post has no comment");
 		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
@@ -139,7 +166,7 @@ public class CommentServiceImpl implements CommentService {
 		comment.setPost(post.get());
 		comment.setCreateTime(new Date());
 		comment.setContent(requestDTO.getContent());
-		comment.setPhotos(requestDTO.getPhotos());
+		comment.setPhotos("");
 		comment.setUser(user.get());
 		save(comment);
 		GenericResponse response = GenericResponse.builder().success(true).message("Comment Post Successfully")
@@ -153,27 +180,27 @@ public class CommentServiceImpl implements CommentService {
 	@Override
 	@Transactional
 	public ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId) {
-		
-			Optional<Comment> optionalComment = findById(commentId);
-			
-			// tìm thấy bài comment với commentId
-			if (optionalComment.isPresent()) {
-				Comment comment = optionalComment.get();
-			
-				// Xóa tất cả các like liên quan đến bình luận này
-	            likeRepository.deleteByCommentCommentId(comment.getCommentId());
-	            
-				// xóa luôn bài comment đó
-				commentRepository.delete(comment);
-				return ResponseEntity.ok()
-						.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
-			}
-			// Khi không tìm thấy comment với id
-			else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
-			}
-		
+
+		Optional<Comment> optionalComment = findById(commentId);
+
+		// tìm thấy bài comment với commentId
+		if (optionalComment.isPresent()) {
+			Comment comment = optionalComment.get();
+
+			// Xóa tất cả các like liên quan đến bình luận này
+			likeRepository.deleteByCommentCommentId(comment.getCommentId());
+
+			// xóa luôn bài comment đó
+			commentRepository.delete(comment);
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		}
+		// Khi không tìm thấy comment với id
+		else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
+		}
+
 	}
 
 }

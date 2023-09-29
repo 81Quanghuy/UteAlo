@@ -9,9 +9,9 @@ import lombok.Data;
 public class CreatePostRequestDTO {
 	private String location;
     private String content;
-    private String photos;
     private Date updateAt;
     private Date postTime;
+    private String photo;
     private String userId;
     private int postGroupId;
 }

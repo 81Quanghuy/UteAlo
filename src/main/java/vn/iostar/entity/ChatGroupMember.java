@@ -28,7 +28,7 @@ public class ChatGroupMember implements Serializable {
 	@ManyToMany(mappedBy = "chatGroupMembers")
 	private List<ChatGroup> chatGroup = new ArrayList<>();
 
-	@ManyToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId")
 	private User user;
 
