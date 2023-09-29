@@ -127,4 +127,9 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 		}
 		return false;
 	}
+
+	@Override
+	public List<FriendRequestResponse> findSuggestionListByUserId(String userId, Pageable pageable) {
+		return friendRequestRepository.findSuggestionListByUserId(userId, pageable);
+	}
 }

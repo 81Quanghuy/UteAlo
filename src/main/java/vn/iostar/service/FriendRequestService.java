@@ -30,4 +30,5 @@ public interface FriendRequestService {
 	
 	ResponseEntity<GenericResponse> acceptRequest (String userFromId, String userToId);
 
+	List<FriendRequestResponse> findSuggestionListByUserId(String userId,Pageable pageable);
 }
