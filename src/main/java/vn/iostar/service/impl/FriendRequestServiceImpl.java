@@ -132,4 +132,27 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 	public List<FriendRequestResponse> findSuggestionListByUserId(String userId, Pageable pageable) {
 		return friendRequestRepository.findSuggestionListByUserId(userId, pageable);
 	}
+
+	@Override
+	public List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(String userId, Pageable pageable) {
+		return friendRequestRepository.findUserToUserIdByUserFromUserIdPageable(userId, pageable);
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> sendFriendRequest(String userId, String userIdToken) {
+		Optional<User> user1 = userRepository.findById(userIdToken);
+		Optional<User> user2 = userRepository.findById(userId);
+		if(user1.isEmpty()||user2.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found user!", null, HttpStatus.NOT_FOUND.value()));
+		}
+		FriendRequest friendRequest = new FriendRequest();
+		friendRequest.setActive(true);
+		friendRequest.setUserFrom(user1.get());
+		friendRequest.setUserTo(user2.get());
+		friendRequestRepository.save(friendRequest);
+		return ResponseEntity.ok()
+				.body(new GenericResponse(true, "Create Successful!", null, HttpStatus.OK.value()));
+		
+	}
 }
