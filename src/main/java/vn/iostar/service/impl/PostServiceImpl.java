@@ -136,9 +136,13 @@ public class PostServiceImpl implements PostService {
 
 				// Xóa tất cả các like liên quan đến post này
 				likeRepository.deleteByPostPostId(post.getPostId());
+				
+				// Xóa tất cả các like liên quan đến comment của bài post này
+				likeRepository.deleteByCommentPostPostId(post.getPostId());
 
 				// Xóa tất cả các comment liên quan đến post này
 				commentRepository.deleteByPostPostId(post.getPostId());
+				
 
 				// xóa luôn bài post đó
 				postRepository.delete(post);

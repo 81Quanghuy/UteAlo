@@ -30,4 +30,6 @@ public interface LikeRepository extends JpaRepository<Like, Integer>{
 	
 	void deleteByPostPostId(Integer postId);
 	
+	void deleteByCommentPostPostId(Integer postId);
+	
 }

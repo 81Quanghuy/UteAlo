@@ -5,6 +5,7 @@ import java.util.List;
 
 import lombok.Data;
 import vn.iostar.entity.Comment;
+import vn.iostar.entity.Like;
 
 @Data
 public class CommentPostResponse {
@@ -41,6 +42,22 @@ public class CommentPostResponse {
 		this.userName = userName;
 		this.postId = postId;
 	}
+
+	public CommentPostResponse(int commentId, String content, Date createTime, String photos, String userName,
+			int postId, String userAvatar, String userId) {
+		super();
+		this.commentId = commentId;
+		this.content = content;
+		this.createTime = createTime;
+		this.photos = photos;
+		this.userName = userName;
+		this.postId = postId;
+		this.userAvatar = userAvatar;
+		this.userId = userId;
+	}
+	
+	
+	
 	
 	
 	

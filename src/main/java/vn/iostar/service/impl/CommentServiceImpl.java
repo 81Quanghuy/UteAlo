@@ -171,7 +171,7 @@ public class CommentServiceImpl implements CommentService {
 		save(comment);
 		GenericResponse response = GenericResponse.builder().success(true).message("Comment Post Successfully")
 				.result(new CommentPostResponse(comment.getCommentId(), comment.getContent(), comment.getCreateTime(),
-						comment.getPhotos(), comment.getUser().getUserName(), comment.getPost().getPostId()))
+						comment.getPhotos(), comment.getUser().getUserName(), comment.getPost().getPostId(),comment.getUser().getProfile().getAvatar(),comment.getUser().getUserId()))
 				.statusCode(200).build();
 
 		return ResponseEntity.ok(response);
