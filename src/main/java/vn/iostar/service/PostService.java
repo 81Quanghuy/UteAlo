@@ -4,6 +4,7 @@ package vn.iostar.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 
@@ -43,6 +44,10 @@ public interface PostService {
 	List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
 
 	PostsResponse getPost(Post post);
+	
+	List<String> findAllPhotosByUserIdOrderByPostTimeDesc(String userId);
+	
+	Page<String> findLatestPhotosByUserId(String userId, int page, int size);
 
 
 }

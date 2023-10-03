@@ -1,17 +1,17 @@
 package vn.iostar.service.impl;
 
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -48,10 +48,10 @@ public class PostServiceImpl implements PostService {
 
 	@Autowired
 	LikeRepository likeRepository;
-	
+
 	@Autowired
 	CloudinaryService cloudinaryService;
-	
+
 	@Autowired
 	CommentRepository commentRepository;
 
@@ -122,39 +122,38 @@ public class PostServiceImpl implements PostService {
 	@Override
 	@Transactional
 	public ResponseEntity<GenericResponse> deletePost(Integer postId, String token, String userId) {
-		
-			String jwt = token.substring(7);
-			String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
-			if (!currentUserId.equals(userId.replaceAll("^\"|\"$", ""))) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));
-			}
-			Optional<Post> optionalPost = findById(postId);
-			// tìm thấy bài post với postId
-			if (optionalPost.isPresent()) {
-				Post post = optionalPost.get();
 
-				// Xóa tất cả các like liên quan đến post này
-				likeRepository.deleteByPostPostId(post.getPostId());
-				
-				// Xóa tất cả các like liên quan đến comment của bài post này
-				likeRepository.deleteByCommentPostPostId(post.getPostId());
+		String jwt = token.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
+		if (!currentUserId.equals(userId.replaceAll("^\"|\"$", ""))) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));
+		}
+		Optional<Post> optionalPost = findById(postId);
+		// tìm thấy bài post với postId
+		if (optionalPost.isPresent()) {
+			Post post = optionalPost.get();
 
-				// Xóa tất cả các comment liên quan đến post này
-				commentRepository.deleteByPostPostId(post.getPostId());
-				
+			// Xóa tất cả các like liên quan đến post này
+			likeRepository.deleteByPostPostId(post.getPostId());
 
-				// xóa luôn bài post đó
-				postRepository.delete(post);
-				return ResponseEntity.ok()
-						.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
-			}
-			// Khi không tìm thấy bài post với id
-			else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new GenericResponse(false, "Cannot found post!", null, HttpStatus.NOT_FOUND.value()));
-			}
-		
+			// Xóa tất cả các like liên quan đến comment của bài post này
+			likeRepository.deleteByCommentPostPostId(post.getPostId());
+
+			// Xóa tất cả các comment liên quan đến post này
+			commentRepository.deleteByPostPostId(post.getPostId());
+
+			// xóa luôn bài post đó
+			postRepository.delete(post);
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		}
+		// Khi không tìm thấy bài post với id
+		else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found post!", null, HttpStatus.NOT_FOUND.value()));
+		}
+
 	}
 
 	@Override
@@ -218,7 +217,7 @@ public class PostServiceImpl implements PostService {
 		}
 		return simplifiedUserPosts;
 	}
-	
+
 	public List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user) {
 		List<Post> userPosts = postRepository.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
@@ -258,6 +257,15 @@ public class PostServiceImpl implements PostService {
 		return postsResponse;
 	}
 
-	
+	@Override
+	public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(String userId) {
+		return postRepository.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
+	}
+
+	@Override
+	public Page<String> findLatestPhotosByUserId(String userId, int page, int size) {
+		PageRequest pageable = PageRequest.of(page, size);
+        return postRepository.findLatestPhotosByUserIdAndNotNull(userId, pageable);
+	}
 
 }
