@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FriendRequestResponse {
-	private String userId;
-	private String background;
-	private String avatar;
-	private String username;
+public class FriendPageableRequest {
+	private Integer page;
+	private Integer limit;
+
 }
