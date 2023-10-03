@@ -15,13 +15,14 @@ import vn.iostar.entity.Friend;
 public interface FriendRepository extends JpaRepository<Friend, Integer> {
 
 	//Get List userId by UserID where become friend
-	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId, u.profile.avatar, u.userName) FROM Friend f " +
-	           "JOIN f.user1 u1 " +
-	           "JOIN f.user2 u2 " +
-	           "JOIN User u ON u = u1 OR u = u2 " +
-	           "WHERE (u1.userId = :userId OR u2.userId = :userId) " +
-	           "AND u.userId <> :userId")
-	List<FriendRequestResponse> findFriendUserIdsByUserId(@Param("userId") String userId,Pageable pageable);
+		@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName) FROM Friend f " +
+		           "JOIN f.user1 u1 " +
+		           "JOIN f.user2 u2 " +
+		           "JOIN User u ON u = u1 OR u = u2 " +
+		           "WHERE (u1.userId = :userId OR u2.userId = :userId) " +
+		           "AND u.userId <> :userId")
+		List<FriendRequestResponse> findFriendUserIdsByUserId(@Param("userId") String userId,Pageable pageable);
+		
 	
 	Friend findByUser1UserIdAndUser2UserId(String userId, String userId2);
 }
