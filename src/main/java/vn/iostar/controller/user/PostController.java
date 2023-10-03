@@ -114,18 +114,13 @@ public class PostController {
 
 	@PutMapping("/update/{postId}")
 	public ResponseEntity<Object> updateUser(@RequestBody @Valid PostUpdateRequest request,
-			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,@PathVariable("postId") String userId,
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
 			BindingResult bindingResult) throws Exception {
 		
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		
-		if(!userId.equals(currentUserId))
-			return ResponseEntity.badRequest().body("Update denied");
-//		if (bindingResult.hasErrors()) {
-//			throw new Exception(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
-//		}
-		return postService.updatePost(postId, request);
+
+		return postService.updatePost(postId, request,currentUserId);
 
 	}
 

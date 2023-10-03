@@ -8,20 +8,19 @@ import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
 
-
 @Data
 public class PostResponse {
 	private int postId;
 	private Date postTime;
-    private Date updateAt;
-    private String content;
-    private String photos;
-    private String location;
-    private String userName;
-    private String postGroupName;
-    private List<Comment> comments;
-    private List<Like> likes;
-    
+	private Date updateAt;
+	private String content;
+	private String photos;
+	private String location;
+	private String userName;
+	private String postGroupName;
+	private List<Comment> comments;
+	private List<Like> likes;
+
 	public PostResponse(Post post) {
 		this.postId = post.getPostId();
 		this.postTime = post.getPostTime();
@@ -35,7 +34,4 @@ public class PostResponse {
 		this.likes = post.getLikes();
 	}
 
-	
-    
-    
 }

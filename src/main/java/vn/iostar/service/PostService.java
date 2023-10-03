@@ -33,7 +33,7 @@ public interface PostService {
 
 	ResponseEntity<GenericResponse> getPost(Integer postId);
 
-	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request) throws Exception;
+	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request,String currentUserId) throws Exception;
 
 	ResponseEntity<GenericResponse> deletePost(Integer postId,String token,String userId);
 	
