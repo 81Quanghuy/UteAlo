@@ -102,11 +102,6 @@ public class CommentServiceImpl implements CommentService {
 		if (comments.isEmpty())
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("This post has no comment")
 					.result(false).statusCode(HttpStatus.OK.value()).build());
-//		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
-//		for (Comment comment : comments) {
-//			commentPostResponses.add(new CommentPostResponse(comment));
-//		}
-
 		return ResponseEntity
 				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
 						.result(comments).statusCode(HttpStatus.OK.value()).build());

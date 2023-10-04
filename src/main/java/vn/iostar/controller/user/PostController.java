@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -112,18 +114,13 @@ public class PostController {
 
 	@PutMapping("/update/{postId}")
 	public ResponseEntity<Object> updateUser(@RequestBody @Valid PostUpdateRequest request,
-			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,@PathVariable("postId") String userId,
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
 			BindingResult bindingResult) throws Exception {
 		
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		
-		if(!userId.equals(currentUserId))
-			return ResponseEntity.badRequest().body("Update denied");
-//		if (bindingResult.hasErrors()) {
-//			throw new Exception(Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
-//		}
-		return postService.updatePost(postId, request);
+
+		return postService.updatePost(postId, request,currentUserId);
 
 	}
 
@@ -139,5 +136,19 @@ public class PostController {
 			@RequestHeader("Authorization") String token) {
 		return postService.createUserPost(token, requestDTO);
 	}
+	
+	@GetMapping("/user/{userId}/photos")
+    public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@PathVariable String userId) {
+        return postService.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
+    }
+
+	@GetMapping("/user/{userId}/latest-photos")
+    public Page<String> getLatestPhotosByUserId(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @PathVariable("userId") String userId
+    ) {
+        return postService.findLatestPhotosByUserId(userId, page, size);
+    }
 
 }
