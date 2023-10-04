@@ -101,26 +101,30 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request, String currentUserId) throws Exception {
+	public ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request, String currentUserId)
+			throws Exception {
 
-		Optional<Post> post = findById(postId);
-		if (post.isEmpty())
+		Optional<Post> postOp = findById(postId);
+		if (postOp.isEmpty())
 			throw new Exception("Post doesn't exist");
-		if(!currentUserId.equals(post.get().getUser().getUserId()))
+		Post post = postOp.get();
+		if (!currentUserId.equals(postOp.get().getUser().getUserId()))
 			throw new Exception("Update denied");
 		if (request.getUpdateAt().after(new Date()))
 			throw new Exception("Invalid date");
-
+		post.setContent(request.getContent());
+		post.setLocation(request.getLocation());
+		post.setUpdateAt(new Date());
+		post.setPhotos(request.getPhotos());
 		Optional<PostGroup> postGroup = postGroupService.findById(request.getPostGroupId());
-		post.get().setContent(request.getContent());
-		post.get().setLocation(request.getLocation());
-		post.get().setUpdateAt(new Date());
-		post.get().setPhotos(request.getPhotos());
-		post.get().getPostGroup().setPostGroupId(request.getPostGroupId());
-		save(post.get());
-
+		if (postGroup.isPresent()) {
+			
+			post.setPostGroup(postGroup.get());
+		
+		}
+		save(post);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
-				.result(new PostResponse(post.get())).statusCode(200).build());
+				.result(null).statusCode(200).build());
 	}
 
 	@Override
@@ -269,7 +273,7 @@ public class PostServiceImpl implements PostService {
 	@Override
 	public Page<String> findLatestPhotosByUserId(String userId, int page, int size) {
 		PageRequest pageable = PageRequest.of(page, size);
-        return postRepository.findLatestPhotosByUserIdAndNotNull(userId, pageable);
+		return postRepository.findLatestPhotosByUserIdAndNotNull(userId, pageable);
 	}
 
 }
