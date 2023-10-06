@@ -22,10 +22,32 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, In
 	List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(@Param("userId") String userId,
 			Pageable pageable);
 	
-	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName) FROM User u " + "JOIN u.postGroupMembers pgm " + "JOIN pgm.postGroup pg "
-			+ "WHERE u.userId != :yourUserId")
-	List<FriendRequestResponse> findSuggestionListByUserId(@Param("yourUserId") String userId, Pageable pageable);
+	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId, u.profile.background, u.profile.avatar, u.userName) FROM User u " +
+	           "JOIN u.postGroupMembers pgm " +
+	           "JOIN pgm.postGroup pg " +
+	           "JOIN pg.postGroupMembers sharedPgm " +
+	           "WHERE sharedPgm.user.userId = :userId " +
+	           "AND u.userId != :userId "+
+	           "AND (" +
+		        "   (SELECT COUNT(f.friendId) " +
+		        "    FROM Friend f " +
+		        "    WHERE (f.user1.userId = u.userId AND f.user2.userId = :userId ) " +
+		        "       OR (f.user1.userId = :userId AND f.user2.userId = u.userId)" +
+		        "   ) = 0) " +
+		        "AND (" +
+		        "   (SELECT COUNT(fr.friendRequestId) " +
+		        "    FROM FriendRequest fr " +
+		        "    WHERE fr.userTo.userId = u.userId AND fr.userFrom.userId = :userId" +
+		        "   ) = 0) " +
+		        "AND (" +
+		        "   (SELECT COUNT(fr.friendRequestId) " +
+		        "    FROM FriendRequest fr " +
+		        "    WHERE fr.userTo.userId = :userId AND fr.userFrom.userId = u.userId" +
+		        "   ) = 0)")
+	    List<FriendRequestResponse> findSuggestionListByUserId(@Param("userId") String userId,Pageable pageable);
 
 	List<FriendRequest> findByUserFromUserIdAndUserToUserId(String userFromId, String userToID);
-
+//	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName) FROM User u " + "JOIN u.postGroupMembers pgm " + "JOIN pgm.postGroup pg "
+//			+ "WHERE u.userId != :yourUserId")
+//	List<FriendRequestResponse> findSuggestionListByUserId(@Param("yourUserId") String userId, Pageable pageable);
 }

@@ -111,7 +111,7 @@ public class AccountServiceImpl implements AccountService {
 				return ResponseEntity.status(409).body(GenericResponse.builder().success(false)
 						.message("Group name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
 			}	
-			saveGroupandRole(registerRequest,poOptional,chatOptional);
+			saveGroupandRole(registerRequest,poOptional.get(),chatOptional.get());
 		}
 		emailVerificationService.sendOtp(registerRequest.getEmail());
 
@@ -119,12 +119,7 @@ public class AccountServiceImpl implements AccountService {
 				.statusCode(200).build());
 	}
 
-	private void saveGroupandRole(RegisterRequest registerRequest,Optional<PostGroup> poOptional,Optional<ChatGroup> chatOptional) {
-		Date createDate = new Date();
-
-		ChatGroup chatGroup = chatOptional.get();
-		chatGroup.setGroupName(registerRequest.getGroupName());
-		chatGroup.setCreateDate(createDate);
+	private void saveGroupandRole(RegisterRequest registerRequest,PostGroup postGroup,ChatGroup chatGroup) {
 
 		ChatGroupMember chatGroupMember = new ChatGroupMember();
 		chatGroupMember.setUser(userRegister);
@@ -132,19 +127,13 @@ public class AccountServiceImpl implements AccountService {
 		chatGroupMember.getChatGroup().add(chatGroup);
 		chatGroup.getChatGroupMembers().add(chatGroupMember);
 
-		PostGroup postGroup = poOptional.get();
-		postGroup.setCreateDate(createDate);
-		postGroup.setPostGroupName(registerRequest.getGroupName());
-
 		PostGroupMember postGroupMember = new PostGroupMember();
 		postGroupMember.setUser(userRegister);
 		postGroupMember.setRoleUserGroup(RoleUserGroup.Member);
 		postGroupMember.getPostGroup().add(postGroup);
 		postGroup.getPostGroupMembers().add(postGroupMember);
-
-		chatGroupRepository.save(chatGroup);
+		
 		chatGroupMemberRepository.save(chatGroupMember);
-		postGroupRepository.save(postGroup);
 		postGroupMemberRepository.save(postGroupMember);
 	}
 
@@ -195,7 +184,7 @@ public class AccountServiceImpl implements AccountService {
 		accountRepository.save(account);
 		
 		Profile profile = new Profile();
-		profile.setAvatar("https://res.cloudinary.com/ddccjvlbf/image/upload/v1694968172/Social%20Media/User/rtizxwfzimf8mcerqmwa.png");
+		profile.setAvatar("https://res.cloudinary.com/ddccjvlbf/image/upload/v1695996773/Social%20Media/User/user_ayzvu3.png");
 		profile.setUser(user);
 		profile.setBackground("https://res.cloudinary.com/ddccjvlbf/image/upload/v1694967910/Social%20Media/User/dzonp4ntntp4rccl1faw.jpg");
 		profileRepository.save(profile);
