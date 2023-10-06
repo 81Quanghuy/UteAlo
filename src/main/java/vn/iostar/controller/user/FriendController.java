@@ -49,7 +49,7 @@ public class FriendController {
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}
 
-	@PutMapping("/delete")
+	@PutMapping("/delete/{userId}")
 	public ResponseEntity<GenericResponse> deleteFriend(@RequestHeader("Authorization") String authorizationHeader,
 			@Valid @PathVariable("userId") String userId) {
 		String token = authorizationHeader.substring(7);
@@ -128,7 +128,21 @@ public class FriendController {
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return friendRequestService.deleteFriendRequest(userId, userIdToken);
 	}
-
+	/**
+	 * PUT delete FriendRequest by Authorization and userId
+	 *
+	 * @param userId
+	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 *                      header for authentication.
+	 * @return The resource if found, or a 404 Not Found response.
+	 */
+	@PutMapping("/request/cancel/{userId}")
+	public ResponseEntity<GenericResponse> cancelRequestFriend(
+			@RequestHeader("Authorization") String authorizationHeader, @Valid @PathVariable("userId") String userId) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return friendRequestService.deleteFriendRequest(userIdToken,userId);
+	}
 	/**
 	 * PUT accept FriendRequest by Authorization and userId
 	 *

@@ -73,7 +73,8 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 	@Override
 	public ResponseEntity<GenericResponse> deleteFriendRequest(String userFromId, String userToId) {
 		Optional<User> user = userRepository.findById(userFromId);
-		if (!user.isPresent()) {
+		Optional<User> user1 = userRepository.findById(userToId);
+		if (!user.isPresent()|| !user1.isPresent()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(new GenericResponse(false, "Cannot found user!", null, HttpStatus.NOT_FOUND.value()));
 		}
