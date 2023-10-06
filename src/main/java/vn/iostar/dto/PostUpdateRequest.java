@@ -26,5 +26,8 @@ public class PostUpdateRequest {
     @Nationalized
     private String photos;
     
+    @Nationalized
+    private Integer postGroupId;
+    
 
 }
