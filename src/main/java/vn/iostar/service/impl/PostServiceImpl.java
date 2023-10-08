@@ -1,5 +1,6 @@
 package vn.iostar.service.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -110,12 +111,23 @@ public class PostServiceImpl implements PostService {
 		Post post = postOp.get();
 		if (!currentUserId.equals(postOp.get().getUser().getUserId()))
 			throw new Exception("Update denied");
-		if (request.getUpdateAt().after(new Date()))
-			throw new Exception("Invalid date");
 		post.setContent(request.getContent());
 		post.setLocation(request.getLocation());
 		post.setUpdateAt(new Date());
-		post.setPhotos(request.getPhotos());
+		try {
+			System.out.println("photos111 "+request.getPhotos());
+		    if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
+		    	post.setPhotos("");
+		    } else if(request.getPhotos().equals(postOp.get().getPhotos())) {
+				post.setPhotos(postOp.get().getPhotos());
+			} else {
+		        post.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
+		    }
+		} catch (IOException e) {
+		    // Xử lý ngoại lệ nếu có
+		    e.printStackTrace();
+		}
+		System.out.println("postGroupId "+request.getPostGroupId());
 		Optional<PostGroup> postGroup = postGroupService.findById(request.getPostGroupId());
 		if (postGroup.isPresent()) {
 			
@@ -181,7 +193,20 @@ public class PostServiceImpl implements PostService {
 		Post post = new Post();
 		post.setLocation(requestDTO.getLocation());
 		post.setContent(requestDTO.getContent());
-		post.setPhotos(requestDTO.getPhoto());
+		
+		
+		try {
+		    if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
+		    	post.setPhotos("");
+		    } else {
+		        
+		        post.setPhotos(cloudinaryService.uploadImage(requestDTO.getPhotos()));
+		    }
+		} catch (IOException e) {
+		    // Xử lý ngoại lệ nếu có
+		    e.printStackTrace();
+		}
+
 		if (user.isEmpty()) {
 			return ResponseEntity.badRequest().body("User not found");
 		} else {

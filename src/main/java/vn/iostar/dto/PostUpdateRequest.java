@@ -2,9 +2,8 @@ package vn.iostar.dto;
 
 
 
-import java.util.Date;
-
 import org.hibernate.annotations.Nationalized;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -21,10 +20,9 @@ public class PostUpdateRequest {
     @NotBlank(message = "Location is required")
     private String location;
 
-    private Date updateAt;
     
     @Nationalized
-    private String photos;
+    private MultipartFile photos;
     
     @Nationalized
     private Integer postGroupId;
