@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
+import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Comment;
@@ -35,6 +36,8 @@ public interface CommentService {
 	 ResponseEntity<GenericResponse> getCountCommentOfPost(int postId);
 	 
 	 ResponseEntity<Object> createCommentPost(String token,CreateCommentPostRequestDTO requestDTO) ;
+	 
+	 ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request,String currentUserId) throws Exception;
 
 	 ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId);
 }

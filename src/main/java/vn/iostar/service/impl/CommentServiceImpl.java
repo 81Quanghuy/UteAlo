@@ -1,6 +1,7 @@
 package vn.iostar.service.impl;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -17,11 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import vn.iostar.dto.CommentPostResponse;
+import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
+import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.User;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.LikeRepository;
@@ -160,8 +164,20 @@ public class CommentServiceImpl implements CommentService {
 		Comment comment = new Comment();
 		comment.setPost(post.get());
 		comment.setCreateTime(new Date());
+		comment.setUpdateAt(new Date());
 		comment.setContent(requestDTO.getContent());
-		comment.setPhotos("");
+		try {
+		    if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
+		    	comment.setPhotos("");
+		    } else {
+		        
+		    	comment.setPhotos(cloudinaryService.uploadImage(requestDTO.getPhotos()));
+		    }
+		} catch (IOException e) {
+		    // Xử lý ngoại lệ nếu có
+		    e.printStackTrace();
+		}
+
 		comment.setUser(user.get());
 		save(comment);
 		GenericResponse response = GenericResponse.builder().success(true).message("Comment Post Successfully")
@@ -172,6 +188,36 @@ public class CommentServiceImpl implements CommentService {
 		return ResponseEntity.ok(response);
 	}
 
+	@Override
+	public ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request, String currentUserId)
+			throws Exception {
+
+		Optional<Comment> commentOp = findById(commentId);
+		if (commentOp.isEmpty())
+			throw new Exception("Comment doesn't exist");
+		Comment comment = commentOp.get();
+		if (!currentUserId.equals(commentOp.get().getUser().getUserId()))
+			throw new Exception("Update denied");
+		comment.setContent(request.getContent());
+		try {
+		    if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
+		    	comment.setPhotos("");
+		    } else if(request.getPhotos().equals(commentOp.get().getPhotos())) {
+		    	comment.setPhotos(commentOp.get().getPhotos());
+			} else {
+				comment.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
+		    }
+		} catch (IOException e) {
+		    // Xử lý ngoại lệ nếu có
+		    e.printStackTrace();
+		}
+		comment.setUpdateAt(new Date());
+		save(comment);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
+				.result(null).statusCode(200).build());
+	}
+
+	
 	@Override
 	@Transactional
 	public ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId) {

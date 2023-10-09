@@ -115,7 +115,6 @@ public class PostServiceImpl implements PostService {
 		post.setLocation(request.getLocation());
 		post.setUpdateAt(new Date());
 		try {
-			System.out.println("photos111 "+request.getPhotos());
 		    if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
 		    	post.setPhotos("");
 		    } else if(request.getPhotos().equals(postOp.get().getPhotos())) {
@@ -127,7 +126,6 @@ public class PostServiceImpl implements PostService {
 		    // Xử lý ngoại lệ nếu có
 		    e.printStackTrace();
 		}
-		System.out.println("postGroupId "+request.getPostGroupId());
 		Optional<PostGroup> postGroup = postGroupService.findById(request.getPostGroupId());
 		if (postGroup.isPresent()) {
 			
