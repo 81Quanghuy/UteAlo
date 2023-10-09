@@ -30,6 +30,7 @@ public class Comment implements Serializable{
     @Column(columnDefinition = "nvarchar(255)")
     private String content;
     private Date createTime;
+    private Date updateAt;
     private String photos;
     
     @ManyToOne

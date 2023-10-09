@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 
 import jakarta.validation.Valid;
 import vn.iostar.dto.CreatePostRequestDTO;
@@ -29,6 +29,7 @@ import vn.iostar.entity.Post;
 import vn.iostar.entity.User;
 import vn.iostar.repository.PostRepository;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.PostService;
 import vn.iostar.service.UserService;
 
@@ -44,6 +45,9 @@ public class PostController {
 
 	@Autowired
 	UserService userService;
+	
+	@Autowired
+	CloudinaryService cloudinaryService;
 
 	@Autowired
 	PostRepository postRepository;
@@ -113,7 +117,7 @@ public class PostController {
 	}
 
 	@PutMapping("/update/{postId}")
-	public ResponseEntity<Object> updateUser(@RequestBody @Valid PostUpdateRequest request,
+	public ResponseEntity<Object> updateUser(@ModelAttribute PostUpdateRequest request,
 			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
 			BindingResult bindingResult) throws Exception {
 		
@@ -132,10 +136,11 @@ public class PostController {
 	}
 
 	@PostMapping("/create")
-	public ResponseEntity<Object> createPost(@RequestBody CreatePostRequestDTO requestDTO,
+	public ResponseEntity<Object> createPost(@ModelAttribute CreatePostRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
 		return postService.createUserPost(token, requestDTO);
 	}
+	
 	
 	@GetMapping("/user/{userId}/photos")
     public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@PathVariable String userId) {

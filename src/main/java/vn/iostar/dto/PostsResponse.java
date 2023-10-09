@@ -17,6 +17,7 @@ public class PostsResponse {
     private String location;
     private String userId;
     private int postGroupId;
+    private String postGroupName;
     private List<Integer> comments;
     private List<Integer> likes;
     
@@ -36,6 +37,7 @@ public class PostsResponse {
 		this.userId = post.getUser().getUserId();
 		if(post.getPostGroup() != null) {
 			this.postGroupId = post.getPostGroup().getPostGroupId();
+			this.postGroupName = post.getPostGroup().getPostGroupName();
 		}
 	}
 }
