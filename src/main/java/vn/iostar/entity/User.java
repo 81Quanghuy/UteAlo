@@ -87,4 +87,8 @@ public class User implements Serializable {
 
 	@OneToOne(mappedBy = "user")
 	private VerificationToken verificationToken;
+	
+	@OneToMany(mappedBy = "user")
+	private List<Share> share;
+
 }

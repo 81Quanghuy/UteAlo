@@ -37,7 +37,18 @@ public class Comment implements Serializable{
     @JoinColumn(name = "userId")
     private User user;
     
+    @ManyToOne
+    @JoinColumn(name = "shareId")
+    private Share share;
+    
     @OneToMany(mappedBy = "comment")
     private List<Like> likes;
     
+    @OneToMany(mappedBy = "commentReply", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<Comment> subComments;
+    
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "comment_reply_id")
+	private Comment commentReply;
 }

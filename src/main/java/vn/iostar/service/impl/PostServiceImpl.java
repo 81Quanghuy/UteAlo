@@ -240,7 +240,6 @@ public class PostServiceImpl implements PostService {
 		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : userPosts) {
-
 			PostsResponse postsResponse = new PostsResponse(post);
 			postsResponse.setComments(getIdComment(post.getComments()));
 			postsResponse.setLikes(getIdLikes(post.getLikes()));

@@ -30,6 +30,10 @@ public class Like implements Serializable{
     @JoinColumn(name = "userId")
     private User user;
     
+    @ManyToOne
+    @JoinColumn(name = "shareId")
+    private Share share;
+    
     private String status;
     
     @ManyToOne
