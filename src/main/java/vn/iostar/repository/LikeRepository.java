@@ -32,4 +32,8 @@ public interface LikeRepository extends JpaRepository<Like, Integer>{
 	
 	void deleteByCommentPostPostId(Integer postId);
 	
+	void deleteByShareShareId(int shareId);
+	
+	void deleteByCommentShareShareId(Integer shareId);
+	
 }

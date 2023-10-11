@@ -4,50 +4,46 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.*;
 
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "POSTS")
-public class Post implements Serializable{
+@Table(name = "SHARES")
+public class Share implements Serializable {
 
-	 
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
-
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int postId;
-    private Date postTime;
-    
-    private Date updateAt;
-    private String location;
+    private int shareId;
     
     @Column(columnDefinition = "nvarchar(255)")
     private String content;
-    private String photos;
-    
+
+    @ManyToOne
+    @JoinColumn(name = "postId")
+    private Post post;
+
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
-    
-    @ManyToOne
-    @JoinColumn(name = "postGroupId")
-    private PostGroup postGroup;
-    
-    @OneToMany(mappedBy = "post")
-    private List<Share> share;
-    
-    @OneToMany(mappedBy = "post")
+
+    @OneToMany(mappedBy = "share")
     private List<Like> likes;
-    
-    @OneToMany(mappedBy = "post")
+
+    @OneToMany(mappedBy = "share")
     private List<Comment> comments;
+
+    private Date createAt;
+
+    private Date updateAt;
+
 }
+

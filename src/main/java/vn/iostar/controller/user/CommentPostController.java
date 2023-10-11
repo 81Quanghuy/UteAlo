@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.ReplyCommentPostRequestDTO;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CommentService;
@@ -39,6 +40,11 @@ public class CommentPostController {
 		return commentService.getCommentOfPost(postId);
 	}
 	
+	@GetMapping("/{commentId}/commentReply")
+	public ResponseEntity<GenericResponse> getCommentReplyOfComment(@PathVariable("commentId") int commentId) {
+		return commentService.getCommentReplyOfComment(commentId);
+	}
+	
 	@GetMapping("/number/{postId}") 
 	public ResponseEntity<GenericResponse> getCountCommentOfPost(
 			@PathVariable("postId") int postId) {
@@ -49,6 +55,12 @@ public class CommentPostController {
 	public ResponseEntity<Object> createCommentPost(@ModelAttribute CreateCommentPostRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
 		return commentService.createCommentPost(token, requestDTO);
+	}
+	
+	@PostMapping("/reply")
+	public ResponseEntity<Object> replyCommentPost(@ModelAttribute ReplyCommentPostRequestDTO requestDTO,
+			@RequestHeader("Authorization") String token) {
+		return commentService.replyCommentPost(token, requestDTO);
 	}
 	
 	@PutMapping("/update/{commentId}")

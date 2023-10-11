@@ -15,6 +15,7 @@ import vn.iostar.entity.User;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
+	
 	List<Post> findByUserUserId(String userId);
 
 	@Query("SELECT p FROM Post p " + "WHERE p.user = :user " + // Bài viết của chính user đó
@@ -32,6 +33,5 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     Page<String> findLatestPhotosByUserIdAndNotNull(String userId, Pageable pageable);
 
     
- 
 
 }
