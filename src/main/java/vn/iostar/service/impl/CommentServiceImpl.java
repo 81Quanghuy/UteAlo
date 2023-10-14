@@ -125,7 +125,7 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	public List<CommentPostResponse> getCommentsOfPost(int postId) {
-		List<Comment> commentPost = commentRepository.findByPostPostIdOrderByCreateTimeDesc(postId);
+		List<Comment> commentPost = commentRepository.findByPostPostIdAndCommentReplyIsNullOrderByCreateTimeDesc(postId);
 
 		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
 		for (Comment comment : commentPost) {
@@ -161,7 +161,7 @@ public class CommentServiceImpl implements CommentService {
 		Optional<Post> post = postService.findById(postId);
 		if (post.isEmpty())
 			throw new RuntimeException("Post not found");
-		List<Comment> comments = commentRepository.findByPostPostIdOrderByCreateTimeDesc(postId);
+		List<Comment> comments = commentRepository.findByPostPostIdAndCommentReplyIsNullOrderByCreateTimeDesc(postId);
 		if (comments.isEmpty())
 			throw new RuntimeException("This post has no comment");
 		List<CommentPostResponse> commentPostResponses = new ArrayList<>();

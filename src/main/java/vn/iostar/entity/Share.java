@@ -35,10 +35,10 @@ public class Share implements Serializable {
     @JoinColumn(name = "userId")
     private User user;
 
-    @OneToMany(mappedBy = "share")
+    @OneToMany(mappedBy = "share", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likes;
 
-    @OneToMany(mappedBy = "share")
+    @OneToMany(mappedBy = "share", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
 
     private Date createAt;
