@@ -137,16 +137,27 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	public List<CommentPostResponse> getCommentsOfComment(int commentId) {
-		List<Comment> commentPost = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
+	    List<CommentPostResponse> commentPostResponses = new ArrayList<>();
 
-		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
-		for (Comment comment : commentPost) {
-			CommentPostResponse cPostResponse = new CommentPostResponse(comment);
-			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
-			commentPostResponses.add(cPostResponse);
-		}
-		return commentPostResponses;
+	    // Tìm các comment reply trực tiếp cho commentId
+	    List<Comment> directReplies = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
+
+	    // Lấy comment reply của commentId
+	    for (Comment directReply : directReplies) {
+	        CommentPostResponse directReplyResponse = new CommentPostResponse(directReply);
+	        directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
+	        commentPostResponses.add(directReplyResponse);
+
+	        // Tìm các comment reply cho directReply
+	        List<CommentPostResponse> subReplies = getCommentsOfComment(directReply.getCommentId());
+
+	        // Thêm tất cả các comment reply của directReply
+	        commentPostResponses.addAll(subReplies);
+	    }
+
+	    return commentPostResponses;
 	}
+
 
 	private List<Integer> getIdLikes(List<Like> likes) {
 		List<Integer> idComments = new ArrayList<>();
