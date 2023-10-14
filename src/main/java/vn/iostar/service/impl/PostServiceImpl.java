@@ -27,6 +27,7 @@ import vn.iostar.entity.User;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.LikeRepository;
 import vn.iostar.repository.PostRepository;
+import vn.iostar.repository.ShareRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.PostGroupService;
@@ -55,6 +56,9 @@ public class PostServiceImpl implements PostService {
 
 	@Autowired
 	CommentRepository commentRepository;
+	
+	@Autowired
+	ShareRepository shareRepository;
 
 	@Override
 	public <S extends Post> S save(S entity) {
@@ -151,18 +155,9 @@ public class PostServiceImpl implements PostService {
 		// tìm thấy bài post với postId
 		if (optionalPost.isPresent()) {
 			Post post = optionalPost.get();
-
-			// Xóa tất cả các like liên quan đến post này
-			likeRepository.deleteByPostPostId(post.getPostId());
-
-			// Xóa tất cả các like liên quan đến comment của bài post này
-			likeRepository.deleteByCommentPostPostId(post.getPostId());
-
-			// Xóa tất cả các comment liên quan đến post này
-			commentRepository.deleteByPostPostId(post.getPostId());
-
-			// xóa luôn bài post đó
+			
 			postRepository.delete(post);
+			
 			return ResponseEntity.ok()
 					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
 		}

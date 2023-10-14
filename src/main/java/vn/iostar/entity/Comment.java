@@ -41,10 +41,10 @@ public class Comment implements Serializable{
     @JoinColumn(name = "shareId")
     private Share share;
     
-    @OneToMany(mappedBy = "comment")
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likes;
     
-    @OneToMany(mappedBy = "commentReply", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "commentReply", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
 	private List<Comment> subComments;
     
     

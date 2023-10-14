@@ -5,7 +5,6 @@ import java.util.List;
 
 import lombok.Data;
 import vn.iostar.entity.Comment;
-import vn.iostar.entity.Like;
 
 @Data
 public class CommentPostResponse {
@@ -18,6 +17,7 @@ public class CommentPostResponse {
 	private String userAvatar;
 	private String userId;
     private List<Integer> likes;
+    private List<Integer> comments;
 	
 	
 	public CommentPostResponse(Comment comment) {

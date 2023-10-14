@@ -14,7 +14,7 @@ import vn.iostar.entity.User;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Integer>{
 	
-	List<Comment> findByPostPostIdOrderByCreateTimeDesc(int postId);
+	List<Comment> findByPostPostIdAndCommentReplyIsNullOrderByCreateTimeDesc(int postId);
 	
 	Optional<Comment> findByPostAndUser(Post post, User user);
 	

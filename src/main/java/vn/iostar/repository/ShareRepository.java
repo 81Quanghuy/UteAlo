@@ -20,5 +20,7 @@ public interface ShareRepository extends JpaRepository<Share, Integer> {
 			+ "OR s.post.postGroup IN (SELECT pgm.postGroup FROM PostGroupMember pgm WHERE pgm.user = :user) "
 			+ "ORDER BY s.post.postTime DESC")
 	List<Share> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(@Param("user") User user);
+	
+	void deleteByPostPostId(int postId);
 
 }

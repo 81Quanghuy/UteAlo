@@ -147,17 +147,8 @@ public class ShareServiceImpl implements ShareService {
 		if (optionalShare.isPresent()) {
 			Share share = optionalShare.get();
 
-			// Xóa tất cả các like liên quan đến share này
-			likeRepository.deleteByPostPostId(share.getPost().getPostId());
-
-			// Xóa tất cả các like liên quan đến comment của bài share này
-			likeRepository.deleteByCommentPostPostId(share.getPost().getPostId());
-
-			// Xóa tất cả các comment liên quan đến share này
-			commentRepository.deleteByPostPostId(share.getPost().getPostId());
-
-			// xóa luôn bài share đó
 			shareRepository.delete(share);
+			
 			return ResponseEntity.ok()
 					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
 		}
