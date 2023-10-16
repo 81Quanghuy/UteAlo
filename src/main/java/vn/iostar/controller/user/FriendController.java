@@ -4,19 +4,17 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
-import vn.iostar.dto.FriendPageableRequest;
 import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.security.JwtTokenProvider;
@@ -40,11 +38,24 @@ public class FriendController {
 	@Autowired
 	UserService userService;
 
-	@PostMapping("/list/{userId}")
-	public ResponseEntity<GenericResponse> getUserPosts(@RequestBody FriendPageableRequest friendPageableRequest,
+	@GetMapping("/list/{userId}")
+	public ResponseEntity<GenericResponse> getListFriendByUserId(@Valid @PathVariable("userId") String userId) {
+		List<FriendRequestResponse> friend = friendService.findFriendUserIdsByUserId(userId);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get List Friend Successfully")
+				.result(friend).statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@GetMapping("/status/{userId}")
+	public ResponseEntity<GenericResponse> getStatusByUserId(@RequestHeader("Authorization") String authorizationHeader,
 			@Valid @PathVariable("userId") String userId) {
-		Pageable pageable = PageRequest.of(friendPageableRequest.getPage(), friendPageableRequest.getLimit());
-		List<FriendRequestResponse> friend = friendService.findFriendUserIdsByUserId(userId, pageable);
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return friendService.getStatusByUserId(userId,userIdToken);
+	}
+	@GetMapping("/list/pageable/{userId}")
+	public ResponseEntity<GenericResponse> getListFriendTop10ByUserId(@Valid @PathVariable("userId") String userId) {
+		PageRequest pageable = PageRequest.of(0, 10);
+		List<FriendRequestResponse> friend = friendService.findFriendTop10UserIdsByUserId(userId, pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get List Friend Successfully")
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}
@@ -64,12 +75,29 @@ public class FriendController {
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
-	@PostMapping("/request/list")
-	public ResponseEntity<GenericResponse> getRequestList(@RequestBody FriendPageableRequest friendPageableRequest,
+	@GetMapping("/request/list")
+	public ResponseEntity<GenericResponse> getRequestList(@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String userId = jwtTokenProvider.getUserIdFromJwt(token);
+		List<FriendRequestResponse> friend = friendRequestService.findUserFromUserIdByUserToUserId(userId);
+		return ResponseEntity.ok(GenericResponse.builder().success(true)
+				.message("Retrieved user posts successfully and access update denied").result(friend)
+				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	/**
+	 * GET list FriendRequest by Authorization
+	 *
+	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 *                      header for authentication.
+	 * @return The resource if found, or a 404 Not Found response.
+	 */
+	@GetMapping("/request/list/pageable")
+	public ResponseEntity<GenericResponse> getRequestListTop5(
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
-		Pageable pageable = PageRequest.of(friendPageableRequest.getPage(), friendPageableRequest.getLimit());
+		PageRequest pageable = PageRequest.of(0, 10);
 		List<FriendRequestResponse> friend = friendRequestService.findUserFromUserIdByUserToUserIdPageable(userId,
 				pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true)
@@ -100,14 +128,12 @@ public class FriendController {
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
-	@PostMapping("/requestFrom/list")
-	public ResponseEntity<GenericResponse> getRequestListFrom(@RequestBody FriendPageableRequest friendPageableRequest,
+	@GetMapping("/requestFrom/list")
+	public ResponseEntity<GenericResponse> getRequestListFrom(
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
-		Pageable pageable = PageRequest.of(friendPageableRequest.getPage(), friendPageableRequest.getLimit());
-		List<FriendRequestResponse> friend = friendRequestService.findUserToUserIdByUserFromUserIdPageable(userId,
-				pageable);
+		List<FriendRequestResponse> friend = friendRequestService.findUserToUserIdByUserFromUserIdPageable(userId);
 		return ResponseEntity.ok(GenericResponse.builder().success(true)
 				.message("Retrieved user posts successfully and access update denied").result(friend)
 				.statusCode(HttpStatus.OK.value()).build());
@@ -128,6 +154,7 @@ public class FriendController {
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return friendRequestService.deleteFriendRequest(userId, userIdToken);
 	}
+
 	/**
 	 * PUT delete FriendRequest by Authorization and userId
 	 *
@@ -141,8 +168,9 @@ public class FriendController {
 			@RequestHeader("Authorization") String authorizationHeader, @Valid @PathVariable("userId") String userId) {
 		String token = authorizationHeader.substring(7);
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-		return friendRequestService.deleteFriendRequest(userIdToken,userId);
+		return friendRequestService.deleteFriendRequest(userIdToken, userId);
 	}
+
 	/**
 	 * PUT accept FriendRequest by Authorization and userId
 	 *
@@ -168,14 +196,12 @@ public class FriendController {
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
-	@PostMapping("/suggestion/list")
-	public ResponseEntity<GenericResponse> getSuggestionList(@RequestBody FriendPageableRequest friendPageableRequest,
+	@GetMapping("/suggestion/list")
+	public ResponseEntity<GenericResponse> getSuggestionList(
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
-		Pageable pageable = PageRequest.of(friendPageableRequest.getPage(), friendPageableRequest.getLimit());
-
-		List<FriendRequestResponse> friend = friendRequestService.findSuggestionListByUserId(userId, pageable);
+		List<FriendRequestResponse> friend = friendRequestService.findSuggestionListByUserId(userId);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get Suggestion List Successfully!")
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}

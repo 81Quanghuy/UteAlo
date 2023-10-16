@@ -15,7 +15,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
@@ -31,7 +30,6 @@ import vn.iostar.repository.PasswordResetOtpRepository;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.repository.VerificationTokenRepository;
-import vn.iostar.service.FriendService;
 import vn.iostar.service.UserService;
 
 @Service
@@ -276,7 +274,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserProfileResponse getFullProfile(Optional<User> user,Pageable pageable) {
 		UserProfileResponse profileResponse = new UserProfileResponse(user.get());
-		List<FriendRequestResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId(),pageable);
+		List<FriendRequestResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId());
 		profileResponse.setFriends(fResponse);
 		
 		List<GroupPostResponse> groupPostResponses = postGroupRepository.findPostGroupInfoByUserId(user.get().getUserId(), pageable);

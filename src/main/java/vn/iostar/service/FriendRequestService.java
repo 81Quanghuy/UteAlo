@@ -15,7 +15,7 @@ public interface FriendRequestService {
 	void deleteAll();
 
 	void deleteById(Integer id);
-	
+
 	long count();
 
 	Optional<FriendRequest> findById(Integer id);
@@ -24,15 +24,17 @@ public interface FriendRequestService {
 
 	<S extends FriendRequest> S save(S entity);
 
-	List<FriendRequestResponse> findUserFromUserIdByUserToUserIdPageable(String userId,Pageable pageable);
-	
-	List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(String userId,Pageable pageable);
-	
-	ResponseEntity<GenericResponse> deleteFriendRequest (String userFromId, String userToId);
-	
-	ResponseEntity<GenericResponse> acceptRequest (String userFromId, String userToId);
+	List<FriendRequestResponse> findUserFromUserIdByUserToUserId(String userId);
 
-	List<FriendRequestResponse> findSuggestionListByUserId(String userId,Pageable pageable);
-	
+	List<FriendRequestResponse> findUserFromUserIdByUserToUserIdPageable(String userId, Pageable pageable);
+
+	List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(String userId);
+
+	ResponseEntity<GenericResponse> deleteFriendRequest(String userFromId, String userToId);
+
+	ResponseEntity<GenericResponse> acceptRequest(String userFromId, String userToId);
+
+	List<FriendRequestResponse> findSuggestionListByUserId(String userId);
+
 	ResponseEntity<GenericResponse> sendFriendRequest(String userId, String userIdToken);
 }

@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Friend;
+import vn.iostar.entity.FriendRequest;
 import vn.iostar.entity.User;
 import vn.iostar.repository.FriendRepository;
+import vn.iostar.repository.FriendRequestRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.service.FriendService;
 
@@ -26,9 +28,17 @@ public class FriendServiceImpl implements FriendService {
 	@Autowired
 	UserRepository userRepository;
 
+	@Autowired
+	FriendRequestRepository friendRequestRepository;
+
 	@Override
-	public List<FriendRequestResponse> findFriendUserIdsByUserId(String userId,Pageable pageable) {
-		return friendRepository.findFriendUserIdsByUserId(userId,pageable);
+	public List<FriendRequestResponse> findFriendUserIdsByUserId(String userId) {
+		return friendRepository.findFriendUserIdsByUserId(userId);
+	}
+
+	@Override
+	public List<FriendRequestResponse> findFriendTop10UserIdsByUserId(String userId, Pageable pageable) {
+		return friendRepository.findFriendTop10UserIdsByUserId(userId, pageable);
 	}
 
 	@Override
@@ -66,16 +76,6 @@ public class FriendServiceImpl implements FriendService {
 		friendRepository.deleteAll();
 	}
 
-	public Friend getFriendByUser1AndUser2(String userId, String userId2) {
-
-		Friend friend1 = friendRepository.findByUser1UserIdAndUser2UserId(userId, userId2);
-		if (friend1 != null) {
-			return friend1;
-		}
-
-		return friendRepository.findByUser1UserIdAndUser2UserId(userId2, userId);
-	}
-
 	@Override
 	public ResponseEntity<GenericResponse> deleteFriend(String userId, String userId2) {
 		Optional<User> user = userRepository.findById(userId);
@@ -84,13 +84,40 @@ public class FriendServiceImpl implements FriendService {
 					.body(new GenericResponse(false, "Cannot found user!", null, HttpStatus.NOT_FOUND.value()));
 		}
 
-		Friend friend = getFriendByUser1AndUser2(userId, userId2);
-		if (friend != null) {
-			friendRepository.delete(friend);
+		Optional<Friend> friend = friendRepository.findByUser1UserIdAndUser2UserId(userId, userId2);
+		Optional<Friend> friend1 = friendRepository.findByUser1UserIdAndUser2UserId(userId2, userId);
+		if (friend.isPresent()) {
+			friendRepository.delete(friend.get());
 			return ResponseEntity.ok()
 					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		} else if (friend1.isPresent()) {
+			friendRepository.delete(friend1.get());
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		} else
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot delete!", null, HttpStatus.NOT_FOUND.value()));
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getStatusByUserId(String userId, String userIdToken) {
+		Optional<Friend> friend = friendRepository.findByUser1UserIdAndUser2UserId(userId, userIdToken);
+		Optional<Friend> friend2 = friendRepository.findByUser1UserIdAndUser2UserId(userIdToken, userId);
+		if (friend.isPresent() || friend2.isPresent()) {
+			return ResponseEntity.ok().body(new GenericResponse(true, "Bạn bè", "null", HttpStatus.OK.value()));
 		}
-		return ResponseEntity.ok().body(new GenericResponse(true, "Both Not Friend", null, HttpStatus.OK.value()));
+		Optional<FriendRequest> friendRequest = friendRequestRepository.findByUserFromUserIdAndUserToUserId(userId,
+				userIdToken);
+		if (friendRequest.isPresent()) {
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Chấp nhận lời mời", "null", HttpStatus.OK.value()));
+		}
+		Optional<FriendRequest> friendRequest1 = friendRequestRepository
+				.findByUserFromUserIdAndUserToUserId(userIdToken, userId);
+		if (friendRequest1.isPresent()) {
+			return ResponseEntity.ok().body(new GenericResponse(true, "Đã gửi lời mời", "null", HttpStatus.OK.value()));
+		}
+		return ResponseEntity.ok().body(new GenericResponse(true, "Kết bạn", "null", HttpStatus.OK.value()));
 	}
 
 }

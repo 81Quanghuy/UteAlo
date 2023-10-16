@@ -1,6 +1,7 @@
 package vn.iostar.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,39 +16,26 @@ import vn.iostar.entity.FriendRequest;
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Integer> {
 
 	@Query("SELECT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName)  FROM FriendRequest fr JOIN User u ON fr.userFrom.userId = u.userId WHERE fr.userTo.userId = :userId")
+	List<FriendRequestResponse> findUserFromUserIdByUserToUserId(@Param("userId") String userId);
+
+	@Query("SELECT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName)  FROM FriendRequest fr JOIN User u ON fr.userFrom.userId = u.userId WHERE fr.userTo.userId = :userId")
 	List<FriendRequestResponse> findUserFromUserIdByUserToUserIdPageable(@Param("userId") String userId,
 			Pageable pageable);
 
 	@Query("SELECT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName)  FROM FriendRequest fr JOIN User u ON fr.userTo.userId = u.userId WHERE fr.userFrom.userId = :userId")
-	List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(@Param("userId") String userId,
-			Pageable pageable);
-	
-	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId, u.profile.background, u.profile.avatar, u.userName) FROM User u " +
-	           "JOIN u.postGroupMembers pgm " +
-	           "JOIN pgm.postGroup pg " +
-	           "JOIN pg.postGroupMembers sharedPgm " +
-	           "WHERE sharedPgm.user.userId = :userId " +
-	           "AND u.userId != :userId "+
-	           "AND (" +
-		        "   (SELECT COUNT(f.friendId) " +
-		        "    FROM Friend f " +
-		        "    WHERE (f.user1.userId = u.userId AND f.user2.userId = :userId ) " +
-		        "       OR (f.user1.userId = :userId AND f.user2.userId = u.userId)" +
-		        "   ) = 0) " +
-		        "AND (" +
-		        "   (SELECT COUNT(fr.friendRequestId) " +
-		        "    FROM FriendRequest fr " +
-		        "    WHERE fr.userTo.userId = u.userId AND fr.userFrom.userId = :userId" +
-		        "   ) = 0) " +
-		        "AND (" +
-		        "   (SELECT COUNT(fr.friendRequestId) " +
-		        "    FROM FriendRequest fr " +
-		        "    WHERE fr.userTo.userId = :userId AND fr.userFrom.userId = u.userId" +
-		        "   ) = 0)")
-	    List<FriendRequestResponse> findSuggestionListByUserId(@Param("userId") String userId,Pageable pageable);
+	List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(@Param("userId") String userId);
 
-	List<FriendRequest> findByUserFromUserIdAndUserToUserId(String userFromId, String userToID);
-//	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName) FROM User u " + "JOIN u.postGroupMembers pgm " + "JOIN pgm.postGroup pg "
-//			+ "WHERE u.userId != :yourUserId")
-//	List<FriendRequestResponse> findSuggestionListByUserId(@Param("yourUserId") String userId, Pageable pageable);
+	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendRequestResponse(u.userId, u.profile.background, u.profile.avatar, u.userName) FROM User u "
+			+ "JOIN u.postGroupMembers pgm " + "JOIN pgm.postGroup pg " + "JOIN pg.postGroupMembers sharedPgm "
+			+ "WHERE sharedPgm.user.userId = :userId " + "AND u.userId != :userId " + "AND ("
+			+ "   (SELECT COUNT(f.friendId) " + "    FROM Friend f "
+			+ "    WHERE (f.user1.userId = u.userId AND f.user2.userId = :userId ) "
+			+ "       OR (f.user1.userId = :userId AND f.user2.userId = u.userId)" + "   ) = 0) " + "AND ("
+			+ "   (SELECT COUNT(fr.friendRequestId) " + "    FROM FriendRequest fr "
+			+ "    WHERE fr.userTo.userId = u.userId AND fr.userFrom.userId = :userId" + "   ) = 0) " + "AND ("
+			+ "   (SELECT COUNT(fr.friendRequestId) " + "    FROM FriendRequest fr "
+			+ "    WHERE fr.userTo.userId = :userId AND fr.userFrom.userId = u.userId" + "   ) = 0)")
+	List<FriendRequestResponse> findSuggestionListByUserId(@Param("userId") String userId);
+
+	Optional<FriendRequest> findByUserFromUserIdAndUserToUserId(String userFromId, String userToID);
 }

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import vn.iostar.contants.RoleName;
 import vn.iostar.contants.RoleUserGroup;
@@ -78,6 +79,7 @@ public class AccountServiceImpl implements AccountService {
 		return accountRepository.findAll();
 	}
 
+	@Transactional
 	public ResponseEntity<GenericResponse> userRegister(RegisterRequest registerRequest) {
 		if (registerRequest.getPassword().length() < 8 || registerRequest.getPassword().length() > 32)
 			throw new RuntimeException("Password must be between 8 and 32 characters long");
@@ -119,6 +121,7 @@ public class AccountServiceImpl implements AccountService {
 				.statusCode(200).build());
 	}
 
+	@Transactional
 	private void saveGroupandRole(RegisterRequest registerRequest,PostGroup postGroup,ChatGroup chatGroup) {
 
 		ChatGroupMember chatGroupMember = new ChatGroupMember();
