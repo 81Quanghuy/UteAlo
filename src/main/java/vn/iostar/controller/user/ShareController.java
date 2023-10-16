@@ -108,6 +108,7 @@ public class ShareController {
 	@PostMapping("/create")
 	public ResponseEntity<Object> createPost(@ModelAttribute SharePostRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
+		System.out.println("postIdKhang"+requestDTO.getPostId()+requestDTO.getContent());
 		return shareService.sharePost(token, requestDTO);
 	}
 	
@@ -125,7 +126,7 @@ public class ShareController {
 	
 	@PutMapping("/delete/{shareId}")
 	public ResponseEntity<GenericResponse> deleteUser(@RequestHeader("Authorization") String token,
-			@PathVariable("shareId") Integer shareId, @ModelAttribute("userId") String userId) {
+			@PathVariable("shareId") Integer shareId, @RequestBody String userId) {
 		return shareService.deleteSharePost(shareId, token, userId);
 
 	}

@@ -16,6 +16,8 @@ public interface CommentRepository extends JpaRepository<Comment, Integer>{
 	
 	List<Comment> findByPostPostIdAndCommentReplyIsNullOrderByCreateTimeDesc(int postId);
 	
+	List<Comment> findByShareShareIdAndCommentReplyIsNullOrderByCreateTimeDesc(int shareId);
+	
 	Optional<Comment> findByPostAndUser(Post post, User user);
 	
 	void deleteByPostPostId(Integer postId);

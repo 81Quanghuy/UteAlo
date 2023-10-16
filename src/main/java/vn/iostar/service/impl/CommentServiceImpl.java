@@ -16,13 +16,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import vn.iostar.dto.CommentPostResponse;
+import vn.iostar.dto.CommentShareResponse;
 import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
+import vn.iostar.dto.CreateCommentShareRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.ReplyCommentPostRequestDTO;
+import vn.iostar.dto.ReplyCommentShareRequestDTO;
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
+import vn.iostar.entity.Share;
 import vn.iostar.entity.User;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.LikeRepository;
@@ -30,6 +34,7 @@ import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.CommentService;
 import vn.iostar.service.PostService;
+import vn.iostar.service.ShareService;
 import vn.iostar.service.UserService;
 
 @Service
@@ -49,6 +54,9 @@ public class CommentServiceImpl implements CommentService {
 
 	@Autowired
 	PostService postService;
+	
+	@Autowired
+	ShareService shareService;
 
 	@Autowired
 	LikeRepository likeRepository;
@@ -107,6 +115,21 @@ public class CommentServiceImpl implements CommentService {
 				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
 						.result(comments).statusCode(HttpStatus.OK.value()).build());
 	}
+	
+	@Override
+	public ResponseEntity<GenericResponse> getCommentOfShare(int shareId) {
+		Optional<Share> share = shareService.findById(shareId);
+		if (share.isEmpty())
+			return ResponseEntity.ok(GenericResponse.builder().success(false).message("Share not found").result(false)
+					.statusCode(HttpStatus.OK.value()).build());
+		List<CommentShareResponse> comments =  getCommentsOfShare(shareId);
+		if (comments.isEmpty())
+			return ResponseEntity.ok(GenericResponse.builder().success(false).message("This share has no comment")
+					.result(false).statusCode(HttpStatus.OK.value()).build());
+		return ResponseEntity
+				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
+						.result(comments).statusCode(HttpStatus.OK.value()).build());
+	}
 
 	@Override
 	public ResponseEntity<GenericResponse> getCommentReplyOfComment(int commentId) {
@@ -130,6 +153,18 @@ public class CommentServiceImpl implements CommentService {
 		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
 		for (Comment comment : commentPost) {
 			CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+			commentPostResponses.add(cPostResponse);
+		}
+		return commentPostResponses;
+	}
+	
+	public List<CommentShareResponse> getCommentsOfShare(int shareId) {
+		List<Comment> commentPost = commentRepository.findByShareShareIdAndCommentReplyIsNullOrderByCreateTimeDesc(shareId);
+
+		List<CommentShareResponse> commentPostResponses = new ArrayList<>();
+		for (Comment comment : commentPost) {
+			CommentShareResponse cPostResponse = new CommentShareResponse(comment);
 			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
 			commentPostResponses.add(cPostResponse);
 		}
@@ -224,6 +259,36 @@ public class CommentServiceImpl implements CommentService {
 
 		return ResponseEntity.ok(response);
 	}
+	
+	@Override
+	public ResponseEntity<Object> createCommentShare(String token, CreateCommentShareRequestDTO requestDTO) {
+		String jwt = token.substring(7);
+		String userId = jwtTokenProvider.getUserIdFromJwt(jwt);
+		Optional<User> user = userService.findById(userId);
+		if (!user.isPresent()) {
+			return ResponseEntity.badRequest().body("User not found");
+		}
+		Optional<Share> share = shareService.findById(requestDTO.getShareId());
+		if (!share.isPresent()) {
+			return ResponseEntity.badRequest().body("Share not found");
+		}
+
+		Comment comment = new Comment();
+		comment.setShare(share.get());
+		comment.setCreateTime(new Date());
+		comment.setUpdateAt(new Date());
+		comment.setContent(requestDTO.getContent());
+
+		comment.setUser(user.get());
+		save(comment);
+		GenericResponse response = GenericResponse.builder().success(true).message("Comment Share Successfully")
+				.result(new CommentShareResponse(comment.getCommentId(), comment.getContent(), comment.getCreateTime(),
+						comment.getPhotos(), comment.getUser().getUserName(), comment.getShare().getShareId(),
+						comment.getUser().getProfile().getAvatar(), comment.getUser().getUserId()))
+				.statusCode(200).build();
+
+		return ResponseEntity.ok(response);
+	}
 
 	@Override
 	public ResponseEntity<Object> replyCommentPost(String token, ReplyCommentPostRequestDTO requestDTO) {
@@ -270,6 +335,53 @@ public class CommentServiceImpl implements CommentService {
 		return ResponseEntity.ok(response);
 	}
 
+	
+	@Override
+	public ResponseEntity<Object> replyCommentShare(String token, ReplyCommentShareRequestDTO requestDTO) {
+		String jwt = token.substring(7);
+		String userId = jwtTokenProvider.getUserIdFromJwt(jwt);
+		Optional<User> user = userService.findById(userId);
+		if (!user.isPresent()) {
+			return ResponseEntity.badRequest().body("User not found");
+		}
+		Optional<Share> share = shareService.findById(requestDTO.getShareId());
+		if (!share.isPresent()) {
+			return ResponseEntity.badRequest().body("Share post not found");
+		}
+		Optional<Comment> commentReply = findById(requestDTO.getCommentId());
+		if (!commentReply.isPresent()) {
+			return ResponseEntity.badRequest().body("Comment not found");
+		}
+
+		Comment comment = new Comment();
+		comment.setShare(share.get());
+		comment.setCreateTime(new Date());
+		comment.setUpdateAt(new Date());
+		comment.setContent(requestDTO.getContent());
+		try {
+			if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
+				comment.setPhotos("");
+			} else {
+
+				comment.setPhotos(cloudinaryService.uploadImage(requestDTO.getPhotos()));
+			}
+		} catch (IOException e) {
+			// Xử lý ngoại lệ nếu có
+			e.printStackTrace();
+		}
+		comment.setUser(user.get());
+		comment.setCommentReply(commentReply.get());
+		save(comment);
+		GenericResponse response = GenericResponse.builder().success(true).message("Comment Share Post Successfully")
+				.result(new CommentShareResponse(comment.getCommentId(), comment.getContent(), comment.getCreateTime(),
+						comment.getPhotos(), comment.getUser().getUserName(), comment.getShare().getShareId(),
+						comment.getUser().getProfile().getAvatar(), comment.getUser().getUserId()))
+				.statusCode(200).build();
+
+		return ResponseEntity.ok(response);
+	}
+
+	
 	@Override
 	public ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request, String currentUserId)
 			throws Exception {
@@ -308,17 +420,6 @@ public class CommentServiceImpl implements CommentService {
 		// tìm thấy bài comment với commentId
 		if (optionalComment.isPresent()) {
 			Comment comment = optionalComment.get();
-
-			// Xóa tất cả các bình luận con (commentReply) của bình luận gốc
-			List<Comment> commentReplies = comment.getSubComments();
-			if (!commentReplies.isEmpty()) {
-				commentReplies.forEach(commentRepository::delete);
-			}
-
-			// Xóa tất cả các like liên quan đến bình luận này
-			likeRepository.deleteByCommentCommentId(comment.getCommentId());
-
-			// xóa luôn bài comment đó
 			commentRepository.delete(comment);
 			return ResponseEntity.ok()
 					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
