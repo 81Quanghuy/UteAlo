@@ -26,8 +26,11 @@ public interface FriendService {
 
 	<S extends Friend> S save(S entity);
 
-	List<FriendRequestResponse> findFriendUserIdsByUserId(String userId,Pageable pageable);
+	List<FriendRequestResponse> findFriendUserIdsByUserId(String userId);
 
 	ResponseEntity<GenericResponse> deleteFriend(String userId, String userId2);
 
+	List<FriendRequestResponse> findFriendTop10UserIdsByUserId(String userId, Pageable pageable);
+	
+	ResponseEntity<GenericResponse> getStatusByUserId(String userId, String userIdToken);
 }
