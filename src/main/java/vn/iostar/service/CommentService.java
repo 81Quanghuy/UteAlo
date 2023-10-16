@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
+import vn.iostar.dto.CreateCommentShareRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.ReplyCommentPostRequestDTO;
+import vn.iostar.dto.ReplyCommentShareRequestDTO;
 import vn.iostar.entity.Comment;
 
 public interface CommentService {
@@ -31,18 +33,25 @@ public interface CommentService {
 	Page<Comment> findAll(Pageable pageable);
 
 	<S extends Comment> S save(S entity);
-	
-	 ResponseEntity<GenericResponse> getCommentOfPost(int postId);
-	 
-	 ResponseEntity<GenericResponse> getCommentReplyOfComment(int commentId);
-	 
-	 ResponseEntity<GenericResponse> getCountCommentOfPost(int postId);
-	 
-	 ResponseEntity<Object> createCommentPost(String token,CreateCommentPostRequestDTO requestDTO) ;
-	 
-	 ResponseEntity<Object> replyCommentPost(String token,ReplyCommentPostRequestDTO requestDTO) ;
-	 
-	 ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request,String currentUserId) throws Exception;
 
-	 ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId);
+	ResponseEntity<GenericResponse> getCommentOfPost(int postId);
+	
+	ResponseEntity<GenericResponse> getCommentOfShare(int shareId);
+
+	ResponseEntity<GenericResponse> getCommentReplyOfComment(int commentId);
+
+	ResponseEntity<GenericResponse> getCountCommentOfPost(int postId);
+
+	ResponseEntity<Object> createCommentPost(String token, CreateCommentPostRequestDTO requestDTO);
+	
+	ResponseEntity<Object> createCommentShare(String token, CreateCommentShareRequestDTO requestDTO);
+
+	ResponseEntity<Object> replyCommentPost(String token, ReplyCommentPostRequestDTO requestDTO);
+	
+	ResponseEntity<Object> replyCommentShare(String token, ReplyCommentShareRequestDTO requestDTO);
+
+	ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request, String currentUserId)
+			throws Exception;
+
+	ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId);
 }

@@ -7,51 +7,51 @@ import lombok.Data;
 import vn.iostar.entity.Comment;
 
 @Data
-public class CommentPostResponse {
+public class CommentShareResponse {
 	private int commentId;
 	private String content;
 	private Date createTime;
 	private String photos;
 	private String userName;
-	private int postId;
+	private int shareId;
 	private String userAvatar;
 	private String userId;
     private List<Integer> likes;
     private List<Integer> comments;
 	
 	
-	public CommentPostResponse(Comment comment) {
+	public CommentShareResponse(Comment comment) {
 		super();
 		this.commentId = comment.getCommentId();
 		this.content = comment.getContent();
 		this.createTime = comment.getCreateTime();
 		this.photos = comment.getPhotos();
 		this.userName = comment.getUser().getUserName();
-		this.postId = comment.getPost().getPostId();
+		this.shareId = comment.getShare().getShareId();
 		this.userAvatar = comment.getUser().getProfile().getAvatar();
 		this.userId = comment.getUser().getUserId();
 	}
 
-	public CommentPostResponse(int commentId, String content, Date createTime, String photos, String userName,
-			int postId) {
+	public CommentShareResponse(int commentId, String content, Date createTime, String photos, String userName,
+			int shareId) {
 		super();
 		this.commentId = commentId;
 		this.content = content;
 		this.createTime = createTime;
 		this.photos = photos;
 		this.userName = userName;
-		this.postId = postId;
+		this.shareId = shareId;
 	}
 
-	public CommentPostResponse(int commentId, String content, Date createTime, String photos, String userName,
-			int postId, String userAvatar, String userId) {
+	public CommentShareResponse(int commentId, String content, Date createTime, String photos, String userName,
+			int shareId, String userAvatar, String userId) {
 		super();
 		this.commentId = commentId;
 		this.content = content;
 		this.createTime = createTime;
 		this.photos = photos;
 		this.userName = userName;
-		this.postId = postId;
+		this.shareId = shareId;
 		this.userAvatar = userAvatar;
 		this.userId = userId;
 	}
