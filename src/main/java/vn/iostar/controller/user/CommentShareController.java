@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import vn.iostar.dto.CreateCommentShareRequestDTO;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.ReplyCommentShareRequestDTO;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CommentService;
@@ -33,9 +34,20 @@ public class CommentShareController {
 		return commentService.getCommentOfShare(shareId);
 	}
 	
+	@GetMapping("/{commentId}/commentReply")
+	public ResponseEntity<GenericResponse> getCommentReplyOfComment(@PathVariable("commentId") int commentId) {
+		return commentService.getCommentReplyOfCommentShare(commentId);
+	}
+	
 	@PostMapping("/create")
 	public ResponseEntity<Object> createCommentShare(@ModelAttribute CreateCommentShareRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
 		return commentService.createCommentShare(token, requestDTO);
+	}
+	
+	@PostMapping("/reply")
+	public ResponseEntity<Object> replyCommentPost(@ModelAttribute ReplyCommentShareRequestDTO requestDTO,
+			@RequestHeader("Authorization") String token) {
+		return commentService.replyCommentShare(token, requestDTO);
 	}
 }

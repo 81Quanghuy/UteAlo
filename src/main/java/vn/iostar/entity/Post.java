@@ -33,6 +33,7 @@ public class Post implements Serializable{
     @Column(columnDefinition = "nvarchar(255)")
     private String content;
     private String photos;
+    private String files;
     
     @ManyToOne
     @JoinColumn(name = "userId")

@@ -127,7 +127,7 @@ public class CommentServiceImpl implements CommentService {
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("This share has no comment")
 					.result(false).statusCode(HttpStatus.OK.value()).build());
 		return ResponseEntity
-				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
+				.ok(GenericResponse.builder().success(true).message("Retrieving comment of share post successfully")
 						.result(comments).statusCode(HttpStatus.OK.value()).build());
 	}
 
@@ -144,6 +144,22 @@ public class CommentServiceImpl implements CommentService {
 							.result(false).statusCode(HttpStatus.OK.value()).build());
 		return ResponseEntity
 				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
+						.result(comments).statusCode(HttpStatus.OK.value()).build());
+	}
+	
+	@Override
+	public ResponseEntity<GenericResponse> getCommentReplyOfCommentShare(int commentId) {
+		Optional<Comment> comment = findById(commentId);
+		if (comment.isEmpty())
+			return ResponseEntity.ok(GenericResponse.builder().success(false).message("Comment not found").result(false)
+					.statusCode(HttpStatus.OK.value()).build());
+		List<CommentShareResponse> comments = getCommentsOfCommentShare(commentId);
+		if (comments.isEmpty())
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(false).message("This comment has no comment reply")
+							.result(false).statusCode(HttpStatus.OK.value()).build());
+		return ResponseEntity
+				.ok(GenericResponse.builder().success(true).message("Retrieving comment of share post successfully")
 						.result(comments).statusCode(HttpStatus.OK.value()).build());
 	}
 
@@ -185,6 +201,28 @@ public class CommentServiceImpl implements CommentService {
 
 	        // Tìm các comment reply cho directReply
 	        List<CommentPostResponse> subReplies = getCommentsOfComment(directReply.getCommentId());
+
+	        // Thêm tất cả các comment reply của directReply
+	        commentPostResponses.addAll(subReplies);
+	    }
+
+	    return commentPostResponses;
+	}
+	
+	public List<CommentShareResponse> getCommentsOfCommentShare(int commentId) {
+	    List<CommentShareResponse> commentPostResponses = new ArrayList<>();
+
+	    // Tìm các comment reply trực tiếp cho commentId
+	    List<Comment> directReplies = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
+
+	    // Lấy comment reply của commentId
+	    for (Comment directReply : directReplies) {
+	    	CommentShareResponse directReplyResponse = new CommentShareResponse(directReply);
+	        directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
+	        commentPostResponses.add(directReplyResponse);
+
+	        // Tìm các comment reply cho directReply
+	        List<CommentShareResponse> subReplies = getCommentsOfCommentShare(directReply.getCommentId());
 
 	        // Thêm tất cả các comment reply của directReply
 	        commentPostResponses.addAll(subReplies);
@@ -278,7 +316,17 @@ public class CommentServiceImpl implements CommentService {
 		comment.setCreateTime(new Date());
 		comment.setUpdateAt(new Date());
 		comment.setContent(requestDTO.getContent());
+		try {
+			if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
+				comment.setPhotos("");
+			} else {
 
+				comment.setPhotos(cloudinaryService.uploadImage(requestDTO.getPhotos()));
+			}
+		} catch (IOException e) {
+			// Xử lý ngoại lệ nếu có
+			e.printStackTrace();
+		}
 		comment.setUser(user.get());
 		save(comment);
 		GenericResponse response = GenericResponse.builder().success(true).message("Comment Share Successfully")

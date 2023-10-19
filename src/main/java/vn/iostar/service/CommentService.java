@@ -39,6 +39,8 @@ public interface CommentService {
 	ResponseEntity<GenericResponse> getCommentOfShare(int shareId);
 
 	ResponseEntity<GenericResponse> getCommentReplyOfComment(int commentId);
+	
+	ResponseEntity<GenericResponse> getCommentReplyOfCommentShare(int commentId);
 
 	ResponseEntity<GenericResponse> getCountCommentOfPost(int postId);
 
