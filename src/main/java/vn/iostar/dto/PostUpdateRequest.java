@@ -25,6 +25,9 @@ public class PostUpdateRequest {
     private MultipartFile photos;
     
     @Nationalized
+    private MultipartFile files;
+    
+    @Nationalized
     private Integer postGroupId;
     
 

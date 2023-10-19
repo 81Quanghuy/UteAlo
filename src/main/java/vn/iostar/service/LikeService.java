@@ -12,6 +12,7 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
+import vn.iostar.entity.Share;
 import vn.iostar.entity.User;
 
 public interface LikeService {
@@ -32,11 +33,17 @@ public interface LikeService {
 	
 	ResponseEntity<GenericResponse> getLikeOfPost(int postId);
 	
+	ResponseEntity<GenericResponse> getLikeOfShare(int shareId);
+	
 	ResponseEntity<GenericResponse> getLikeOfComment(int commentId);
 	
 	ResponseEntity<Object> toggleLikePost(String token,Integer postId );
 	
+	ResponseEntity<Object> toggleLikeShare(String token,Integer shareId );
+	
 	Optional<Like> findByPostAndUser(Post post, User user);
+	
+	Optional<Like> findByShareAndUser(Share share, User user);
 	
 	ResponseEntity<GenericResponse> getCountLikeOfPost(int postId);
 	
@@ -47,6 +54,8 @@ public interface LikeService {
 	Optional<Like> findByCommentAndUser(Comment comment, User user);
 	
 	ResponseEntity<Object> checkUserLikePost(String token,Integer postId );
+	
+	ResponseEntity<Object> checkUserLikeShare(String token,Integer shareId );
 	
 	ResponseEntity<Object> checkUserLikeComment(String token,Integer commentId );
 }

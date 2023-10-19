@@ -14,6 +14,7 @@ public class CreatePostRequestDTO {
     private Date updateAt;
     private Date postTime;
     private MultipartFile photos;
+    private MultipartFile files;
     private String userId;
     private int postGroupId;
 }

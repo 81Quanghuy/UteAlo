@@ -2,6 +2,7 @@ package vn.iostar.service.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -109,6 +111,8 @@ public class PostServiceImpl implements PostService {
 	public ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request, String currentUserId)
 			throws Exception {
 
+		List<String> allowedFileExtensions = Arrays.asList("docx", "txt", "pdf");
+		
 		Optional<Post> postOp = findById(postId);
 		if (postOp.isEmpty())
 			throw new Exception("Post doesn't exist");
@@ -126,16 +130,29 @@ public class PostServiceImpl implements PostService {
 			} else {
 		        post.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
 		    }
+		    
+		    if (request.getFiles() == null || request.getFiles().getContentType() == null) {
+	            post.setFiles("");
+	        } else {
+	            String fileExtension = StringUtils.getFilenameExtension(request.getFiles().getOriginalFilename());
+	            if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
+	                post.setFiles(cloudinaryService.uploadFile(request.getFiles()));
+	            } else {
+	                throw new IllegalArgumentException("Not support for this file.");
+	            }
+	        }
 		} catch (IOException e) {
 		    // Xử lý ngoại lệ nếu có
 		    e.printStackTrace();
 		}
+
 		Optional<PostGroup> postGroup = postGroupService.findById(request.getPostGroupId());
 		if (postGroup.isPresent()) {
 			
 			post.setPostGroup(postGroup.get());
 		
 		}
+		
 		save(post);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
 				.result(null).statusCode(200).build());
@@ -171,6 +188,9 @@ public class PostServiceImpl implements PostService {
 
 	@Override
 	public ResponseEntity<Object> createUserPost(String token, CreatePostRequestDTO requestDTO) {
+		
+		List<String> allowedFileExtensions = Arrays.asList("docx", "txt", "pdf");
+
 		if (String.valueOf(requestDTO.getPostGroupId()) == null) {
 			return ResponseEntity.badRequest().body("Please select post group");
 		}
@@ -191,15 +211,26 @@ public class PostServiceImpl implements PostService {
 		try {
 		    if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
 		    	post.setPhotos("");
-		    } else {
-		        
+		    } else {  
 		        post.setPhotos(cloudinaryService.uploadImage(requestDTO.getPhotos()));
 		    }
+		    if (requestDTO.getFiles() == null || requestDTO.getFiles().getContentType() == null) {
+	            post.setFiles("");
+	        } else {
+	            String fileExtension = StringUtils.getFilenameExtension(requestDTO.getFiles().getOriginalFilename());
+	            if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
+	                post.setFiles(cloudinaryService.uploadFile(requestDTO.getFiles()));
+	            } else {
+	                throw new IllegalArgumentException("Not support for this file.");
+	            }
+	        }
 		} catch (IOException e) {
 		    // Xử lý ngoại lệ nếu có
 		    e.printStackTrace();
 		}
-
+		
+		
+		
 		if (user.isEmpty()) {
 			return ResponseEntity.badRequest().body("User not found");
 		} else {

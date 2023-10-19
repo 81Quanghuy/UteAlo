@@ -14,6 +14,7 @@ public class PostsResponse {
     private Date updateAt;
     private String content;
     private String photos;
+    private String files;
     private String location;
     private String userId;
     private int postGroupId;
@@ -30,6 +31,9 @@ public class PostsResponse {
 		}
 		if(post.getPhotos()!=null) {
 			this.photos = post.getPhotos();
+		}
+		if(post.getFiles()!=null) {
+			this.files = post.getFiles();
 		}
 		if(post.getLocation()!=null) {
 			this.location = post.getLocation();
