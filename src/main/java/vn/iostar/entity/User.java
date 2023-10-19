@@ -55,10 +55,10 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "user2")
 	private List<Friend> friend2;
 
-	@OneToMany(mappedBy = "userFrom")
+	@OneToMany(mappedBy = "userFrom", fetch = FetchType.LAZY)
 	private List<FriendRequest> friendRequests1;
 
-	@OneToMany(mappedBy = "userTo")
+	@OneToMany(mappedBy = "userTo", fetch = FetchType.LAZY)
 	private List<FriendRequest> friendRequests2;
 
 	@OneToMany(mappedBy = "userFrom")
@@ -76,19 +76,25 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "user")
 	private List<Post> posts;
 
-	@OneToOne(mappedBy = "user")
-	private PostGroupMember postGroupMembers;
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+	private List<PostGroupMember> postGroupMembers;
 
-	@OneToOne(mappedBy = "user")
-	private ChatGroupMember chatGroupMembers;
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+	private List<ChatGroupMember> chatGroupMembers;
 
 	@OneToMany(mappedBy = "user")
 	private List<RefreshToken> refreshTokens;
 
 	@OneToOne(mappedBy = "user")
 	private VerificationToken verificationToken;
-	
+
 	@OneToMany(mappedBy = "user")
 	private List<Share> share;
+
+	@OneToMany(mappedBy = "invitedUser", fetch = FetchType.LAZY)
+	private List<PostGroupRequest> postGroupRequests;
+
+	@OneToMany(mappedBy = "invitingUser", fetch = FetchType.LAZY)
+	private List<PostGroupRequest> postGroupRequests1;
 
 }

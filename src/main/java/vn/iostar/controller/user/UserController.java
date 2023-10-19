@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -159,7 +158,6 @@ public class UserController {
 				.result("Send Otp successfully!").statusCode(HttpStatus.OK.value()).build();
 	}
 
-	@SuppressWarnings("unchecked")
 	@PutMapping("/reset-password")
 	public ResponseEntity<?> resetPassword(@RequestParam("token") String token,
 			@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
@@ -171,10 +169,10 @@ public class UserController {
 					passwordResetRequest.getConfirmPassword());
 			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Reset password successful")
 					.result(null).statusCode(200).build());
-		} else {
-			return new ResponseEntity(GenericResponse.builder().success(false).message(result).result(null)
+		} 
+			return new ResponseEntity<Object>(GenericResponse.builder().success(false).message(result).result(null)
 					.statusCode(HttpStatus.BAD_REQUEST.value()).build(), HttpStatus.BAD_REQUEST);
-		}
+		
 	}
 
 	@PutMapping("/avatar")

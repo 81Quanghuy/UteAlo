@@ -1,6 +1,9 @@
 package vn.iostar.dto;
 
-import java.util.Date;
+import java.util.Set;
+
+import org.hibernate.annotations.Nationalized;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +17,16 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 public class PostGroupDTO {
-	private int postGroupId;
+	private Integer postGroupId;
 	private String postGroupName;
-	private Date createDate;
+	private String bio;
+	private Set<String> userId;
+	private boolean isPublic;// true: private, false: public
+	private boolean isApprovalRequired;
+
+	@Nationalized
+	private MultipartFile avatar;
+
+	@Nationalized
+	private MultipartFile background;
 }

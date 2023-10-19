@@ -1,11 +1,23 @@
 package vn.iostar.entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,15 +37,25 @@ public class PostGroup implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int postGroupId;
 
-	@Column(columnDefinition = "nvarchar(255)")
+	@Column(unique = true, columnDefinition = "nvarchar(255)")
 	private String postGroupName;
+	private String avatarGroup;
+	private String backgroundGroup;
+	@Column(columnDefinition = "nvarchar(255)")
+	private String bio;
 	private Date createDate;
+	private Date updateDate;
+	private Boolean isPublic = true; // true: private, false: public
+	private Boolean isApprovalRequired = false; // Yêu cầu phê duyệt
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinTable(name = "postGroup_postGroupMember", joinColumns = @JoinColumn(name = "postGroupId"), inverseJoinColumns = @JoinColumn(name = "postGroupMemberId"))
-	private List<PostGroupMember> postGroupMembers = new ArrayList<>();
+	private Set<PostGroupMember> postGroupMembers = new HashSet<>();
 
-	@OneToMany(mappedBy = "postGroup")
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
 	private List<Post> posts;
+
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
+	private List<PostGroupRequest> postGroupRequests;
 
 }

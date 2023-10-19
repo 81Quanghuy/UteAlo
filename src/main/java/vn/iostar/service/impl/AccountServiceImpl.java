@@ -59,7 +59,7 @@ public class AccountServiceImpl implements AccountService {
 
 	@Autowired
 	UserRepository userRepository;
-	
+
 	@Autowired
 	ProfileRepository profileRepository;
 
@@ -106,14 +106,14 @@ public class AccountServiceImpl implements AccountService {
 					.message("Role name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
 		}
 		saveUserAndAccount(registerRequest, role.get());
-		if(registerRequest.getRoleName().equals(RoleName.SinhVien.name())) {
+		if (registerRequest.getRoleName().equals(RoleName.SinhVien.name())) {
 			Optional<PostGroup> poOptional = postGroupRepository.findByPostGroupName(registerRequest.getGroupName());
 			Optional<ChatGroup> chatOptional = chatGroupRepository.findByGroupName(registerRequest.getGroupName());
 			if (!poOptional.isPresent() || !chatOptional.isPresent()) {
 				return ResponseEntity.status(409).body(GenericResponse.builder().success(false)
 						.message("Group name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
-			}	
-			saveGroupandRole(registerRequest,poOptional.get(),chatOptional.get());
+			}
+			saveGroupandRole(registerRequest, poOptional.get(), chatOptional.get());
 		}
 		emailVerificationService.sendOtp(registerRequest.getEmail());
 
@@ -122,7 +122,7 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Transactional
-	private void saveGroupandRole(RegisterRequest registerRequest,PostGroup postGroup,ChatGroup chatGroup) {
+	private void saveGroupandRole(RegisterRequest registerRequest, PostGroup postGroup, ChatGroup chatGroup) {
 
 		ChatGroupMember chatGroupMember = new ChatGroupMember();
 		chatGroupMember.setUser(userRegister);
@@ -135,7 +135,7 @@ public class AccountServiceImpl implements AccountService {
 		postGroupMember.setRoleUserGroup(RoleUserGroup.Member);
 		postGroupMember.getPostGroup().add(postGroup);
 		postGroup.getPostGroupMembers().add(postGroupMember);
-		
+
 		chatGroupMemberRepository.save(chatGroupMember);
 		postGroupMemberRepository.save(postGroupMember);
 	}
@@ -185,13 +185,10 @@ public class AccountServiceImpl implements AccountService {
 
 		account.setUser(user);
 		accountRepository.save(account);
-		
+
 		Profile profile = new Profile();
-		profile.setAvatar("https://res.cloudinary.com/ddccjvlbf/image/upload/v1695996773/Social%20Media/User/user_ayzvu3.png");
 		profile.setUser(user);
-		profile.setBackground("https://res.cloudinary.com/ddccjvlbf/image/upload/v1694967910/Social%20Media/User/dzonp4ntntp4rccl1faw.jpg");
 		profileRepository.save(profile);
-		
 
 	}
 

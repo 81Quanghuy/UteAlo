@@ -10,12 +10,29 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vn.iostar.dto.GroupPostResponse;
+import vn.iostar.dto.InvitedPostGroupResponse;
 import vn.iostar.entity.PostGroup;
 
 @Repository
 public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
-	Optional<PostGroup> findByPostGroupName(String postGroupName);
+	
+	
+	Optional<PostGroup>findByPostGroupName(String name);
 	
 	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId")
     List<GroupPostResponse> findPostGroupInfoByUserId(@Param("userId") String userId, Pageable pageable);
+	
+	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId  AND pgm.roleUserGroup = 'Admin'")
+    
+	List<GroupPostResponse> findPostGroupInfoByUserIdOfUser(@Param("userId") String userId);
+	
+	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId  AND pgm.roleUserGroup = 'Member'")
+	List<GroupPostResponse> findPostGroupInfoByUserId(@Param("userId") String userId);
+	
+	@Query("SELECT NEW vn.iostar.dto.InvitedPostGroupResponse(pg.avatarGroup, pg.backgroundGroup, pg.bio, pg.postGroupName, u.userName) FROM PostGroupRequest pgr " +
+	           "JOIN pgr.postGroup pg " +
+	           "JOIN pgr.invitingUser u " +
+	           "WHERE pgr.invitedUser.userId = :invitedUserId " +
+	           "AND pgr.isAccept = false")
+	List<InvitedPostGroupResponse> findPostGroupInvitedByUserId(@Param("invitedUserId") String userId);
 }
