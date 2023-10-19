@@ -121,6 +121,7 @@ public class PostServiceImpl implements PostService {
 			throw new Exception("Update denied");
 		post.setContent(request.getContent());
 		post.setLocation(request.getLocation());
+		post.setPrivacyLevel(request.getPrivacyLevel());
 		post.setUpdateAt(new Date());
 		try {
 		    if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
@@ -206,7 +207,7 @@ public class PostServiceImpl implements PostService {
 		Post post = new Post();
 		post.setLocation(requestDTO.getLocation());
 		post.setContent(requestDTO.getContent());
-		
+		post.setPrivacyLevel(requestDTO.getPrivacyLevel());		
 		
 		try {
 		    if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
@@ -261,7 +262,7 @@ public class PostServiceImpl implements PostService {
 	}
 
 	public List<PostsResponse> findUserPosts(String userId) {
-		List<Post> userPosts = postRepository.findByUserUserId(userId);
+		List<Post> userPosts = postRepository.findByUserUserIdOrderByPostTimeDesc(userId);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
 		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();

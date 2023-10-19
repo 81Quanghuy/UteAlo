@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import vn.iostar.contants.PrivacyLevel;
+
 
 @Getter
 @Setter
@@ -17,10 +19,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @Table(name = "POSTS")
 public class Post implements Serializable{
-
-	 
+	
 
 	private static final long serialVersionUID = 1L;
+	
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +36,9 @@ public class Post implements Serializable{
     private String content;
     private String photos;
     private String files;
+    
+    @Enumerated(EnumType.STRING)
+    private PrivacyLevel privacyLevel;
     
     @ManyToOne
     @JoinColumn(name = "userId")
