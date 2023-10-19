@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import vn.iostar.contants.PrivacyLevel;
 
 
 
@@ -26,6 +27,9 @@ public class PostUpdateRequest {
     
     @Nationalized
     private MultipartFile files;
+    
+    @Nationalized
+    private PrivacyLevel privacyLevel;
     
     @Nationalized
     private Integer postGroupId;
