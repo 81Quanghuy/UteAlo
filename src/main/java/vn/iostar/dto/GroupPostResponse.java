@@ -11,5 +11,7 @@ import vn.iostar.contants.RoleUserGroup;
 public class GroupPostResponse {
 	private Integer postGroupId;
 	private String postGroupName;
+	private String avatarGroup;
+	private String backgroundGroup;
 	private RoleUserGroup role;	
 }

@@ -75,13 +75,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 
 		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserId(currentUserId);
-		if (!list.isEmpty()) {
 			return ResponseEntity
-					.ok(GenericResponse.builder().success(true).message("get list group post successfully!")
+					.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
 							.result(list).statusCode(HttpStatus.OK.value()).build());
-		}
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-				.message("Not found group post of this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 	}
 
 	@Override
@@ -90,13 +86,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 
 		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserIdOfUser(currentUserId);
-		if (!list.isEmpty()) {
 			return ResponseEntity
-					.ok(GenericResponse.builder().success(true).message("get list group post successfully!")
+					.ok(GenericResponse.builder().success(true).message("get list group post owner successfully!")
 							.result(list).statusCode(HttpStatus.OK.value()).build());
-		}
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-				.message("Not found group post of this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 	}
 
 	@Override
@@ -183,7 +175,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		postGroupRepository.save(groupEntity);
 		groupMemberRepository.save(postMember);
 		return ResponseEntity.status(HttpStatus.CREATED) // Sử dụng HttpStatus.CREATED cho tạo thành công
-				.body(GenericResponse.builder().success(true).message("Tạo thành công") // Thông báo tạo thành công
+				.body(GenericResponse.builder().success(true).message("Tạo thành công").result(groupEntity.getPostGroupId())// Thông báo tạo thành công
 						.statusCode(HttpStatus.CREATED.value()).build());
 
 	}
