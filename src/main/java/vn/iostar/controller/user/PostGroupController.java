@@ -38,7 +38,7 @@ public class PostGroupController {
 			@RequestHeader("Authorization") String authorizationHeader) {
 		return groupService.getPostGroupOwnerByUserId(authorizationHeader);
 	}
-	
+
 	@GetMapping("/list/invited")
 	public ResponseEntity<GenericResponse> getPostGroupInvitedByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -47,7 +47,7 @@ public class PostGroupController {
 		return groupService.getPostGroupInvitedByUserId(currentUserId);
 	}
 
-	//Chưa xong
+	// Chưa xong
 	@GetMapping("/list/suggestion")
 	public ResponseEntity<GenericResponse> getSuggestionPostGroupByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -107,12 +107,27 @@ public class PostGroupController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.invitePostGroup(postGroup, currentUserId);
 	}
-
+	@PostMapping("/joinGroup/{postId}")
+	public ResponseEntity<GenericResponse> joinPostGroup(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("postId") Integer postId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.joinPostGroup(postId, currentUserId);
+	}
+	
 	@PostMapping("/acceptMember")
 	public ResponseEntity<GenericResponse> acceptMemberPostGroup(
 			@RequestHeader("Authorization") String authorizationHeader, @RequestBody PostGroupDTO postGroup) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.acceptMemberPostGroup(postGroup, currentUserId);
+	}
+
+	@GetMapping("/get/{postId}")
+	public ResponseEntity<GenericResponse> getPostGroupById(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("postId") Integer postId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.getPostGroupById(currentUserId,postId);
 	}
 }

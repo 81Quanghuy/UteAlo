@@ -29,7 +29,7 @@ public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
 	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName,pg.avatarGroup, pg.backgroundGroup, pgm.roleUserGroup)start FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId  AND pgm.roleUserGroup = 'Member'")
 	List<GroupPostResponse> findPostGroupInfoByUserId(@Param("userId") String userId);
 	
-	@Query("SELECT NEW vn.iostar.dto.InvitedPostGroupResponse(pg.avatarGroup, pg.backgroundGroup, pg.bio, pg.postGroupName, u.userName) FROM PostGroupRequest pgr " +
+	@Query("SELECT NEW vn.iostar.dto.InvitedPostGroupResponse(pg.avatarGroup, pg.backgroundGroup, pg.bio, pg.postGroupName, u.userName, u.profile.avatar) FROM PostGroupRequest pgr " +
 	           "JOIN pgr.postGroup pg " +
 	           "JOIN pgr.invitingUser u " +
 	           "WHERE pgr.invitedUser.userId = :invitedUserId " +
