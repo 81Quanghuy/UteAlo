@@ -40,4 +40,8 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> acceptMemberPostGroup(PostGroupDTO postGroup, String currentUserId);
 
 	ResponseEntity<GenericResponse> getPostGroupInvitedByUserId(String currentUserId);
+
+	ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId);
+
+	ResponseEntity<GenericResponse> joinPostGroup(Integer postId, String currentUserId);
 }

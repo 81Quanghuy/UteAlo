@@ -22,6 +22,7 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.InvitedPostGroupResponse;
 import vn.iostar.dto.PostGroupDTO;
+import vn.iostar.dto.PostGroupResponse;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.PostGroupMember;
 import vn.iostar.entity.PostGroupRequest;
@@ -75,9 +76,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 
 		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserId(currentUserId);
-			return ResponseEntity
-					.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
-							.result(list).statusCode(HttpStatus.OK.value()).build());
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
+				.result(list).statusCode(HttpStatus.OK.value()).build());
 	}
 
 	@Override
@@ -86,9 +86,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 
 		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserIdOfUser(currentUserId);
-			return ResponseEntity
-					.ok(GenericResponse.builder().success(true).message("get list group post owner successfully!")
-							.result(list).statusCode(HttpStatus.OK.value()).build());
+		return ResponseEntity
+				.ok(GenericResponse.builder().success(true).message("get list group post owner successfully!")
+						.result(list).statusCode(HttpStatus.OK.value()).build());
 	}
 
 	@Override
@@ -175,7 +175,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 		postGroupRepository.save(groupEntity);
 		groupMemberRepository.save(postMember);
 		return ResponseEntity.status(HttpStatus.CREATED) // Sử dụng HttpStatus.CREATED cho tạo thành công
-				.body(GenericResponse.builder().success(true).message("Tạo thành công").result(groupEntity.getPostGroupId())// Thông báo tạo thành công
+				.body(GenericResponse.builder().success(true).message("Tạo thành công")
+						.result(groupEntity.getPostGroupId())// Thông báo tạo thành công
 						.statusCode(HttpStatus.CREATED.value()).build());
 
 	}
@@ -322,29 +323,25 @@ public class PostGroupServiceImpl implements PostGroupService {
 		// TH Group kiem tra quyen tu dong vao nhom
 		// TH: Group kiem tra thanh vien nhom
 		if (Boolean.TRUE.equals(groupPost.get().getIsApprovalRequired())) {
-			if (poOptional.isPresent()) {
-				poOptional.get().setIsAccept(true);
-				postGroupRequestRepository.save(poOptional.get());
-			}
+			poOptional.get().setIsAccept(true);
+			postGroupRequestRepository.save(poOptional.get());
 
 			// Tu dong vao nhom
 		} else {
-			if (poOptional.isPresent()) {
-				Optional<PostGroupMember> postGroupMember = groupMemberRepository
-						.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Member);
-				PostGroupMember postMember1 = new PostGroupMember();
-				if (postGroupMember.isPresent()) {
-					postMember1 = postGroupMember.get();
-				} else {
-					postMember1.setRoleUserGroup(RoleUserGroup.Member);
-					postMember1.setUser(user.get());
-				}
-				postMember1.getPostGroup().add(groupPost.get());
-				groupPost.get().getPostGroupMembers().add(postMember1);
-				groupMemberRepository.save(postMember1);
-				postGroupRepository.save(groupPost.get());
-				postGroupRequestRepository.delete(poOptional.get());
+			Optional<PostGroupMember> postGroupMember = groupMemberRepository
+					.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Member);
+			PostGroupMember postMember1 = new PostGroupMember();
+			if (postGroupMember.isPresent()) {
+				postMember1 = postGroupMember.get();
+			} else {
+				postMember1.setRoleUserGroup(RoleUserGroup.Member);
+				postMember1.setUser(user.get());
 			}
+			postMember1.getPostGroup().add(groupPost.get());
+			groupPost.get().getPostGroupMembers().add(postMember1);
+			groupMemberRepository.save(postMember1);
+			postGroupRepository.save(groupPost.get());
+			postGroupRequestRepository.delete(poOptional.get());
 		}
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Accept successfully")
@@ -473,6 +470,99 @@ public class PostGroupServiceImpl implements PostGroupService {
 		List<InvitedPostGroupResponse> list = postGroupRepository.findPostGroupInvitedByUserId(currentUserId);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully").result(list)
 				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		Optional<PostGroup> postGroup = postGroupRepository.findById(postId);
+		if (postGroup.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+
+		PostGroupResponse response = new PostGroupResponse();
+		response.setPostGroupId(postId);
+		response.setPostGroupName(postGroup.get().getPostGroupName());
+		response.setAvatar(postGroup.get().getAvatarGroup());
+		response.setBackground(postGroup.get().getBackgroundGroup());
+		response.setIsPublic(postGroup.get().getIsPublic());
+		response.setIsApprovalRequired(postGroup.get().getIsApprovalRequired());
+		response.setBio(postGroup.get().getBio());
+		response.setCountMember(postGroup.get().getPostGroupMembers().size());
+		response.setRoleGroup(checkUserInGroup(user.get(), postGroup.get()));
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully").result(response)
+				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	public String checkUserInGroup(User user, PostGroup group) {
+		Set<PostGroupMember> member = group.getPostGroupMembers();
+		for (PostGroupMember postGroupMember : member) {
+			if (postGroupMember.getUser().equals(user)) {
+				if (postGroupMember.getRoleUserGroup().equals(RoleUserGroup.Admin)) {
+					return "Admin";
+				}
+				return "Member";
+			}
+		}
+		Optional<PostGroupRequest> postGroupRequest = postGroupRequestRepository
+				.findByInvitedUserUserIdAndPostGroupPostGroupId(user.getUserId(), group.getPostGroupId());
+		if (postGroupRequest.isPresent()) {
+			if (Boolean.TRUE.equals(postGroupRequest.get().getIsAccept())) {
+				return "Waiting Accept";
+			}
+			return "Accept Invited";
+		}
+		return "None";
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> joinPostGroup(Integer postId, String currentUserId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		Optional<PostGroup> groupPost = postGroupRepository.findById(postId);
+		if (groupPost.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		for (PostGroupMember member : groupPost.get().getPostGroupMembers()) {
+			if (member.getUser().equals(user.get())) {
+				return ResponseEntity.status(HttpStatus.CONFLICT) // Sử dụng HttpStatus.CONFLICT cho lỗi đã tồn tại
+						.body(GenericResponse.builder().success(false).message("user đã là thành viên của nhóm")
+								.statusCode(HttpStatus.CONFLICT.value()).build());
+			}
+		}
+		if (Boolean.TRUE.equals(groupPost.get().getIsApprovalRequired())) {
+			PostGroupRequest postGroupRequest = new PostGroupRequest();
+			Date date = new Date();
+			postGroupRequest.setCreateDate(date);
+			postGroupRequest.setInvitingUser(user.get());
+			postGroupRequest.setInvitedUser(user.get());
+			postGroupRequest.setIsAccept(true);
+			postGroupRequest.setPostGroup(groupPost.get());
+			postGroupRequestRepository.save(postGroupRequest);
+			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully")
+					.result("Waiting Accept").statusCode(HttpStatus.OK.value()).build());
+		}
+		Optional<PostGroupMember> member = groupMemberRepository.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Member);
+		PostGroupMember postGroupMember = new PostGroupMember();
+		if(member.isPresent()) {
+			postGroupMember = member.get();
+		}
+			postGroupMember.setUser(user.get());
+			postGroupMember.setRoleUserGroup(RoleUserGroup.Member);
+			postGroupMember.getPostGroup().add(groupPost.get());
+			groupPost.get().getPostGroupMembers().add(postGroupMember);
+			groupMemberRepository.save(postGroupMember);
+			postGroupRepository.save(groupPost.get());
+			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully")
+					.result("Member").statusCode(HttpStatus.OK.value()).build());
 	}
 
 }

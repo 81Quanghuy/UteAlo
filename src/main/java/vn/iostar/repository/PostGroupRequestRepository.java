@@ -10,5 +10,5 @@ import vn.iostar.entity.PostGroupRequest;
 @Repository
 public interface PostGroupRequestRepository extends JpaRepository<PostGroupRequest, String> {
 
-	Optional<PostGroupRequest> findByInvitedUserUserIdAndPostGroupPostGroupId(String invitedUserId, Integer postGroupId);
+	Optional<PostGroupRequest> findByInvitedUserUserIdAndPostGroupPostGroupId( String invitedUserId, Integer postGroupId);
 }
