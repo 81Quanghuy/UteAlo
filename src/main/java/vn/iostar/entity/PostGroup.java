@@ -54,6 +54,9 @@ public class PostGroup implements Serializable {
 
 	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
 	private List<Post> posts;
+	
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
+	private List<Share> shares;
 
 	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
 	private List<PostGroupRequest> postGroupRequests;

@@ -209,4 +209,32 @@ public class ShareServiceImpl implements ShareService {
 		return sharesResponses;
 	}
 
+	@Override
+	public List<SharesResponse> findPostGroupShares(String currentUserId, Integer postGroupId) {
+		List<Share> groupSharePosts = shareRepository.findByPostGroupPostGroupId(postGroupId);
+		List<SharesResponse> sharesResponses = new ArrayList<>();
+		for(Share share : groupSharePosts) {
+			SharesResponse sharesResponse = new SharesResponse(share);
+			sharesResponse.setComments(getIdComment(share.getComments()));
+			sharesResponse.setLikes(getIdLikes(share.getLikes()));
+			sharesResponses.add(sharesResponse);
+		}
+		return sharesResponses;
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getGroupSharePosts(String currentUserId, Integer postGroupId) {
+		List<SharesResponse> groupSharePosts = findPostGroupShares(currentUserId,postGroupId);
+		if (currentUserId.isEmpty()) {
+			throw new RuntimeException("User not found.");
+		} else if (groupSharePosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.ok(GenericResponse.builder().success(true)
+					.message("Retrieved group posts successfully").result(groupSharePosts)
+					.statusCode(HttpStatus.OK.value()).build());
+		}
+	}
+
 }

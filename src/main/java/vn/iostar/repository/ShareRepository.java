@@ -22,5 +22,7 @@ public interface ShareRepository extends JpaRepository<Share, Integer> {
 	List<Share> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(@Param("user") User user);
 	
 	void deleteByPostPostId(int postId);
+	
+	List<Share> findByPostGroupPostGroupId(Integer postGroupId);
 
 }

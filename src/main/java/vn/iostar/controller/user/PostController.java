@@ -156,5 +156,6 @@ public class PostController {
     ) {
         return postService.findLatestPhotosByUserId(userId, page, size);
     }
+	
 
 }

@@ -58,7 +58,7 @@ public class PostServiceImpl implements PostService {
 
 	@Autowired
 	CommentRepository commentRepository;
-	
+
 	@Autowired
 	ShareRepository shareRepository;
 
@@ -112,7 +112,7 @@ public class PostServiceImpl implements PostService {
 			throws Exception {
 
 		List<String> allowedFileExtensions = Arrays.asList("docx", "txt", "pdf");
-		
+
 		Optional<Post> postOp = findById(postId);
 		if (postOp.isEmpty())
 			throw new Exception("Post doesn't exist");
@@ -124,39 +124,39 @@ public class PostServiceImpl implements PostService {
 		post.setPrivacyLevel(request.getPrivacyLevel());
 		post.setUpdateAt(new Date());
 		try {
-		    if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
-		    	post.setPhotos("");
-		    } else if(request.getPhotos().equals(postOp.get().getPhotos())) {
+			if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
+				post.setPhotos("");
+			} else if (request.getPhotos().equals(postOp.get().getPhotos())) {
 				post.setPhotos(postOp.get().getPhotos());
 			} else {
-		        post.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
-		    }
-		    
-		    if (request.getFiles() == null || request.getFiles().getContentType() == null) {
-	            post.setFiles("");
-	        } else {
-	            String fileExtension = StringUtils.getFilenameExtension(request.getFiles().getOriginalFilename());
-	            if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
-	                post.setFiles(cloudinaryService.uploadFile(request.getFiles()));
-	            } else {
-	                throw new IllegalArgumentException("Not support for this file.");
-	            }
-	        }
+				post.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
+			}
+
+			if (request.getFiles() == null || request.getFiles().getContentType() == null) {
+				post.setFiles("");
+			} else {
+				String fileExtension = StringUtils.getFilenameExtension(request.getFiles().getOriginalFilename());
+				if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
+					post.setFiles(cloudinaryService.uploadFile(request.getFiles()));
+				} else {
+					throw new IllegalArgumentException("Not support for this file.");
+				}
+			}
 		} catch (IOException e) {
-		    // Xử lý ngoại lệ nếu có
-		    e.printStackTrace();
+			// Xử lý ngoại lệ nếu có
+			e.printStackTrace();
 		}
 
 		Optional<PostGroup> postGroup = postGroupService.findById(request.getPostGroupId());
 		if (postGroup.isPresent()) {
-			
+
 			post.setPostGroup(postGroup.get());
-		
+
 		}
-		
+
 		save(post);
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
-				.result(null).statusCode(200).build());
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
+				.statusCode(200).build());
 	}
 
 	@Override
@@ -173,9 +173,9 @@ public class PostServiceImpl implements PostService {
 		// tìm thấy bài post với postId
 		if (optionalPost.isPresent()) {
 			Post post = optionalPost.get();
-			
+
 			postRepository.delete(post);
-			
+
 			return ResponseEntity.ok()
 					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
 		}
@@ -189,7 +189,7 @@ public class PostServiceImpl implements PostService {
 
 	@Override
 	public ResponseEntity<Object> createUserPost(String token, CreatePostRequestDTO requestDTO) {
-		
+
 		List<String> allowedFileExtensions = Arrays.asList("docx", "txt", "pdf");
 
 		if (String.valueOf(requestDTO.getPostGroupId()) == null) {
@@ -207,31 +207,29 @@ public class PostServiceImpl implements PostService {
 		Post post = new Post();
 		post.setLocation(requestDTO.getLocation());
 		post.setContent(requestDTO.getContent());
-		post.setPrivacyLevel(requestDTO.getPrivacyLevel());		
-		
+		post.setPrivacyLevel(requestDTO.getPrivacyLevel());
+
 		try {
-		    if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
-		    	post.setPhotos("");
-		    } else {  
-		        post.setPhotos(cloudinaryService.uploadImage(requestDTO.getPhotos()));
-		    }
-		    if (requestDTO.getFiles() == null || requestDTO.getFiles().getContentType() == null) {
-	            post.setFiles("");
-	        } else {
-	            String fileExtension = StringUtils.getFilenameExtension(requestDTO.getFiles().getOriginalFilename());
-	            if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
-	                post.setFiles(cloudinaryService.uploadFile(requestDTO.getFiles()));
-	            } else {
-	                throw new IllegalArgumentException("Not support for this file.");
-	            }
-	        }
+			if (requestDTO.getPhotos() == null || requestDTO.getPhotos().getContentType() == null) {
+				post.setPhotos("");
+			} else {
+				post.setPhotos(cloudinaryService.uploadImage(requestDTO.getPhotos()));
+			}
+			if (requestDTO.getFiles() == null || requestDTO.getFiles().getContentType() == null) {
+				post.setFiles("");
+			} else {
+				String fileExtension = StringUtils.getFilenameExtension(requestDTO.getFiles().getOriginalFilename());
+				if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
+					post.setFiles(cloudinaryService.uploadFile(requestDTO.getFiles()));
+				} else {
+					throw new IllegalArgumentException("Not support for this file.");
+				}
+			}
 		} catch (IOException e) {
-		    // Xử lý ngoại lệ nếu có
-		    e.printStackTrace();
+			// Xử lý ngoại lệ nếu có
+			e.printStackTrace();
 		}
-		
-		
-		
+
 		if (user.isEmpty()) {
 			return ResponseEntity.badRequest().body("User not found");
 		} else {
@@ -261,6 +259,7 @@ public class PostServiceImpl implements PostService {
 		return ResponseEntity.ok(response);
 	}
 
+	// Lấy những bài post của cá nhân
 	public List<PostsResponse> findUserPosts(String userId) {
 		List<Post> userPosts = postRepository.findByUserUserIdOrderByPostTimeDesc(userId);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
@@ -275,6 +274,67 @@ public class PostServiceImpl implements PostService {
 		return simplifiedUserPosts;
 	}
 
+	// Lấy những bài post của nhóm
+	@Override
+	public List<PostsResponse> findPostGroupPosts(String currentUserId, Integer postGroupId) {
+		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId);
+		List<PostsResponse> simplifiedGroupPosts = new ArrayList<>();
+		for (Post post : groupPosts) {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedGroupPosts.add(postsResponse);
+		}
+		return simplifiedGroupPosts;
+	}
+
+	// Lấy những bài post của nhóm
+	@Override
+	public ResponseEntity<GenericResponse> getGroupPosts(String currentUserId, Integer postGroupId) {
+		List<PostsResponse> groupPosts = findPostGroupPosts(currentUserId, postGroupId);
+		if (currentUserId.isEmpty()) {
+			throw new RuntimeException("User not found.");
+		} else if (groupPosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("Retrieved group posts successfully")
+							.result(groupPosts).statusCode(HttpStatus.OK.value()).build());
+		}
+	}
+
+	// Lấy tất cả các bài post của những nhóm mình tham gia
+	@Override
+	public List<PostsResponse> findGroupPosts(String currentUserId) {
+		List<Post> groupPosts = postRepository.findAllPostsInUserGroups(currentUserId);
+		List<PostsResponse> simplifiedGroupPosts = new ArrayList<>();
+		for (Post post : groupPosts) {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedGroupPosts.add(postsResponse);
+		}
+		return simplifiedGroupPosts;
+	}
+
+	// Lấy tất cả các bài post của những nhóm mình tham gia
+	@Override
+	public ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId,String userId) {
+		List<PostsResponse> groupPosts = findGroupPosts(currentUserId);
+		if (currentUserId.isEmpty()) {
+			throw new RuntimeException("User not found.");
+		} else if (groupPosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("Retrieved group posts successfully")
+							.result(groupPosts).statusCode(HttpStatus.OK.value()).build());
+		}
+	}
+
+	// Lấy những bài post liên quan đến user như cá nhân, nhóm, bạn bè
 	public List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user) {
 		List<Post> userPosts = postRepository.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.

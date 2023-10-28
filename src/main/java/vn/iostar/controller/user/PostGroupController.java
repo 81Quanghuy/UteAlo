@@ -16,6 +16,8 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.PostGroupService;
+import vn.iostar.service.PostService;
+import vn.iostar.service.ShareService;
 
 @RestController
 @RequestMapping("/api/v1/groupPost")
@@ -23,6 +25,12 @@ public class PostGroupController {
 
 	@Autowired
 	PostGroupService groupService;
+
+	@Autowired
+	ShareService shareService;
+
+	@Autowired
+	PostService postService;
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
@@ -107,6 +115,7 @@ public class PostGroupController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.invitePostGroup(postGroup, currentUserId);
 	}
+
 	@PostMapping("/joinGroup/{postId}")
 	public ResponseEntity<GenericResponse> joinPostGroup(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postId") Integer postId) {
@@ -114,7 +123,7 @@ public class PostGroupController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.joinPostGroup(postId, currentUserId);
 	}
-	
+
 	@PostMapping("/acceptMember")
 	public ResponseEntity<GenericResponse> acceptMemberPostGroup(
 			@RequestHeader("Authorization") String authorizationHeader, @RequestBody PostGroupDTO postGroup) {
@@ -128,6 +137,36 @@ public class PostGroupController {
 			@PathVariable("postId") Integer postId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.getPostGroupById(currentUserId,postId);
+		return groupService.getPostGroupById(currentUserId, postId);
 	}
+
+	// Lấy những bài post của nhóm
+	@GetMapping("/{postGroupId}/post")
+	public ResponseEntity<GenericResponse> getGroupPosts(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("postGroupId") Integer postGroupId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return postService.getGroupPosts(currentUserId, postGroupId);
+	}
+
+	// Lấy những bài share post của nhóm
+	@GetMapping("/{postGroupId}/share")
+	public ResponseEntity<GenericResponse> getGroupSharePosts(
+			@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("postGroupId") Integer postGroupId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return shareService.getGroupSharePosts(currentUserId, postGroupId);
+	}
+
+	// Lấy tất cả các bài post của những nhóm mình tham gia
+	@GetMapping("/posts/{userId}")
+	public ResponseEntity<GenericResponse> getPostOfPostGroup(
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable String userId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return postService.getPostOfPostGroup(currentUserId, userId);
+
+	}
+
 }

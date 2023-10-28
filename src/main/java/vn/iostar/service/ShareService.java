@@ -38,6 +38,10 @@ public interface ShareService {
 	public List<SharesResponse> findUserSharePosts(String userId);
 	
 	List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
+	
+	List<SharesResponse> findPostGroupShares(String currentUserId,Integer postGroupId);
+	
+	ResponseEntity<GenericResponse> getGroupSharePosts(String currentUserId,Integer postGroupId);
 
 	
 }
