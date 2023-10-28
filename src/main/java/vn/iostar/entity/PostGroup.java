@@ -41,6 +41,7 @@ public class PostGroup implements Serializable {
 	private String postGroupName;
 	private String avatarGroup;
 	private String backgroundGroup;
+	
 	@Column(columnDefinition = "nvarchar(255)")
 	private String bio;
 	private Date createDate;

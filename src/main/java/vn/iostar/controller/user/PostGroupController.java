@@ -140,15 +140,6 @@ public class PostGroupController {
 		return groupService.getPostGroupById(currentUserId, postId);
 	}
 
-	// Lấy những bài post của nhóm
-	@GetMapping("/{postGroupId}/post")
-	public ResponseEntity<GenericResponse> getGroupPosts(@RequestHeader("Authorization") String authorizationHeader,
-			@PathVariable("postGroupId") Integer postGroupId) {
-		String token = authorizationHeader.substring(7);
-		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return postService.getGroupPosts(currentUserId, postGroupId);
-	}
-
 	// Lấy những bài share post của nhóm
 	@GetMapping("/{postGroupId}/share")
 	public ResponseEntity<GenericResponse> getGroupSharePosts(

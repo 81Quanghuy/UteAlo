@@ -1,6 +1,7 @@
 package vn.iostar.service.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +22,7 @@ import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.InvitedPostGroupResponse;
+import vn.iostar.dto.MemberGroupResponse;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.dto.PostGroupResponse;
 import vn.iostar.entity.PostGroup;
@@ -139,9 +141,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 		Date date = new Date();
 		PostGroup groupEntity = new PostGroup();
 		groupEntity.setPostGroupName(postGroup.getPostGroupName());
-		groupEntity.setIsPublic(postGroup.isPublic());
+		groupEntity.setIsPublic(postGroup.getIsPublic());
 		groupEntity.setBio(postGroup.getBio());
-		groupEntity.setIsApprovalRequired(postGroup.isApprovalRequired());
+		groupEntity.setIsApprovalRequired(postGroup.getIsApprovalRequired());
 		groupEntity.setCreateDate(date);
 		groupEntity.setUpdateDate(date);
 
@@ -202,8 +204,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 			Date date = new Date();
 			PostGroup entity = groupPost.get();
 			entity.setPostGroupName(postGroup.getPostGroupName());
-			entity.setIsPublic(postGroup.isPublic());
-			entity.setIsApprovalRequired(postGroup.isApprovalRequired());
+			entity.setIsPublic(postGroup.getIsPublic());
+			entity.setIsApprovalRequired(postGroup.getIsApprovalRequired());
 			entity.setBio(postGroup.getBio());
 			entity.setUpdateDate(date);
 			postGroupRepository.save(entity);
@@ -238,14 +240,13 @@ public class PostGroupServiceImpl implements PostGroupService {
 			String avatarOld = entity.getAvatarGroup();
 			entity.setAvatarGroup(updateImage(avatarOld, postGroup.getAvatar()));
 			postGroupRepository.save(entity);
-		}
-		if (postGroup.getBackground() != null) {
+		} else if (postGroup.getBackground() != null) {
 			String backgroundOld = entity.getBackgroundGroup();
 			entity.setBackgroundGroup(updateImage(backgroundOld, postGroup.getBackground()));
 			postGroupRepository.save(entity);
 		}
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Upload successfully")
-				.result(postGroup).statusCode(HttpStatus.OK.value()).build());
+				.statusCode(HttpStatus.OK.value()).build());
 	}
 
 	public String updateImage(String oldImage, MultipartFile newImage) {
@@ -500,8 +501,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 		response.setPostGroupName(postGroup.get().getPostGroupName());
 		response.setAvatar(postGroup.get().getAvatarGroup());
 		response.setBackground(postGroup.get().getBackgroundGroup());
-		response.setIsPublic(postGroup.get().getIsPublic());
-		response.setIsApprovalRequired(postGroup.get().getIsApprovalRequired());
+		response.setGroupType(Boolean.TRUE.equals(postGroup.get().getIsPublic()) ? "Public" : "Private");
+		response.setUserJoinStatus(Boolean.TRUE.equals(postGroup.get().getIsApprovalRequired()) ? "denied" : "allowed");
 		response.setBio(postGroup.get().getBio());
 		response.setCountMember(postGroup.get().getPostGroupMembers().size());
 		response.setRoleGroup(checkUserInGroup(user.get(), postGroup.get()));
@@ -574,6 +575,60 @@ public class PostGroupServiceImpl implements PostGroupService {
 		postGroupRepository.save(groupPost.get());
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully").result("Member")
 				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getMemberByPostId(Integer postId, String currentUserId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		Optional<PostGroup> groupPost = postGroupRepository.findById(postId);
+		if (groupPost.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		List<MemberGroupResponse> meList = new ArrayList<>();
+
+		for (PostGroupMember member : groupPost.get().getPostGroupMembers()) {
+			MemberGroupResponse mResponse = new MemberGroupResponse();
+			mResponse.setGroupName(groupPost.get().getPostGroupName());
+			mResponse.setUserId(member.getUser().getUserId());
+			mResponse.setUsername(member.getUser().getUserName());
+			mResponse.setAvatarUser(member.getUser().getProfile().getAvatar());
+			mResponse.setRoleName(member.getRoleUserGroup());
+			meList.add(mResponse);
+		}
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully").result(meList)
+				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getMemberRequiredByPostId(Integer postId, String currentUserId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		Optional<PostGroup> groupPost = postGroupRepository.findById(postId);
+		if (groupPost.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		List<MemberGroupResponse> meList = new ArrayList<>();
+		List<PostGroupRequest> postRequestList = postGroupRequestRepository.findByIsAcceptAndPostGroupPostGroupId(true,
+				postId);
+		for (PostGroupRequest postGroupRequest : postRequestList) {
+			MemberGroupResponse mResponse = new MemberGroupResponse();
+			mResponse.setGroupName(groupPost.get().getPostGroupName());
+			mResponse.setUserId(postGroupRequest.getInvitedUser().getUserId());
+			mResponse.setUsername(postGroupRequest.getInvitedUser().getUserName());
+			mResponse.setAvatarUser(postGroupRequest.getInvitedUser().getProfile().getAvatar());
+			mResponse.setCreateAt(postGroupRequest.getCreateDate());
+			meList.add(mResponse);
+		}
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully").result(meList)
+				.statusCode(HttpStatus.OK.value()).build());
+
 	}
 
 	

@@ -21,8 +21,8 @@ public class PostGroupDTO {
 	private String postGroupName;
 	private String bio;
 	private Set<String> userId;
-	private boolean isPublic;// true: private, false: public
-	private boolean isApprovalRequired;
+	private Boolean isPublic;// true: private, false: public
+	private Boolean isApprovalRequired;
 
 	@Nationalized
 	private MultipartFile avatar;
