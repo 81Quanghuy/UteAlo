@@ -19,4 +19,6 @@ public interface PostGroupRequestService {
 
 	<S extends PostGroupRequest> S save(S entity);
 
+	List<PostGroupRequest> findByIsAcceptAndPostGroupPostGroupId(Integer postGroupId, Boolean isAccept);
+
 }

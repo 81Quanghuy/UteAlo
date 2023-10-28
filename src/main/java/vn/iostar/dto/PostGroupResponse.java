@@ -16,9 +16,9 @@ public class PostGroupResponse {
 	private String postGroupName;
 	private String bio;
 	private Integer countMember;
-	private Boolean isPublic;// true: private, false: public
-	private Boolean isApprovalRequired;
+	private String groupType;// true: private, false: public
+	private String userJoinStatus;
 	private String avatar;
 	private String background;
-	private String RoleGroup;
+	private String roleGroup;
 }

@@ -107,6 +107,7 @@ public class PostGroupController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.invitePostGroup(postGroup, currentUserId);
 	}
+
 	@PostMapping("/joinGroup/{postId}")
 	public ResponseEntity<GenericResponse> joinPostGroup(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postId") Integer postId) {
@@ -114,7 +115,7 @@ public class PostGroupController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.joinPostGroup(postId, currentUserId);
 	}
-	
+
 	@PostMapping("/acceptMember")
 	public ResponseEntity<GenericResponse> acceptMemberPostGroup(
 			@RequestHeader("Authorization") String authorizationHeader, @RequestBody PostGroupDTO postGroup) {
@@ -128,6 +129,22 @@ public class PostGroupController {
 			@PathVariable("postId") Integer postId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.getPostGroupById(currentUserId,postId);
+		return groupService.getPostGroupById(currentUserId, postId);
+	}
+
+	@GetMapping("/list/member/{postId}")
+	public ResponseEntity<GenericResponse> getMemberByPostId(@PathVariable("postId") Integer postId,
+			@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.getMemberByPostId(postId, currentUserId);
+	}
+
+	@GetMapping("/list/memberRequired/{postId}")
+	public ResponseEntity<GenericResponse> getMemberRequiredByPostId(@PathVariable("postId") Integer postId,
+			@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.getMemberRequiredByPostId(postId, currentUserId);
 	}
 }
