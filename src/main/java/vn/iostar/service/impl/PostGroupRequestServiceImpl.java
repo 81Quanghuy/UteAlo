@@ -37,6 +37,11 @@ public class PostGroupRequestServiceImpl implements PostGroupRequestService {
 	}
 
 	@Override
+	public List<PostGroupRequest> findByIsAcceptAndPostGroupPostGroupId(Integer postGroupId, Boolean isAccept) {
+		return postGroupRequestRepository.findByIsAcceptAndPostGroupPostGroupId(isAccept, postGroupId);
+	}
+
+	@Override
 	public void delete(PostGroupRequest entity) {
 		postGroupRequestRepository.delete(entity);
 	}
