@@ -47,6 +47,13 @@ public interface PostService {
 	List<String> findAllPhotosByUserIdOrderByPostTimeDesc(String userId);
 	
 	Page<String> findLatestPhotosByUserId(String userId, int page, int size);
-
+	
+	List<PostsResponse> findPostGroupPosts(String currentUserId,Integer postGroupId);
+	
+	ResponseEntity<GenericResponse> getGroupPosts(String currentUserId,Integer postGroupId);
+	
+List<PostsResponse> findGroupPosts(String currentUserId);
+	
+	ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId,String userId);
 
 }

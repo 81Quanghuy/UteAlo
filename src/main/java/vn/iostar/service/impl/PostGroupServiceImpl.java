@@ -33,6 +33,7 @@ import vn.iostar.repository.FriendRepository;
 import vn.iostar.repository.PostGroupMemberRepository;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.PostGroupRequestRepository;
+import vn.iostar.repository.PostRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CloudinaryService;
@@ -61,6 +62,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Autowired
 	PostGroupRequestRepository postGroupRequestRepository;
+	
+	@Autowired
+	PostRepository postRepository;
 
 	@Override
 	public Optional<PostGroup> findById(Integer id) {
@@ -385,6 +389,12 @@ public class PostGroupServiceImpl implements PostGroupService {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
+		
+		boolean userInPostGroup = postGroupRepository.isUserInPostGroup(groupPost.get(), user.get());
+		if(!userInPostGroup) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("User does not belong to the post group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
 
 		// Lap qua mang UserId de gui loi moi vao nhom
 		if (postGroup.getUserId() != null) {
@@ -620,5 +630,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 				.statusCode(HttpStatus.OK.value()).build());
 
 	}
+
+	
 
 }

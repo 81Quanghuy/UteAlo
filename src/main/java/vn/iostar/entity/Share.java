@@ -30,6 +30,10 @@ public class Share implements Serializable {
     @ManyToOne
     @JoinColumn(name = "postId")
     private Post post;
+    
+    @ManyToOne
+    @JoinColumn(name = "postGroupId")
+    private PostGroup postGroup;
 
     @ManyToOne
     @JoinColumn(name = "userId")

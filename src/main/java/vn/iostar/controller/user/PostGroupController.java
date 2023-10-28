@@ -16,6 +16,8 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.PostGroupService;
+import vn.iostar.service.PostService;
+import vn.iostar.service.ShareService;
 
 @RestController
 @RequestMapping("/api/v1/groupPost")
@@ -23,6 +25,12 @@ public class PostGroupController {
 
 	@Autowired
 	PostGroupService groupService;
+
+	@Autowired
+	ShareService shareService;
+
+	@Autowired
+	PostService postService;
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
@@ -132,19 +140,24 @@ public class PostGroupController {
 		return groupService.getPostGroupById(currentUserId, postId);
 	}
 
-	@GetMapping("/list/member/{postId}")
-	public ResponseEntity<GenericResponse> getMemberByPostId(@PathVariable("postId") Integer postId,
-			@RequestHeader("Authorization") String authorizationHeader) {
+	// Lấy những bài share post của nhóm
+	@GetMapping("/{postGroupId}/share")
+	public ResponseEntity<GenericResponse> getGroupSharePosts(
+			@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("postGroupId") Integer postGroupId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.getMemberByPostId(postId, currentUserId);
+		return shareService.getGroupSharePosts(currentUserId, postGroupId);
 	}
 
-	@GetMapping("/list/memberRequired/{postId}")
-	public ResponseEntity<GenericResponse> getMemberRequiredByPostId(@PathVariable("postId") Integer postId,
-			@RequestHeader("Authorization") String authorizationHeader) {
+	// Lấy tất cả các bài post của những nhóm mình tham gia
+	@GetMapping("/posts/{userId}")
+	public ResponseEntity<GenericResponse> getPostOfPostGroup(
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable String userId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.getMemberRequiredByPostId(postId, currentUserId);
+		return postService.getPostOfPostGroup(currentUserId, userId);
+
 	}
+
 }
