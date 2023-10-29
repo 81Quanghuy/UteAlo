@@ -482,6 +482,18 @@ public class PostGroupServiceImpl implements PostGroupService {
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully").result(list)
 				.statusCode(HttpStatus.OK.value()).build());
 	}
+	
+	@Override
+	public ResponseEntity<GenericResponse> getPostGroupRequestsSentByUserId(String currentUserId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		List<InvitedPostGroupResponse> list = postGroupRepository.findPostGroupRequestsSentByUserId(currentUserId);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully").result(list)
+				.statusCode(HttpStatus.OK.value()).build());
+	}
 
 	@Override
 	public ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId) {
@@ -631,6 +643,5 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	}
 
-	
 
 }
