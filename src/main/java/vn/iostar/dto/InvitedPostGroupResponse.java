@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InvitedPostGroupResponse {
+	private String postGroupRequestId;
+	private Integer postGroupId;
 	private String avatarGroup;
 	private String backgroundGroup;
 	private String bio;

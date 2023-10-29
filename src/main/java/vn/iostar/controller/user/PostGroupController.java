@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.service.PostGroupRequestService;
 import vn.iostar.service.PostGroupService;
 import vn.iostar.service.PostService;
 import vn.iostar.service.ShareService;
@@ -25,6 +27,9 @@ public class PostGroupController {
 
 	@Autowired
 	PostGroupService groupService;
+	
+	@Autowired
+	PostGroupRequestService postGroupRequestService;
 
 	@Autowired
 	ShareService shareService;
@@ -47,12 +52,22 @@ public class PostGroupController {
 		return groupService.getPostGroupOwnerByUserId(authorizationHeader);
 	}
 
-	@GetMapping("/list/invited")
+	// Lời mời vào nhóm đã nhận được
+	@GetMapping("/list/isInvited")
 	public ResponseEntity<GenericResponse> getPostGroupInvitedByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.getPostGroupInvitedByUserId(currentUserId);
+	}
+	
+	// Lời mời vào nhóm đã gửi đi
+	@GetMapping("/list/invited")
+	public ResponseEntity<GenericResponse> getPostGroupRequestsSentByUserId(
+			@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.getPostGroupRequestsSentByUserId(currentUserId);
 	}
 
 	// Chưa xong
@@ -92,20 +107,20 @@ public class PostGroupController {
 		return groupService.deletePostGroup(postId, currentUserId);
 	}
 
-	@PostMapping("/accept/{postId}")
+	@PostMapping("/accept/{postGroupId}")
 	public ResponseEntity<GenericResponse> acceptPostGroup(@RequestHeader("Authorization") String authorizationHeader,
-			@PathVariable("postId") Integer postId) {
+			@PathVariable("postGroupId") Integer postGroupId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.acceptPostGroup(postId, currentUserId);
+		return groupService.acceptPostGroup(postGroupId, currentUserId);
 	}
 
-	@PostMapping("/decline/{postId}")
+	@PostMapping("/decline/{postGroupId}")
 	public ResponseEntity<GenericResponse> declinePostGroup(@RequestHeader("Authorization") String authorizationHeader,
-			@PathVariable("postId") Integer postId) {
+			@PathVariable("postGroupId") Integer postGroupId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.declinePostGroup(postId, currentUserId);
+		return groupService.declinePostGroup(postGroupId, currentUserId);
 	}
 
 	@PostMapping("/invite")
@@ -158,6 +173,14 @@ public class PostGroupController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return postService.getPostOfPostGroup(currentUserId, userId);
 
+	}
+	
+	@PutMapping("/request/cancel/{postGroupRequestId}")
+	public ResponseEntity<GenericResponse> cancelRequestJoinInGroup(
+			@RequestHeader("Authorization") String authorizationHeader, @Valid @PathVariable("postGroupRequestId") String postGroupRequestId) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return postGroupRequestService.cancelPostGroupInvitation(postGroupRequestId, userIdToken);
 	}
 
 }

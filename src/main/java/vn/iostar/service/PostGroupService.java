@@ -39,7 +39,11 @@ public interface PostGroupService {
 
 	ResponseEntity<GenericResponse> acceptMemberPostGroup(PostGroupDTO postGroup, String currentUserId);
 
+	// Lời mời vào nhóm đã nhận được
 	ResponseEntity<GenericResponse> getPostGroupInvitedByUserId(String currentUserId);
+	
+	// Lời mời vào nhóm đã gửi đi
+	ResponseEntity<GenericResponse> getPostGroupRequestsSentByUserId(String currentUserId);
 
 	ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId);
 
