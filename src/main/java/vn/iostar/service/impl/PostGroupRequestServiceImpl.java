@@ -20,7 +20,6 @@ public class PostGroupRequestServiceImpl implements PostGroupRequestService {
 
 	@Autowired
 	PostGroupRequestRepository postGroupRequestRepository;
-	
 
 	@Autowired
 	UserRepository userRepository;
@@ -71,6 +70,10 @@ public class PostGroupRequestServiceImpl implements PostGroupRequestService {
 
 		PostGroupRequest postGroupRequestOptional = postGroupRequestRepository
 				.findInvitationSentByUserIdAndRequestId(currentUserId, postGroupRequestId);
+		if (postGroupRequestOptional==null) {
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "NOT FOUND JOIN GROUP REQUEST!", null, HttpStatus.OK.value()));
+		}
 		if (!postGroupRequestOptional.equals(null)) {
 			delete(postGroupRequestOptional);
 			return ResponseEntity.ok()

@@ -18,12 +18,14 @@ import vn.iostar.dto.SharesResponse;
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
+import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.Share;
 import vn.iostar.entity.User;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.LikeRepository;
 import vn.iostar.repository.ShareRepository;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.service.PostGroupService;
 import vn.iostar.service.PostService;
 import vn.iostar.service.ShareService;
 import vn.iostar.service.UserService;
@@ -42,6 +44,9 @@ public class ShareServiceImpl implements ShareService {
 
 	@Autowired
 	PostService postService;
+	
+	@Autowired
+	PostGroupService postGroupService;
 
 	@Autowired
 	LikeRepository likeRepository;
@@ -105,6 +110,10 @@ public class ShareServiceImpl implements ShareService {
 		share.setUpdateAt(new Date());
 		share.setPost(post.get());
 		share.setUser(user.get());
+		Optional<PostGroup> postGroup = postGroupService.findById(requestDTO.getPostGroupId());
+		if (postGroup.isPresent()) {
+			share.setPostGroup(postGroup.get());
+		}
 		save(share);
 		SharesResponse sharesResponse = new SharesResponse(share);
 		List<Integer> count = new ArrayList<>();
@@ -210,7 +219,7 @@ public class ShareServiceImpl implements ShareService {
 	}
 
 	@Override
-	public List<SharesResponse> findPostGroupShares(String currentUserId, Integer postGroupId) {
+	public List<SharesResponse> findPostGroupShares(Integer postGroupId) {
 		List<Share> groupSharePosts = shareRepository.findByPostGroupPostGroupId(postGroupId);
 		List<SharesResponse> sharesResponses = new ArrayList<>();
 		for(Share share : groupSharePosts) {
@@ -223,11 +232,10 @@ public class ShareServiceImpl implements ShareService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> getGroupSharePosts(String currentUserId, Integer postGroupId) {
-		List<SharesResponse> groupSharePosts = findPostGroupShares(currentUserId,postGroupId);
-		if (currentUserId.isEmpty()) {
-			throw new RuntimeException("User not found.");
-		} else if (groupSharePosts.isEmpty()) {
+	public ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId) {
+		List<SharesResponse> groupSharePosts = findPostGroupShares(postGroupId);
+		
+		if (groupSharePosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		} else {

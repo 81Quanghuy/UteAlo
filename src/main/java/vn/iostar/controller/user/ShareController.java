@@ -108,7 +108,6 @@ public class ShareController {
 	@PostMapping("/create")
 	public ResponseEntity<Object> createPost(@ModelAttribute SharePostRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
-		System.out.println("postIdKhang"+requestDTO.getPostId()+requestDTO.getContent());
 		return shareService.sharePost(token, requestDTO);
 	}
 	
