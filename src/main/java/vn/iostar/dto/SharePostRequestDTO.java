@@ -5,5 +5,6 @@ import lombok.Data;
 @Data
 public class SharePostRequestDTO {
 	private String content;
-	private int postId;
+	private Integer postId;
+	private Integer postGroupId;
 }

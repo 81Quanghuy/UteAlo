@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -36,6 +39,7 @@ public class PostGroupMember implements Serializable {
 	private int postGroupMemberId;
 
 	@ManyToMany(mappedBy = "postGroupMembers")
+	@Cascade(value = { CascadeType.REMOVE })
 	private List<PostGroup> postGroup = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)

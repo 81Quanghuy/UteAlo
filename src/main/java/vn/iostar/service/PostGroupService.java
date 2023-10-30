@@ -16,14 +16,14 @@ public interface PostGroupService {
 	Optional<PostGroup> findById(Integer id);
 
 	List<GroupPostResponse> findPostGroupInfoByUserId(String userId, Pageable pageable);
-	
+
 	ResponseEntity<GenericResponse> getPostGroupJoinByUserId(String authorizationHeader);
-	
+
 	ResponseEntity<GenericResponse> getPostGroupOwnerByUserId(String authorizationHeader);
 
 	ResponseEntity<GenericResponse> getSuggestionPostGroupByUserId(String authorizationHeader);
 
-	ResponseEntity<GenericResponse> createPostGroupByUserId(PostGroupDTO postGroup,String authorizationHeader);
+	ResponseEntity<GenericResponse> createPostGroupByUserId(PostGroupDTO postGroup, String authorizationHeader);
 
 	ResponseEntity<GenericResponse> updatePostGroupByPostIdAndUserId(PostGroupDTO postGroup, String currentUserId);
 
@@ -41,9 +41,12 @@ public interface PostGroupService {
 
 	// Lời mời vào nhóm đã nhận được
 	ResponseEntity<GenericResponse> getPostGroupInvitedByUserId(String currentUserId);
-	
+
 	// Lời mời vào nhóm đã gửi đi
 	ResponseEntity<GenericResponse> getPostGroupRequestsSentByUserId(String currentUserId);
+
+	// Rời nhóm
+	ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId);
 
 	ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId);
 

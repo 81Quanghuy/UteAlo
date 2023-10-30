@@ -46,6 +46,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 	PostGroupRepository postGroupRepository;
 
 	@Autowired
+	PostGroupMemberRepository postGroupMemberRepository;
+
+	@Autowired
 	JwtTokenProvider jwtTokenProvider;
 
 	@Autowired
@@ -62,7 +65,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Autowired
 	PostGroupRequestRepository postGroupRequestRepository;
-	
+
 	@Autowired
 	PostRepository postRepository;
 
@@ -389,11 +392,12 @@ public class PostGroupServiceImpl implements PostGroupService {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
-		
+
 		boolean userInPostGroup = postGroupRepository.isUserInPostGroup(groupPost.get(), user.get());
-		if(!userInPostGroup) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("User does not belong to the post group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		if (!userInPostGroup) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(GenericResponse.builder().success(false).message("User does not belong to the post group")
+							.statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 
 		// Lap qua mang UserId de gui loi moi vao nhom
@@ -482,7 +486,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully").result(list)
 				.statusCode(HttpStatus.OK.value()).build());
 	}
-	
+
 	@Override
 	public ResponseEntity<GenericResponse> getPostGroupRequestsSentByUserId(String currentUserId) {
 		Optional<User> user = userRepository.findById(currentUserId);
@@ -643,5 +647,19 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	}
 
+	@Override
+	public ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId) {
+		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ tồn tại
+		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId,userId);
+
+        if (hasAssociations==1) {
+            // Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
+            postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
+
+            return ResponseEntity.ok().body(new GenericResponse(true, "Leave Group Successful!", null, HttpStatus.OK.value()));
+        } else {
+            return ResponseEntity.ok().body(new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
+        }
+	}
 
 }
