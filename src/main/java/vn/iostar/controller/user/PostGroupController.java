@@ -35,6 +35,12 @@ public class PostGroupController {
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
 
+	@GetMapping("/list/all")
+	public ResponseEntity<GenericResponse> getPostGroupByUserId(
+			@RequestHeader("Authorization") String authorizationHeader) {
+		return groupService.getPostGroupByUserId(authorizationHeader);
+	}
+	
 	@GetMapping("/list/join")
 	public ResponseEntity<GenericResponse> getPostGroupJoinByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {

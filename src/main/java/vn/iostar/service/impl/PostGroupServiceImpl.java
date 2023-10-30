@@ -770,7 +770,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 				listUser.add(userItem.get());
 			}
-			
+
 			for (User user2 : listUser) {
 				for (PostGroupRequest requestItem : requestList) {
 					if (requestItem.getInvitedUser().getUserId().equals(user2.getUserId())) {
@@ -783,6 +783,22 @@ public class PostGroupServiceImpl implements PostGroupService {
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 				.message("Not found user need delete").statusCode(HttpStatus.NOT_FOUND.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getPostGroupByUserId(String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userRepository.findById(currentUserId);
+
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		PageRequest pageable = PageRequest.of(0, 20);
+		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserId(currentUserId, pageable);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
+				.result(list).statusCode(HttpStatus.OK.value()).build());
 	}
 
 }

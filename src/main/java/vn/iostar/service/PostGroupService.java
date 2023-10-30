@@ -54,4 +54,6 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> deleteMemberByPostId(PostGroupDTO postGroup, String currentUserId);
 
 	ResponseEntity<GenericResponse> declineMemberRequiredByPostId(PostGroupDTO postGroup, String currentUserId);
+
+	ResponseEntity<GenericResponse> getPostGroupByUserId(String authorizationHeader);
 }
