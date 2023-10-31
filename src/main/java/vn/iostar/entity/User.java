@@ -61,12 +61,6 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "userTo", fetch = FetchType.LAZY)
 	private List<FriendRequest> friendRequests2;
 
-	@OneToMany(mappedBy = "userFrom")
-	private List<Message> messages1;
-
-	@OneToMany(mappedBy = "userTo")
-	private List<Message> messages2;
-
 	@OneToMany(mappedBy = "user")
 	private List<Like> likes;
 

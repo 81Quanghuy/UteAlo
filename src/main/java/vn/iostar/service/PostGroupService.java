@@ -55,4 +55,12 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> getMemberByPostId(Integer postId, String currentUserId);
 
 	ResponseEntity<GenericResponse> getMemberRequiredByPostId(Integer postId, String currentUserId);
+
+	ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
+
+	ResponseEntity<GenericResponse> deleteMemberByPostId(PostGroupDTO postGroup, String currentUserId);
+
+	ResponseEntity<GenericResponse> declineMemberRequiredByPostId(PostGroupDTO postGroup, String currentUserId);
+
+	ResponseEntity<GenericResponse> getPostGroupByUserId(String authorizationHeader);
 }
