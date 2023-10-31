@@ -1,7 +1,5 @@
 package vn.iostar.dto;
 
-
-
 import org.hibernate.annotations.Nationalized;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,10 +7,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import vn.iostar.contants.PrivacyLevel;
 
-
-
 @Data
 public class PostUpdateRequest {
+	
 	@Nationalized
     @NotBlank(message = "Content is required")
     private String content;
@@ -31,8 +28,4 @@ public class PostUpdateRequest {
     @Nationalized
     private PrivacyLevel privacyLevel;
     
-    @Nationalized
-    private Integer postGroupId;
-    
-
 }

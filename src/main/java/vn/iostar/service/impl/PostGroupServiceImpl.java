@@ -46,6 +46,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 	PostGroupRepository postGroupRepository;
 
 	@Autowired
+	PostGroupMemberRepository postGroupMemberRepository;
+
+	@Autowired
 	JwtTokenProvider jwtTokenProvider;
 
 	@Autowired
@@ -485,6 +488,18 @@ public class PostGroupServiceImpl implements PostGroupService {
 	}
 
 	@Override
+	public ResponseEntity<GenericResponse> getPostGroupRequestsSentByUserId(String currentUserId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		List<InvitedPostGroupResponse> list = postGroupRepository.findPostGroupRequestsSentByUserId(currentUserId);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully").result(list)
+				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@Override
 	public ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId) {
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty()) {
@@ -799,6 +814,20 @@ public class PostGroupServiceImpl implements PostGroupService {
 		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserId(currentUserId, pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
 				.result(list).statusCode(HttpStatus.OK.value()).build());
+  }
+    
+	public ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId) {
+		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ tồn tại
+		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId,userId);
+
+        if (hasAssociations==1) {
+            // Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
+            postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
+
+            return ResponseEntity.ok().body(new GenericResponse(true, "Leave Group Successful!", null, HttpStatus.OK.value()));
+        } else {
+            return ResponseEntity.ok().body(new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
+        }
 	}
 
 }

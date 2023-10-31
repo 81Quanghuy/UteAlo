@@ -21,7 +21,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "POST_GROUP_REQUESTS")
-
 public class PostGroupRequest implements Serializable {
 
 	private static final long serialVersionUID = 1L;

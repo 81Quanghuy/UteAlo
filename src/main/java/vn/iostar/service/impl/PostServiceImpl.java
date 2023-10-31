@@ -146,14 +146,6 @@ public class PostServiceImpl implements PostService {
 			// Xử lý ngoại lệ nếu có
 			e.printStackTrace();
 		}
-
-		Optional<PostGroup> postGroup = postGroupService.findById(request.getPostGroupId());
-		if (postGroup.isPresent()) {
-
-			post.setPostGroup(postGroup.get());
-
-		}
-
 		save(post);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
 				.statusCode(200).build());
@@ -276,7 +268,7 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy những bài post của nhóm
 	@Override
-	public List<PostsResponse> findPostGroupPosts(String currentUserId, Integer postGroupId) {
+	public List<PostsResponse> findPostGroupPosts(Integer postGroupId) {
 		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId);
 		List<PostsResponse> simplifiedGroupPosts = new ArrayList<>();
 		for (Post post : groupPosts) {
@@ -290,11 +282,9 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy những bài post của nhóm
 	@Override
-	public ResponseEntity<GenericResponse> getGroupPosts(String currentUserId, Integer postGroupId) {
-		List<PostsResponse> groupPosts = findPostGroupPosts(currentUserId, postGroupId);
-		if (currentUserId.isEmpty()) {
-			throw new RuntimeException("User not found.");
-		} else if (groupPosts.isEmpty()) {
+	public ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId) {
+		List<PostsResponse> groupPosts = findPostGroupPosts(postGroupId);
+		if (groupPosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		} else {
