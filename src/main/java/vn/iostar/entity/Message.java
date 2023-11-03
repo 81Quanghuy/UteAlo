@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import vn.iostar.contants.ChatStatus;
+import vn.iostar.contants.MessageType;
 
 @Getter
 @Setter
@@ -31,17 +32,15 @@ public class Message implements Serializable {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String messageId;
 	
-	
-	private String messageType;
+	@Enumerated(EnumType.STRING)
+	private MessageType messageType;
 	@Column(columnDefinition = "nvarchar(255)")
 	private String content;
 	private Date createAt;
 	private String senderId;
-	private String senderName;
 	private String receiverId;
-	private String receiverName;
 	private String groupId;
-	private String groupIdName;
+
 	@Enumerated(EnumType.STRING)
 	private ChatStatus status;
 }

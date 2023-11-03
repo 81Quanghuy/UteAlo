@@ -45,7 +45,7 @@ public class PostGroupController {
 			@RequestHeader("Authorization") String authorizationHeader) {
 		return groupService.getPostGroupByUserId(authorizationHeader);
 	}
-	
+
 	@GetMapping("/list/join")
 	public ResponseEntity<GenericResponse> getPostGroupJoinByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -176,6 +176,7 @@ public class PostGroupController {
 		return postService.getPostOfPostGroup(currentUserId, userId);
 
 	}
+
 	@GetMapping("/list/member/{postGroupId}")
 	public ResponseEntity<GenericResponse> getMemberByPostId(@PathVariable("postGroupId") Integer postGroupId,
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -213,7 +214,8 @@ public class PostGroupController {
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.declineMemberRequiredByPostId(postGroup, currentUserId);
+		return groupService.declineMemberRequiredByPostId(postGroup,currentUserId);
+	}
 
 	// Lấy tất cả bài post của 1 nhóm
 	@GetMapping("/{postGroupId}/posts")
