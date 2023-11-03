@@ -21,16 +21,6 @@ public class ChatController {
 	private MessageService messageService;
 
 
-	// Xử lý tin nhắn mới
-	@MessageMapping("/chat.sendMessage")
-	public void sendMessage(Message message) {
-
-		// Lưu tin nhắn vào cơ sở dữ liệu
-		message.setCreateAt(new Date()); // Đặt thời gian gửi
-		messageService.save(message); // Gửi tin nhắn đến tất cả người dùng khác
-		simpMessagingTemplate.convertAndSend("/topic/public", message);
-	}
-
 	@MessageMapping("/message")
 	@SendTo("/chatroom/public")
 	public Message receiveMessage(@Payload Message message) {
@@ -49,7 +39,7 @@ public class ChatController {
 		message.setCreateAt(new Date()); // Đặt thời gian gửi
 		messageService.save(message);
 
-		simpMessagingTemplate.convertAndSendToUser(message.getReceiverName(), "/private", message);
+		simpMessagingTemplate.convertAndSendToUser(message.getReceiverId(), "/private", message);
 		System.out.println(message.toString());
 		return message;
 	}
