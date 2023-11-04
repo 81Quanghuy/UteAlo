@@ -36,8 +36,8 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PasswordResetRequest;
 import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserUpdateRequest;
+import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
-import vn.iostar.exception.UserNotFoundException;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.AccountService;
 import vn.iostar.service.CloudinaryService;
@@ -91,17 +91,17 @@ public class UserController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Optional<User> user = userService.findById(userId);
 		Pageable pageable = PageRequest.of(0, 5);
-		UserProfileResponse profileResponse = userService.getFullProfile(user,pageable);
+		UserProfileResponse profileResponse = userService.getFullProfile(user, pageable);
 		if (user.isEmpty()) {
 			throw new RuntimeException("User not found.");
 		} else if (currentUserId.equals(userId)) {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieving user profile successfully and access update")
-					.result(profileResponse).statusCode(HttpStatus.OK.value()).build());
+					.message("Retrieving user profile successfully and access update").result(profileResponse)
+					.statusCode(HttpStatus.OK.value()).build());
 		} else {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieving user profile successfully and access update denied")
-					.result(profileResponse).statusCode(HttpStatus.OK.value()).build());
+					.message("Retrieving user profile successfully and access update denied").result(profileResponse)
+					.statusCode(HttpStatus.OK.value()).build());
 		}
 	}
 
@@ -134,11 +134,14 @@ public class UserController {
 	@PostMapping("/forgot-password")
 	public GenericResponse resetPassword(@RequestParam final String email)
 			throws MessagingException, UnsupportedEncodingException {
-		User user = userService.findByAccountEmail(email)
-				.orElseThrow(() -> new UserNotFoundException("User Not Found"));
+		Optional<User> user = userService.findByAccountEmail(email);
+		if (user.isEmpty()) {
+			return GenericResponse.builder().success(true).message("NOT FOUND").result("Send Otp successfully!")
+					.statusCode(HttpStatus.NOT_FOUND.value()).build();
+		}
 
 		String otp = UUID.randomUUID().toString();
-		userService.createPasswordResetOtpForUser(user, otp);
+		userService.createPasswordResetOtpForUser(user.get(), otp);
 		String url = "http://localhost:3000/reset-password?token=" + otp;
 		String subject = "Change Password For JobPost";
 		Context context = new Context();
@@ -149,7 +152,7 @@ public class UserController {
 		MimeMessageHelper helper = new MimeMessageHelper(message, true);
 		helper.setSubject(subject);
 		helper.setText(content, true);
-		helper.setTo(user.getAccount().getEmail());
+		helper.setTo(user.get().getAccount().getEmail());
 		helper.setFrom(env.getProperty("spring.mail.username"), "Recruiment Manager");
 
 		javaMailSender.send(message);
@@ -163,16 +166,19 @@ public class UserController {
 			@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
 		String result = userService.validatePasswordResetOtp(token);
 		if (result == null) {
-			User user = userService.getUserByPasswordResetOtp(token)
-					.orElseThrow(() -> new UserNotFoundException("User Not Found")).getUser();
-			userService.changeUserPassword(user, passwordResetRequest.getNewPassword(),
+			Optional<PasswordResetOtp> user = userService.getUserByPasswordResetOtp(token);
+			if (user.isEmpty()) {
+				return ResponseEntity.ok(GenericResponse.builder().success(true).message("not found").result(null)
+						.statusCode(404).build());
+			}
+			userService.changeUserPassword(user.get().getUser(), passwordResetRequest.getNewPassword(),
 					passwordResetRequest.getConfirmPassword());
 			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Reset password successful")
 					.result(null).statusCode(200).build());
-		} 
-			return new ResponseEntity<Object>(GenericResponse.builder().success(false).message(result).result(null)
-					.statusCode(HttpStatus.BAD_REQUEST.value()).build(), HttpStatus.BAD_REQUEST);
-		
+		}
+		return new ResponseEntity<Object>(GenericResponse.builder().success(false).message(result).result(null)
+				.statusCode(HttpStatus.BAD_REQUEST.value()).build(), HttpStatus.BAD_REQUEST);
+
 	}
 
 	@PutMapping("/avatar")
