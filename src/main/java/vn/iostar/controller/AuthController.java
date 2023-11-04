@@ -35,7 +35,6 @@ import vn.iostar.dto.RegisterRequest;
 import vn.iostar.dto.TokenRequest;
 import vn.iostar.entity.Account;
 import vn.iostar.entity.RefreshToken;
-import vn.iostar.exception.UserNotFoundException;
 import vn.iostar.repository.AccountRepository;
 import vn.iostar.repository.RefreshTokenRepository;
 import vn.iostar.security.JwtTokenProvider;
@@ -77,8 +76,11 @@ public class AuthController {
 	public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO) {
 
 		if (userService.findByEmail(loginDTO.getCredentialId()).isEmpty()
-				&& userService.findByPhone(loginDTO.getCredentialId()).isEmpty())
-			throw new UserNotFoundException("Account does not exist");
+				&& userService.findByPhone(loginDTO.getCredentialId()).isEmpty()) {
+			return ResponseEntity.ok().body(GenericResponse.builder().success(true).message("not found user")
+					.result(null).statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+
 		Optional<Account> optionalUser = userService.findByEmail(loginDTO.getCredentialId());
 		if (optionalUser.isPresent() && !optionalUser.get().isVerified()) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
