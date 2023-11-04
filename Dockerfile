@@ -8,6 +8,6 @@ RUN mvn clean install
 # Stage 2: Run the application
 FROM openjdk:17-alpine
 WORKDIR /app
-COPY --from=build /app/target/aws-0.0.1-SNAPSHOT.jar ./demo-aws.jar
+COPY --from=build /app/target/UTEALO-0.0.1-SNAPSHOT.jar ./UTEALO-0.0.1-SNAPSHOT.jar
 EXPOSE 8080
 CMD ["java", "-jar", "demo-aws.jar"]
