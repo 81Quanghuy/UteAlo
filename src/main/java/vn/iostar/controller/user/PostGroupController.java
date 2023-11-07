@@ -220,6 +220,7 @@ public class PostGroupController {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.declineMemberRequiredByPostId(postGroup, currentUserId);
+
 	}
 
 	// Lấy tất cả bài post của 1 nhóm
