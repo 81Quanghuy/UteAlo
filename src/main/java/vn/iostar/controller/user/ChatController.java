@@ -26,7 +26,6 @@ public class ChatController {
 	public Message receiveMessage(@Payload Message message) {
 
 		// Lưu tin nhắn vào cơ sở dữ liệu
-		message.setCreateAt(new Date()); // Đặt thời gian gửi
 		messageService.save(message);
 
 		System.out.println(message.toString());
@@ -36,7 +35,6 @@ public class ChatController {
 	@MessageMapping("/private-message")
 	public Message recMessage(@Payload Message message) {
 		// Lưu tin nhắn vào cơ sở dữ liệu
-		message.setCreateAt(new Date()); // Đặt thời gian gửi
 		messageService.save(message);
 
 		simpMessagingTemplate.convertAndSendToUser(message.getReceiverId(), "/private", message);

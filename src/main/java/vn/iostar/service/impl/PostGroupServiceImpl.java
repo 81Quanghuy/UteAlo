@@ -169,7 +169,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		if (postGroup.getUserId() != null) {
 			for (String idRequest : postGroup.getUserId()) {
 				Optional<User> userMember = userRepository.findById(idRequest);
-				if (userMember.isPresent() && (!userMember.equals(user))) {
+				if (userMember.isPresent() && (!userMember.get().getUserId().equals(user.get().getUserId()))) {
 					PostGroupRequest postGroupRequest = new PostGroupRequest();
 					postGroupRequest.setCreateDate(date);
 					postGroupRequest.setInvitedUser(userMember.get());
@@ -177,7 +177,6 @@ public class PostGroupServiceImpl implements PostGroupService {
 					postGroupRequest.setPostGroup(groupEntity);
 					postGroupRequest.setIsAccept(false);
 					postGroupRequestRepository.save(postGroupRequest);
-
 				}
 			}
 		}
@@ -814,20 +813,23 @@ public class PostGroupServiceImpl implements PostGroupService {
 		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserId(currentUserId, pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
 				.result(list).statusCode(HttpStatus.OK.value()).build());
-  }
-    
+	}
+
 	public ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId) {
-		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ tồn tại
-		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId,userId);
+		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ
+		// tồn tại
+		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId, userId);
 
-        if (hasAssociations==1) {
-            // Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
-            postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
+		if (hasAssociations == 1) {
+			// Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
+			postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
 
-            return ResponseEntity.ok().body(new GenericResponse(true, "Leave Group Successful!", null, HttpStatus.OK.value()));
-        } else {
-            return ResponseEntity.ok().body(new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
-        }
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Leave Group Successful!", null, HttpStatus.OK.value()));
+		} else {
+			return ResponseEntity.ok().body(
+					new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
+		}
 	}
 
 }
