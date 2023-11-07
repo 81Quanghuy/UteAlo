@@ -1,7 +1,7 @@
 package vn.iostar.service.impl;
 
+import java.sql.Timestamp;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -100,9 +100,8 @@ public class MessageServiceImpl implements MessageService {
 		if (userToken.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
-
-		Date javaDate = new Date(messageRequest.getCreateAt());
-		Optional<Message> entity = messageRepository.findByCreateAtAndSenderIdAndReceiverIdAndContent(javaDate,
+		Timestamp timestamp = Timestamp.valueOf(messageRequest.getCreateAt());
+		Optional<Message> entity = messageRepository.findByCreateAtAndSenderIdAndReceiverIdAndContent(timestamp,
 				messageRequest.getSenderId(), messageRequest.getReceiverId(), messageRequest.getContent());
 		if (entity.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)

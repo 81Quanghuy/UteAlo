@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder
 public class MessageRequest {
 	private String content;
-	private Long createAt;
+	private String createAt;
 	private String senderId;
 	private String receiverId;
 	private String groupId;

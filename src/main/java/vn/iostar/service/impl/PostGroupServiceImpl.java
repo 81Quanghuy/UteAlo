@@ -179,7 +179,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		if (postGroup.getUserId() != null) {
 			for (String idRequest : postGroup.getUserId()) {
 				Optional<User> userMember = userRepository.findById(idRequest);
-				if (userMember.isPresent() && (!userMember.equals(user))) {
+				if (userMember.isPresent() && (!userMember.get().getUserId().equals(user.get().getUserId()))) {
 					PostGroupRequest postGroupRequest = new PostGroupRequest();
 					postGroupRequest.setCreateDate(date);
 					postGroupRequest.setInvitedUser(userMember.get());
@@ -187,7 +187,6 @@ public class PostGroupServiceImpl implements PostGroupService {
 					postGroupRequest.setPostGroup(groupEntity);
 					postGroupRequest.setIsAccept(false);
 					postGroupRequestRepository.save(postGroupRequest);
-
 				}
 			}
 		}
@@ -830,7 +829,6 @@ public class PostGroupServiceImpl implements PostGroupService {
 		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ
 		// tồn tại
 		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId, userId);
-
 		if (hasAssociations == 1) {
 			// Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
 			postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
@@ -843,7 +841,6 @@ public class PostGroupServiceImpl implements PostGroupService {
 		}
 	}
 	
-
 	@Override
 	public int getNumberOfFriendsInGroup(String userId, int postGroupId) {
 		return postGroupMemberRepository.countFriendsInGroup(userId, postGroupId);
@@ -926,6 +923,4 @@ public class PostGroupServiceImpl implements PostGroupService {
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully")
 				.result(combinedList).statusCode(HttpStatus.OK.value()).build());
 	}
-	
-
 }
