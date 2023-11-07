@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostGroupDTO;
+import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.PostGroupRequestService;
 import vn.iostar.service.PostGroupService;
@@ -31,6 +33,9 @@ public class PostGroupController {
 	@Autowired
 	PostGroupRequestService postGroupRequestService;
 
+	@Autowired
+	PostGroupRepository postGroupRepository;
+	
 	@Autowired
 	ShareService shareService;
 
@@ -260,5 +265,13 @@ public class PostGroupController {
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.leaveGroup(userIdToken, postGroupId);
 	}
+
+	@GetMapping("/getPostGroups/key")
+	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,@RequestParam("search") String search) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.findByPostGroupNameContainingIgnoreCase(search,userIdToken);
+	}
+	
 
 }
