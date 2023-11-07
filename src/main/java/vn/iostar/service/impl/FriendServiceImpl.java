@@ -33,9 +33,9 @@ public class FriendServiceImpl implements FriendService {
 
 	@Override
 	public List<FriendRequestResponse> findFriendUserIdsByUserId(String userId) {
+		
 		return friendRepository.findFriendUserIdsByUserId(userId);
 	}
-
 	@Override
 	public List<FriendRequestResponse> findFriendTop10UserIdsByUserId(String userId, Pageable pageable) {
 		return friendRepository.findFriendTop10UserIdsByUserId(userId, pageable);

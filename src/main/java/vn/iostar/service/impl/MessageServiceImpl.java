@@ -1,15 +1,18 @@
 package vn.iostar.service.impl;
 
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import jakarta.validation.Valid;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.MessageRequest;
 import vn.iostar.entity.Message;
 import vn.iostar.entity.User;
 import vn.iostar.repository.MessageRepository;
@@ -61,8 +64,8 @@ public class MessageServiceImpl implements MessageService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> getListMessageByUserIdAndUserTokenId(@Valid String userId,
-			String userIdToken) {
+	public ResponseEntity<GenericResponse> getListMessageByUserIdAndUserTokenId(String userId, String userIdToken,
+			PageRequest pageable) {
 		Optional<User> user = userRepository.findById(userId);
 		if (user.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -71,21 +74,42 @@ public class MessageServiceImpl implements MessageService {
 		if (userToken.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		List<Message> messages = messageRepository.findMessagesBetweenUsers(userId, userIdToken);
+		List<Message> messages = messageRepository.findMessagesBetweenUsers(userId, userIdToken, pageable);
+		Collections.reverse(messages);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Accept successfully").result(messages)
 				.statusCode(HttpStatus.OK.value()).build());
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> getListMessageByGroupIdAndUserTokenId(@Valid String groupId,
-			String userIdToken) {
+	public ResponseEntity<GenericResponse> getListMessageByGroupIdAndUserTokenId(String groupId, String userIdToken,
+			PageRequest pageable) {
 		Optional<User> userToken = userRepository.findById(userIdToken);
 		if (userToken.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 
-		List<Message> messages = messageRepository.findByGroupIdOrderByCreateAt(groupId);
+		List<Message> messages = messageRepository.findByGroupIdOrderByCreateAt(groupId, pageable);
+		Collections.reverse(messages);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Accept successfully").result(messages)
+				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> deleteMessage(String userIdToken, MessageRequest messageRequest) {
+		Optional<User> userToken = userRepository.findById(userIdToken);
+		if (userToken.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		Date javaDate = new Date(messageRequest.getCreateAt());
+		Optional<Message> entity = messageRepository.findByCreateAtAndSenderIdAndReceiverIdAndContent(javaDate,
+				messageRequest.getSenderId(), messageRequest.getReceiverId(), messageRequest.getContent());
+		if (entity.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found message").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		messageRepository.delete(entity.get());
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Accept successfully")
 				.statusCode(HttpStatus.OK.value()).build());
 	}
 
