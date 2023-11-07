@@ -25,6 +25,8 @@ import vn.iostar.dto.InvitedPostGroupResponse;
 import vn.iostar.dto.MemberGroupResponse;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.dto.PostGroupResponse;
+import vn.iostar.dto.SearchPostGroup;
+import vn.iostar.dto.SearchUser;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.PostGroupMember;
 import vn.iostar.entity.PostGroupRequest;
@@ -37,7 +39,9 @@ import vn.iostar.repository.PostRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CloudinaryService;
+import vn.iostar.service.FriendService;
 import vn.iostar.service.PostGroupService;
+import vn.iostar.service.UserService;
 
 @Service
 public class PostGroupServiceImpl implements PostGroupService {
@@ -47,6 +51,12 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Autowired
 	PostGroupMemberRepository postGroupMemberRepository;
+	
+	@Autowired
+	FriendService friendService;
+	
+	@Autowired
+	UserService userService;
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
@@ -814,20 +824,108 @@ public class PostGroupServiceImpl implements PostGroupService {
 		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserId(currentUserId, pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
 				.result(list).statusCode(HttpStatus.OK.value()).build());
-  }
-    
-	public ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId) {
-		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ tồn tại
-		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId,userId);
-
-        if (hasAssociations==1) {
-            // Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
-            postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
-
-            return ResponseEntity.ok().body(new GenericResponse(true, "Leave Group Successful!", null, HttpStatus.OK.value()));
-        } else {
-            return ResponseEntity.ok().body(new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
-        }
 	}
+
+	public ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId) {
+		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ
+		// tồn tại
+		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId, userId);
+
+		if (hasAssociations == 1) {
+			// Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
+			postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
+
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Leave Group Successful!", null, HttpStatus.OK.value()));
+		} else {
+			return ResponseEntity.ok().body(
+					new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
+		}
+	}
+	
+
+	@Override
+	public int getNumberOfFriendsInGroup(String userId, int postGroupId) {
+		return postGroupMemberRepository.countFriendsInGroup(userId, postGroupId);
+	}
+
+
+	@Override
+	public ResponseEntity<GenericResponse> findByPostGroupNameContainingIgnoreCase(String search, String userIdToken) {
+		List<SearchPostGroup> list = postGroupRepository.findPostGroupNamesContainingIgnoreCase(search);
+		Optional<User> user = userRepository.findById(userIdToken);
+		List<SearchPostGroup> simplifiedGroupPosts = new ArrayList<>();
+		// Lặp qua danh sách SearchPostGroup và thiết lập giá trị checkUserInGroup
+		for (SearchPostGroup group : list) {
+			Optional<PostGroup> postGroupOptional = findById(group.getPostGroupId());
+			if (postGroupOptional.isPresent()) {
+				String checkUser = checkUserInGroup(user.get(), postGroupOptional.get());
+				System.out.println("HI");
+				if (checkUser.equals("Admin") || checkUser.equals("Member")) {
+					group.setCheckUserInGroup("isMember");
+				} else {
+					group.setCheckUserInGroup("isNotMember");
+				}
+				simplifiedGroupPosts.add(group);
+			}
+			group.setCountMember(postGroupOptional.get().getPostGroupMembers().size());
+			group.setCountFriendJoinnedGroup(getNumberOfFriendsInGroup(userIdToken,group.getPostGroupId()));
+
+		}
+
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully")
+				.result(simplifiedGroupPosts).statusCode(HttpStatus.OK.value()).build());
+	}
+	
+	@Override
+	public ResponseEntity<GenericResponse> searchGroupAndUserContainingIgnoreCase(String search, String userIdToken) {
+		Optional<User> user = userRepository.findById(userIdToken);
+		List<SearchPostGroup> postGroups = postGroupRepository.findPostGroupNamesContainingIgnoreCase(search);
+		List<SearchPostGroup> simplifiedGroupPosts = new ArrayList<>();
+		// Lặp qua danh sách SearchPostGroup và thiết lập giá trị checkUserInGroup
+		for (SearchPostGroup group : postGroups) {
+			Optional<PostGroup> postGroupOptional = findById(group.getPostGroupId());
+			if (postGroupOptional.isPresent()) {
+				String checkUser = checkUserInGroup(user.get(), postGroupOptional.get());
+				if (checkUser.equals("Admin") || checkUser.equals("Member")) {
+					group.setCheckUserInGroup("isMember");
+				} else {
+					group.setCheckUserInGroup("isNotMember");
+				}
+				simplifiedGroupPosts.add(group);
+			}
+			group.setCountMember(postGroupOptional.get().getPostGroupMembers().size());
+			group.setCountFriendJoinnedGroup(getNumberOfFriendsInGroup(userIdToken,group.getPostGroupId()));
+
+		}
+        List<SearchUser> users = postGroupRepository.findUsersByName(search);
+        List<SearchUser> simplifiedUsers = new ArrayList<>();
+        // Lặp qua danh sách SearchUser và thiết lập giá trị getStatusByUserId
+        for (SearchUser userItem : users) {
+        	ResponseEntity<GenericResponse> check = friendService.getStatusByUserId(userItem.getUserId(), userIdToken);
+        	if(check.equals("Bạn bè")) {
+        		userItem.setCheckStatusFriend("isFriend");
+        	} else {
+        		userItem.setCheckStatusFriend("isNotFriend");
+        	}
+        	simplifiedUsers.add(userItem);
+        	Optional<User> userOptional = userService.findById(userItem.getUserId());
+        	if(userOptional.isPresent()) {
+        		userItem.setAvatar(userOptional.get().getProfile().getAvatar());
+        		userItem.setBackground(userOptional.get().getProfile().getBackground());
+        		userItem.setBio(userOptional.get().getProfile().getBio());
+        	}
+        	
+        }
+        
+        List<Object> combinedList = new ArrayList<>();
+        combinedList.addAll(postGroups);
+        combinedList.addAll(users);
+		
+		
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully")
+				.result(combinedList).statusCode(HttpStatus.OK.value()).build());
+	}
+	
 
 }

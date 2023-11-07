@@ -48,6 +48,12 @@ public interface PostGroupService {
 	// Rời nhóm
 	ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId);
 
+	// Tìm kiếm nhóm
+	ResponseEntity<GenericResponse> findByPostGroupNameContainingIgnoreCase(String search, String userIdToken);
+	
+	// Tìm kiếm tất cả nhóm và người dùng 
+	ResponseEntity<GenericResponse> searchGroupAndUserContainingIgnoreCase(String search, String userIdToken);
+
 	ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId);
 
 	ResponseEntity<GenericResponse> joinPostGroup(Integer postId, String currentUserId);
@@ -63,4 +69,6 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> declineMemberRequiredByPostId(PostGroupDTO postGroup, String currentUserId);
 
 	ResponseEntity<GenericResponse> getPostGroupByUserId(String authorizationHeader);
+
+	int getNumberOfFriendsInGroup(String userId, int postGroupId);
 }

@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 
 import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.InvitedPostGroupResponse;
+import vn.iostar.dto.SearchPostGroup;
+import vn.iostar.dto.SearchUser;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.User;
 
@@ -31,18 +33,25 @@ public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
 
 	// Lời mời vào nhóm đã nhận được
 	@Query("SELECT NEW vn.iostar.dto.InvitedPostGroupResponse(pgr.postGroupRequestId, pg.postGroupId, pg.avatarGroup, pg.backgroundGroup, pg.bio, pg.postGroupName, u.userName, u.profile.avatar) FROM PostGroupRequest pgr "
-	        + "JOIN pgr.postGroup pg " + "JOIN pgr.invitingUser u " + "WHERE pgr.invitedUser.userId = :invitedUserId "
-	        + "AND pgr.isAccept = false")
+			+ "JOIN pgr.postGroup pg " + "JOIN pgr.invitingUser u " + "WHERE pgr.invitedUser.userId = :invitedUserId "
+			+ "AND pgr.isAccept = false")
 	List<InvitedPostGroupResponse> findPostGroupInvitedByUserId(@Param("invitedUserId") String userId);
 
 	@Query("SELECT CASE WHEN COUNT(pg) > 0 THEN true ELSE false END FROM PostGroup pg "
 			+ "JOIN pg.postGroupMembers pgm " + "JOIN pgm.user u " + "WHERE pg = :postGroup AND u = :user")
 	boolean isUserInPostGroup(@Param("postGroup") PostGroup postGroup, @Param("user") User user);
-	
+
 	// Lời mời vào nhóm đã gửi đi
 	@Query("SELECT NEW vn.iostar.dto.InvitedPostGroupResponse(pgr.postGroupRequestId, pg.postGroupId, pg.avatarGroup, pg.backgroundGroup, pg.bio, pg.postGroupName, u.userName, u.profile.avatar) FROM PostGroupRequest pgr "
-	        + "JOIN pgr.postGroup pg " + "JOIN pgr.invitedUser u " + "WHERE pgr.invitingUser.userId = :invitingUserId "
-	        + "AND pgr.isAccept = false")
+			+ "JOIN pgr.postGroup pg " + "JOIN pgr.invitedUser u " + "WHERE pgr.invitingUser.userId = :invitingUserId "
+			+ "AND pgr.isAccept = false")
 	List<InvitedPostGroupResponse> findPostGroupRequestsSentByUserId(@Param("invitingUserId") String userId);
-	
+
+	@Query("SELECT  NEW vn.iostar.dto.SearchPostGroup (pg.postGroupId,pg.postGroupName,pg.avatarGroup,pg.bio,pg.isPublic) FROM PostGroup pg WHERE pg.postGroupName LIKE %:search%")
+	List<SearchPostGroup> findPostGroupNamesContainingIgnoreCase(@Param("search") String search);
+
+	@Query("SELECT NEW vn.iostar.dto.SearchUser(u.userId, u.userName) " + "FROM User u "
+			+ "WHERE u.userName LIKE %:search%")
+	List<SearchUser> findUsersByName(@Param("search") String search);
+
 }
