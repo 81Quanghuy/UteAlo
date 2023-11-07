@@ -45,18 +45,21 @@ public class PostGroupController {
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
 
+	// Get list all group
 	@GetMapping("/list/all")
 	public ResponseEntity<GenericResponse> getPostGroupByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {
 		return groupService.getPostGroupByUserId(authorizationHeader);
 	}
 
+	// get list group user join
 	@GetMapping("/list/join")
 	public ResponseEntity<GenericResponse> getPostGroupJoinByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {
 		return groupService.getPostGroupJoinByUserId(authorizationHeader);
 	}
 
+	// get list group user owner
 	@GetMapping("/list/owner")
 	public ResponseEntity<GenericResponse> getPostGroupOwenrByUserId(
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -88,12 +91,14 @@ public class PostGroupController {
 		return groupService.getSuggestionPostGroupByUserId(authorizationHeader);
 	}
 
+	// create group
 	@PostMapping("/create")
 	public ResponseEntity<GenericResponse> createGroupByUser(@RequestBody PostGroupDTO postGroup,
 			@RequestHeader("Authorization") String authorizationHeader) {
 		return groupService.createPostGroupByUserId(postGroup, authorizationHeader);
 	}
 
+	// update infor post group
 	@PutMapping("/update/bio")
 	public ResponseEntity<GenericResponse> updatePostGroupByPostId(
 			@RequestHeader("Authorization") String authorizationHeader, @RequestBody PostGroupDTO postGroup) {
@@ -102,6 +107,7 @@ public class PostGroupController {
 		return groupService.updatePostGroupByPostIdAndUserId(postGroup, currentUserId);
 	}
 
+	// update avatar and background in group
 	@PutMapping("/update/photo")
 	public ResponseEntity<GenericResponse> updateBackgroundByPostId(
 			@RequestHeader("Authorization") String authorizationHeader, @ModelAttribute PostGroupDTO postGroup) {
@@ -110,6 +116,7 @@ public class PostGroupController {
 		return groupService.updatePhotoByPostIdAndUserId(postGroup, currentUserId);
 	}
 
+	// delete group
 	@PutMapping("/delete/{postGroupId}")
 	public ResponseEntity<GenericResponse> deletePostGroup(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postGroupId") Integer postGroupId) {
@@ -118,6 +125,7 @@ public class PostGroupController {
 		return groupService.deletePostGroup(postGroupId, currentUserId);
 	}
 
+	// accept request in group
 	@PostMapping("/accept/{postGroupId}")
 	public ResponseEntity<GenericResponse> acceptPostGroup(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postGroupId") Integer postGroupId) {
@@ -126,6 +134,7 @@ public class PostGroupController {
 		return groupService.acceptPostGroup(postGroupId, currentUserId);
 	}
 
+	// decline request in group
 	@PostMapping("/decline/{postGroupId}")
 	public ResponseEntity<GenericResponse> declinePostGroup(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postGroupId") Integer postGroupId) {
@@ -134,6 +143,7 @@ public class PostGroupController {
 		return groupService.declinePostGroup(postGroupId, currentUserId);
 	}
 
+	// invite member group
 	@PostMapping("/invite")
 	public ResponseEntity<GenericResponse> invitePostGroup(@RequestHeader("Authorization") String authorizationHeader,
 			@RequestBody PostGroupDTO postGroup) {
@@ -142,6 +152,7 @@ public class PostGroupController {
 		return groupService.invitePostGroup(postGroup, currentUserId);
 	}
 
+	// join group by userId
 	@PostMapping("/joinGroup/{postGroupId}")
 	public ResponseEntity<GenericResponse> joinPostGroup(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postGroupId") Integer postGroupId) {
@@ -150,6 +161,7 @@ public class PostGroupController {
 		return groupService.joinPostGroup(postGroupId, currentUserId);
 	}
 
+	// accept one request member in all request member
 	@PostMapping("/acceptMember")
 	public ResponseEntity<GenericResponse> acceptMemberPostGroup(
 			@RequestHeader("Authorization") String authorizationHeader, @RequestBody PostGroupDTO postGroup) {
@@ -158,6 +170,7 @@ public class PostGroupController {
 		return groupService.acceptMemberPostGroup(postGroup, currentUserId);
 	}
 
+	// get information post group
 	@GetMapping("/get/{postGroupId}")
 	public ResponseEntity<GenericResponse> getPostGroupById(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postGroupId") Integer postGroupId) {
@@ -182,6 +195,7 @@ public class PostGroupController {
 
 	}
 
+	// list member in group by postGroupId
 	@GetMapping("/list/member/{postGroupId}")
 	public ResponseEntity<GenericResponse> getMemberByPostId(@PathVariable("postGroupId") Integer postGroupId,
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -190,6 +204,7 @@ public class PostGroupController {
 		return groupService.getMemberByPostId(postGroupId, currentUserId);
 	}
 
+	// list request member in group
 	@GetMapping("/list/memberRequired/{postGroupId}")
 	public ResponseEntity<GenericResponse> getMemberRequiredByPostId(@PathVariable("postGroupId") Integer postGroupId,
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -198,6 +213,7 @@ public class PostGroupController {
 		return groupService.getMemberRequiredByPostId(postGroupId, currentUserId);
 	}
 
+	// chuyen quyen âdmin
 	@PostMapping("/appoint-admin")
 	public ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(@RequestBody PostGroupDTO postGroup,
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -206,6 +222,7 @@ public class PostGroupController {
 		return groupService.assignAdminByUserIdAndGroupId(postGroup, currentUserId);
 	}
 
+	// delete member
 	@PostMapping("/delete/member")
 	public ResponseEntity<GenericResponse> deteleMemberByPostId(@RequestBody PostGroupDTO postGroup,
 			@RequestHeader("Authorization") String authorizationHeader) {
@@ -214,13 +231,13 @@ public class PostGroupController {
 		return groupService.deleteMemberByPostId(postGroup, currentUserId);
 	}
 
+	// decline request member in group
 	@PostMapping("/decline/memberRequired")
 	public ResponseEntity<GenericResponse> declineMemberRequiredByPostId(@RequestBody PostGroupDTO postGroup,
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.declineMemberRequiredByPostId(postGroup, currentUserId);
-
 	}
 
 	// Lấy tất cả bài post của 1 nhóm
@@ -229,6 +246,7 @@ public class PostGroupController {
 		return postService.getGroupPosts(postGroupId);
 	}
 
+	// cancel request in group
 	@PutMapping("/request/cancel/{postGroupRequestId}")
 	public ResponseEntity<GenericResponse> cancelRequestJoinInGroup(
 			@RequestHeader("Authorization") String authorizationHeader,
