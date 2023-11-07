@@ -41,6 +41,7 @@ import vn.iostar.exception.UserNotFoundException;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.AccountService;
 import vn.iostar.service.CloudinaryService;
+import vn.iostar.service.PostGroupService;
 import vn.iostar.service.PostService;
 import vn.iostar.service.UserService;
 
@@ -53,6 +54,9 @@ public class UserController {
 
 	@Autowired
 	CloudinaryService cloudinaryService;
+	
+	@Autowired 
+	PostGroupService groupService;
 
 	@Autowired
 	JavaMailSender javaMailSender;
@@ -225,6 +229,13 @@ public class UserController {
 		String userIdFromToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return userService.deleteUser(userIdFromToken);
 
+	}
+	
+	@GetMapping("/search/key")
+	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,@RequestParam("search") String search) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.searchGroupAndUserContainingIgnoreCase(search,userIdToken);
 	}
 
 }
