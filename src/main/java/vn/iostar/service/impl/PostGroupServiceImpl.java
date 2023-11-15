@@ -680,39 +680,25 @@ public class PostGroupServiceImpl implements PostGroupService {
 			// da truyen vao user de chi dinh lam admin
 			if (userIdToAdmin != null && !userIdToAdmin.equals(currentUserId)) {
 				Optional<User> userAdd = userRepository.findById(userIdToAdmin);
+				if (userAdd.isEmpty())
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+							.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 				// cap de xoa di
-				Optional<PostGroupMember> memberAdminAdd = groupMemberRepository
+				Optional<PostGroupMember> memberAddDeputy = groupMemberRepository
 						.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Member);
 				Optional<PostGroupMember> memberAdmin = groupMemberRepository
 						.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
 
-				if (memberAdminAdd.isPresent() && memberAdmin.isPresent()) {
+				if (memberAddDeputy.isPresent() && memberAdmin.isPresent()) {
 					// cap de them vao
-					Optional<PostGroupMember> memberAdminAdd1 = groupMemberRepository
-							.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Member);
-					Optional<PostGroupMember> memberAdmin1 = groupMemberRepository
-							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Admin);
-
-					// Kiem tra user truyen vao da co member la admin chua
-					if (memberAdminAdd1.isPresent()) {
-						memberAdminAdd1.get().getPostGroup().add(groupPost.get());
-						groupPost.get().getPostGroupMembers().add(memberAdminAdd1.get());
-						groupMemberRepository.save(memberAdminAdd1.get());
-
-					} else {
-						PostGroupMember member = new PostGroupMember();
-						member.setUser(user.get());
-						member.setRoleUserGroup(RoleUserGroup.Member);
-						member.getPostGroup().add(groupPost.get());
-						groupPost.get().getPostGroupMembers().add(member);
-						groupMemberRepository.save(member);
-					}
+					Optional<PostGroupMember> memberDeputy = groupMemberRepository
+							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Deputy);
 
 					// Kiem tra user hien tai da co member la member chua
-					if (memberAdmin1.isPresent()) {
-						memberAdmin1.get().getPostGroup().add(groupPost.get());
-						groupPost.get().getPostGroupMembers().add(memberAdmin1.get());
-						groupMemberRepository.save(memberAdmin1.get());
+					if (memberDeputy.isPresent()) {
+						memberDeputy.get().getPostGroup().add(groupPost.get());
+						groupPost.get().getPostGroupMembers().add(memberDeputy.get());
+						groupMemberRepository.save(memberDeputy.get());
 					} else {
 						PostGroupMember member = new PostGroupMember();
 						member.setUser(userAdd.get());
@@ -721,8 +707,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 						groupPost.get().getPostGroupMembers().add(member);
 						groupMemberRepository.save(member);
 					}
-					groupPost.get().getPostGroupMembers().remove(memberAdminAdd.get());
-					groupPost.get().getPostGroupMembers().remove(memberAdmin.get());
+					groupPost.get().getPostGroupMembers().remove(memberAddDeputy.get());
 					postGroupRepository.save(groupPost.get());
 					return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully")
 							.statusCode(HttpStatus.OK.value()).build());
