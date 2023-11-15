@@ -39,5 +39,8 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	// Lấy tất cả các bài post của những nhóm mình tham gia
 	@Query("SELECT p FROM Post p WHERE p.postGroup IN (SELECT pg FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId)")
     List<Post> findAllPostsInUserGroups(@Param("userId") String userId);
+	
+	@Query("SELECT p FROM Post p WHERE p.content LIKE %:searchTerm%")
+    List<Post> findByContentContaining(@Param("searchTerm") String searchTerm, Pageable pageable);
 
 }

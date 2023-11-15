@@ -266,6 +266,7 @@ public class PostGroupController {
 		return groupService.leaveGroup(userIdToken, postGroupId);
 	}
 
+	
 	@GetMapping("/getPostGroups/key")
 	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,@RequestParam("search") String search) {
 		String token = authorizationHeader.substring(7);

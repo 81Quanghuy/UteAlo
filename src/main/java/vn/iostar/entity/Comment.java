@@ -44,11 +44,11 @@ public class Comment implements Serializable{
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likes;
     
-    @OneToMany(mappedBy = "commentReply", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "commentReply", cascade = CascadeType.ALL,orphanRemoval = true)
 	private List<Comment> subComments;
     
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "comment_reply_id")
 	private Comment commentReply;
 }

@@ -71,7 +71,7 @@ public class ShareController {
 			throw new RuntimeException("User not found.");
 		} else if (sharePosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("No posts found for this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+					.message("No share posts found for this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		} else if (!currentUserId.equals(userId)) {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
 					.message("Retrieved share posts successfully and access update denied").result(sharePosts)
@@ -98,7 +98,7 @@ public class ShareController {
 			throw new RuntimeException("User not found.");
 		} else if (userPosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("No posts found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+					.message("No share posts found").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		} else
 			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved posts successfully")
 					.result(userPosts).statusCode(HttpStatus.OK.value()).build());
