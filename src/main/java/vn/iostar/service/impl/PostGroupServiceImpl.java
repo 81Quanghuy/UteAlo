@@ -25,8 +25,12 @@ import vn.iostar.dto.InvitedPostGroupResponse;
 import vn.iostar.dto.MemberGroupResponse;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.dto.PostGroupResponse;
+import vn.iostar.dto.PostsResponse;
 import vn.iostar.dto.SearchPostGroup;
 import vn.iostar.dto.SearchUser;
+import vn.iostar.entity.Comment;
+import vn.iostar.entity.Like;
+import vn.iostar.entity.Post;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.PostGroupMember;
 import vn.iostar.entity.PostGroupRequest;
@@ -862,6 +866,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 	@Override
 	public ResponseEntity<GenericResponse> searchGroupAndUserContainingIgnoreCase(String search, String userIdToken) {
 		Optional<User> user = userRepository.findById(userIdToken);
+		Pageable pageable = PageRequest.of(0, 3);
+		// List<SearchPostGroup> postGroups = postGroupRepository.findTop3PostGroupNamesContainingIgnoreCase(search,pageable);
 		List<SearchPostGroup> postGroups = postGroupRepository.findPostGroupNamesContainingIgnoreCase(search);
 		List<SearchPostGroup> simplifiedGroupPosts = new ArrayList<>();
 		// Lặp qua danh sách SearchPostGroup và thiết lập giá trị checkUserInGroup
@@ -893,19 +899,54 @@ public class PostGroupServiceImpl implements PostGroupService {
         	simplifiedUsers.add(userItem);
         	Optional<User> userOptional = userService.findById(userItem.getUserId());
         	if(userOptional.isPresent()) {
+        		userItem.setNumberFriend(userOptional.get().getFriend1().size());
+        		userItem.setAddress(userOptional.get().getAddress());
         		userItem.setAvatar(userOptional.get().getProfile().getAvatar());
         		userItem.setBackground(userOptional.get().getProfile().getBackground());
         		userItem.setBio(userOptional.get().getProfile().getBio());
         	}
         	
         }
+        List<Post> posts = postRepository.findByContentContaining(search,pageable);
+        List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+        for (Post post : posts) {
+			PostsResponse postsResponse = new PostsResponse(post);
+			if (post.getComments() != null && !post.getComments().isEmpty()) {
+				postsResponse.setComments(getIdComment(post.getComments()));
+			} else {
+			    postsResponse.setComments(new ArrayList<>()); 
+			}
+			if (post.getLikes() != null && !post.getLikes().isEmpty()) {
+				postsResponse.setLikes(getIdLikes(post.getLikes()));
+			} else {
+			    postsResponse.setLikes(new ArrayList<>()); 
+			}
+			simplifiedUserPosts.add(postsResponse);
+		}
+      
         
         List<Object> combinedList = new ArrayList<>();
         combinedList.addAll(postGroups);
         combinedList.addAll(users);
-		
+		combinedList.addAll(simplifiedUserPosts);
 		
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully")
 				.result(combinedList).statusCode(HttpStatus.OK.value()).build());
+	}
+	
+	private List<Integer> getIdLikes(List<Like> likes) {
+		List<Integer> idComments = new ArrayList<>();
+		for (Like like : likes) {
+			idComments.add(like.getLikeId());
+		}
+		return idComments;
+	}
+
+	private List<Integer> getIdComment(List<Comment> comments) {
+		List<Integer> idComments = new ArrayList<>();
+		for (Comment cmt : comments) {
+			idComments.add(cmt.getCommentId());
+		}
+		return idComments;
 	}
 }

@@ -19,6 +19,8 @@ public class SearchUser {
 	private String avatar;
 	private String background;
 	private String checkStatusFriend;
+	private String address;
+	private int numberFriend;
 	
 	public SearchUser(String userId, String userName) {
 		super();

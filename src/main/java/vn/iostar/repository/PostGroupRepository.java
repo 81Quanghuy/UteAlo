@@ -46,12 +46,19 @@ public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
 			+ "JOIN pgr.postGroup pg " + "JOIN pgr.invitedUser u " + "WHERE pgr.invitingUser.userId = :invitingUserId "
 			+ "AND pgr.isAccept = false")
 	List<InvitedPostGroupResponse> findPostGroupRequestsSentByUserId(@Param("invitingUserId") String userId);
-
+	
 	@Query("SELECT  NEW vn.iostar.dto.SearchPostGroup (pg.postGroupId,pg.postGroupName,pg.avatarGroup,pg.bio,pg.isPublic) FROM PostGroup pg WHERE pg.postGroupName LIKE %:search%")
 	List<SearchPostGroup> findPostGroupNamesContainingIgnoreCase(@Param("search") String search);
+
+	@Query("SELECT  NEW vn.iostar.dto.SearchPostGroup (pg.postGroupId,pg.postGroupName,pg.avatarGroup,pg.bio,pg.isPublic) FROM PostGroup pg WHERE pg.postGroupName LIKE %:search%")
+	List<SearchPostGroup> findTop3PostGroupNamesContainingIgnoreCase(@Param("search") String search, Pageable pageable);
 
 	@Query("SELECT NEW vn.iostar.dto.SearchUser(u.userId, u.userName) " + "FROM User u "
 			+ "WHERE u.userName LIKE %:search%")
 	List<SearchUser> findUsersByName(@Param("search") String search);
+	
+	@Query("SELECT NEW vn.iostar.dto.SearchUser(u.userId, u.userName) " + "FROM User u "
+			+ "WHERE u.userName LIKE %:search%")
+	List<SearchUser> findTop3UsersByName(@Param("search") String search, Pageable pageable);
 
 }
