@@ -1,6 +1,5 @@
 package vn.iostar.controller.user;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +43,7 @@ public class PostController {
 
 	@Autowired
 	UserService userService;
-	
+
 	@Autowired
 	CloudinaryService cloudinaryService;
 
@@ -95,6 +94,7 @@ public class PostController {
 		}
 	}
 
+
 	// Lấy những bài post liên quan đến mình như: nhóm, bạn bè, cá nhân
 	@GetMapping("/{userId}/posts")
 	public ResponseEntity<GenericResponse> getPostsByUserAndFriendsAndGroups(
@@ -105,6 +105,7 @@ public class PostController {
 		Optional<User> user = userService.findById(currentUserId);
 
 		List<PostsResponse> userPosts = postService.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user.get());
+
 
 		if (!userId.equals(currentUserId)) {
 			throw new RuntimeException("User not found.");
@@ -121,11 +122,11 @@ public class PostController {
 	public ResponseEntity<Object> updateUser(@ModelAttribute PostUpdateRequest request,
 			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
 			BindingResult bindingResult) throws Exception {
-		
+
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 
-		return postService.updatePost(postId, request,currentUserId);
+		return postService.updatePost(postId, request, currentUserId);
 
 	}
 
@@ -141,21 +142,16 @@ public class PostController {
 			@RequestHeader("Authorization") String token) {
 		return postService.createUserPost(token, requestDTO);
 	}
-	
-	
+
 	@GetMapping("/user/{userId}/photos")
-    public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@PathVariable String userId) {
-        return postService.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
-    }
+	public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@PathVariable String userId) {
+		return postService.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
+	}
 
 	@GetMapping("/user/{userId}/latest-photos")
-    public Page<String> getLatestPhotosByUserId(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "9") int size,
-            @PathVariable("userId") String userId
-    ) {
-        return postService.findLatestPhotosByUserId(userId, page, size);
-    }
-	
+	public Page<String> getLatestPhotosByUserId(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "9") int size, @PathVariable("userId") String userId) {
+		return postService.findLatestPhotosByUserId(userId, page, size);
+	}
 
 }

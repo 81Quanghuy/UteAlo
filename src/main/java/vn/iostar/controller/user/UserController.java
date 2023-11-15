@@ -237,6 +237,7 @@ public class UserController {
 
 	}
 	
+	// Tìm kiếm bài viết, user, nhóm
 	@GetMapping("/search/key")
 	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,@RequestParam("search") String search) {
 		String token = authorizationHeader.substring(7);

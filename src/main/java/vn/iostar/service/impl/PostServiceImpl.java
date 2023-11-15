@@ -310,7 +310,7 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy tất cả các bài post của những nhóm mình tham gia
 	@Override
-	public ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId,String userId) {
+	public ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId, String userId) {
 		List<PostsResponse> groupPosts = findGroupPosts(currentUserId);
 		if (currentUserId.isEmpty()) {
 			throw new RuntimeException("User not found.");
@@ -325,16 +325,24 @@ public class PostServiceImpl implements PostService {
 	}
 
 	// Lấy những bài post liên quan đến user như cá nhân, nhóm, bạn bè
+	@Override
 	public List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user) {
 		List<Post> userPosts = postRepository.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
 		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : userPosts) {
-
 			PostsResponse postsResponse = new PostsResponse(post);
-			postsResponse.setComments(getIdComment(post.getComments()));
-			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			if (post.getComments() != null && !post.getComments().isEmpty()) {
+				postsResponse.setComments(getIdComment(post.getComments()));
+			} else {
+			    postsResponse.setComments(new ArrayList<>()); 
+			}
+			if (post.getLikes() != null && !post.getLikes().isEmpty()) {
+				postsResponse.setLikes(getIdLikes(post.getLikes()));
+			} else {
+			    postsResponse.setLikes(new ArrayList<>()); 
+			}
 			simplifiedUserPosts.add(postsResponse);
 		}
 		return simplifiedUserPosts;

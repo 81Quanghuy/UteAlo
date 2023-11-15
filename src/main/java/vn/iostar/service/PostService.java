@@ -1,6 +1,5 @@
 package vn.iostar.service;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -32,28 +31,29 @@ public interface PostService {
 
 	ResponseEntity<GenericResponse> getPost(Integer postId);
 
-	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request,String currentUserId) throws Exception;
+	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request, String currentUserId) throws Exception;
 
-	ResponseEntity<GenericResponse> deletePost(Integer postId,String token,String userId);
-	
-	ResponseEntity<Object> createUserPost(String token,CreatePostRequestDTO requestDTO);
+	ResponseEntity<GenericResponse> deletePost(Integer postId, String token, String userId);
+
+	ResponseEntity<Object> createUserPost(String token, CreatePostRequestDTO requestDTO);
 
 	public List<PostsResponse> findUserPosts(String userId);
-	
+
 	List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
 
 	PostsResponse getPost(Post post);
-	
+
 	List<String> findAllPhotosByUserIdOrderByPostTimeDesc(String userId);
-	
+
 	Page<String> findLatestPhotosByUserId(String userId, int page, int size);
-	
+
 	List<PostsResponse> findPostGroupPosts(Integer postGroupId);
-	
+
 	ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId);
+
+	List<PostsResponse> findGroupPosts(String currentUserId);
+
+	ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId, String userId);
 	
-List<PostsResponse> findGroupPosts(String currentUserId);
-	
-	ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId,String userId);
 
 }
