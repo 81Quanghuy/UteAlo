@@ -213,13 +213,30 @@ public class PostGroupController {
 		return groupService.getMemberRequiredByPostId(postGroupId, currentUserId);
 	}
 
-	// chuyen quyen âdmin
-	@PostMapping("/appoint-admin")
-	public ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(@RequestBody PostGroupDTO postGroup,
+	// them quyen pho quan trị viên
+	@PostMapping("/appoint-deputy")
+	public ResponseEntity<GenericResponse> assignDeputyByUserIdAndGroupId(@RequestBody PostGroupDTO postGroup,
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.assignDeputyByUserIdAndGroupId(postGroup, currentUserId);
+	}
+
+	// nhuong quyen âdmin
+	@PostMapping("/appoint-admin")
+	public ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(@RequestBody PostGroupDTO postGroup,
+																		 @RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.assignAdminByUserIdAndGroupId(postGroup, currentUserId);
+	}
+	// xóa quyền phó quản trị viên
+	@PostMapping("/remove-deputy")
+	public ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(@RequestBody PostGroupDTO postGroup,
+																		 @RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.removeDeputyByUserIdAndGroupId(postGroup, currentUserId);
 	}
 
 	// delete member

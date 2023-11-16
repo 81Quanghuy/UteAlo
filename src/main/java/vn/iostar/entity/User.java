@@ -73,9 +73,6 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private List<PostGroupMember> postGroupMembers;
 
-	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-	private List<ChatGroupMember> chatGroupMembers;
-
 	@OneToMany(mappedBy = "user")
 	private List<RefreshToken> refreshTokens;
 
