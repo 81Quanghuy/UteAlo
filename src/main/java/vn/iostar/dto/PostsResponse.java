@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import lombok.Data;
+import vn.iostar.contants.PrivacyLevel;
+import vn.iostar.contants.RoleName;
 import vn.iostar.entity.Post;
 
 
@@ -21,6 +23,8 @@ public class PostsResponse {
     private String postGroupName;
     private List<Integer> comments;
     private List<Integer> likes;
+    private RoleName roleName;
+    private PrivacyLevel privacyLevel;
     
 	public PostsResponse(Post post) {
 		this.postId = post.getPostId();
@@ -42,6 +46,12 @@ public class PostsResponse {
 		if(post.getPostGroup() != null) {
 			this.postGroupId = post.getPostGroup().getPostGroupId();
 			this.postGroupName = post.getPostGroup().getPostGroupName();
+		}
+		if(post.getUser().getRole().getRoleName()!=null) {
+			this.roleName = post.getUser().getRole().getRoleName();
+		}
+		if(post.getPrivacyLevel()!=null) {
+			this.privacyLevel = post.getPrivacyLevel(); 
 		}
 	}
 }

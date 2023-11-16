@@ -1,6 +1,6 @@
 package vn.iostar.service.impl;
 
-
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -15,11 +15,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import vn.iostar.contants.RoleName;
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GroupPostResponse;
+import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserProfileResponse;
+import vn.iostar.dto.UserResponse;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
@@ -30,6 +33,7 @@ import vn.iostar.repository.PasswordResetOtpRepository;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.repository.VerificationTokenRepository;
+import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.UserService;
 
 @Service
@@ -37,7 +41,7 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	UserRepository userRepository;
-	
+
 	@Autowired
 	PostGroupRepository postGroupRepository;
 
@@ -46,7 +50,7 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	VerificationTokenRepository tokenRepository;
-	
+
 	@Autowired
 	FriendRepository friendRepository;
 
@@ -56,6 +60,9 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	PasswordResetOtpRepository passwordResetOtpRepository;
 
+	@Autowired
+	JwtTokenProvider jwtTokenProvider;
+	
 	@Override
 	public <S extends User> S save(S entity) {
 		return userRepository.save(entity);
@@ -182,107 +189,149 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public Optional<PasswordResetOtp> getUserByPasswordResetOtp(String otp) {
-		 return passwordResetOtpRepository.findByOtp(otp);
+		return passwordResetOtpRepository.findByOtp(otp);
 	}
-	
+
 	@Override
-    public void changeUserPassword(User user, String newPassword, String confirmPassword) {
-        if (!newPassword.equals(confirmPassword))
-            throw new RuntimeException("Password and confirm password do not match");
-        user.getAccount().setPassword(passwordEncoder.encode(newPassword));
-        save(user);
-    }
-	
+	public void changeUserPassword(User user, String newPassword, String confirmPassword) {
+		if (!newPassword.equals(confirmPassword))
+			throw new RuntimeException("Password and confirm password do not match");
+		user.getAccount().setPassword(passwordEncoder.encode(newPassword));
+		save(user);
+	}
+
+	// Cập nhật thông tin người dùng
 	@Override
-    public ResponseEntity<Object> updateProfile(String userId, UserUpdateRequest request) throws Exception {
-        Optional<User> user = findById(userId);
-        if (user.isEmpty())
-            throw new Exception("User doesn't exist");
+	public ResponseEntity<Object> updateProfile(String userId, UserUpdateRequest request) throws Exception {
+		Optional<User> user = findById(userId);
+		if (user.isEmpty())
+			throw new Exception("User doesn't exist");
 
-        if (request.getDateOfBirth().after(new Date()))
-            throw new Exception("Invalid date of birth");
+		if (request.getDateOfBirth().after(new Date()))
+			throw new Exception("Invalid date of birth");
 
-        user.get().setUserName(request.getFullName());
-        user.get().setPhone(request.getPhone());
-        user.get().setGender(request.getGender());
-        user.get().setDayOfBirth(request.getDateOfBirth());
-        user.get().setAddress(request.getAddress());
-        user.get().getProfile().setBio(request.getAbout());
-        save(user.get());
+		user.get().setUserName(request.getFullName());
+		user.get().setPhone(request.getPhone());
+		user.get().setGender(request.getGender());
+		user.get().setDayOfBirth(request.getDateOfBirth());
+		user.get().setAddress(request.getAddress());
+		user.get().getProfile().setBio(request.getAbout());
+		save(user.get());
 
-        return ResponseEntity.ok(
-                GenericResponse.builder()
-                        .success(true)
-                        .message("Update successful")
-                        .result(new UserProfileResponse(user.get()))
-                        .statusCode(200)
-                        .build()
-        );
-    }
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
+				.result(new UserProfileResponse(user.get())).statusCode(200).build());
+	}
+
+	// Quản lý tài khoản người dùng
+	@Override
+	public ResponseEntity<Object> accountManager(String authorizationHeader, UserManagerRequest request) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> userManager = findById(currentUserId);
+		RoleName roleName = userManager.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		Optional<User> user = findById(request.getUserId());
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("User doesn't exist").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		user.get().getAccount().setActive(request.getIsActive());
+		save(user.get());
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
+				.result(new UserProfileResponse(user.get())).statusCode(200).build());
+	}
+
 	
+	// Xóa user
 	@Override
 	public ResponseEntity<GenericResponse> deleteUser(String idFromToken) {
 		try {
-            Optional<User> optionalUser = findById(idFromToken);
-            /// tìm thấy user với id 
-            if (optionalUser.isPresent()) {
-                User user = optionalUser.get();
-                //không xóa user , chỉ cập nhật active về flase
-                user.getAccount().setActive(false);
-                
-                User updatedUser = userRepository.save(user);
-                /// nếu cập nhật active về false
-                if (updatedUser != null) {
-                    return ResponseEntity.ok().body(new GenericResponse(
-                            true,
-                            "Delete Successful!",
-                            updatedUser,
-                            HttpStatus.OK.value()));
-                }
-                /// cập nhật không thành công
-                else {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GenericResponse(
-                            false,
-                            "Update Failed!",
-                            null,
-                            HttpStatus.INTERNAL_SERVER_ERROR.value()));
-                }
-            }
-            /// khi không tìm thấy user với id 
-            else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GenericResponse(
-                        false,
-                        "Cannot found user!",
-                        null,
-                        HttpStatus.NOT_FOUND.value()));
-            }
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new GenericResponse(
-                    false,
-                    "Invalid arguments!",
-                    null,
-                    HttpStatus.BAD_REQUEST.value()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GenericResponse(
-                    false,
-                    "An internal server error occurred!",
-                    null,
-                    HttpStatus.INTERNAL_SERVER_ERROR.value()));
-        }
-    }
+			Optional<User> optionalUser = findById(idFromToken);
+			/// tìm thấy user với id
+			if (optionalUser.isPresent()) {
+				User user = optionalUser.get();
+				// không xóa user , chỉ cập nhật active về flase
+				user.getAccount().setActive(false);
 
+				User updatedUser = userRepository.save(user);
+				/// nếu cập nhật active về false
+				if (updatedUser != null) {
+					return ResponseEntity.ok()
+							.body(new GenericResponse(true, "Delete Successful!", updatedUser, HttpStatus.OK.value()));
+				}
+				/// cập nhật không thành công
+				else {
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GenericResponse(false,
+							"Update Failed!", null, HttpStatus.INTERNAL_SERVER_ERROR.value()));
+				}
+			}
+			/// khi không tìm thấy user với id
+			else {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new GenericResponse(false, "Cannot found user!", null, HttpStatus.NOT_FOUND.value()));
+			}
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest()
+					.body(new GenericResponse(false, "Invalid arguments!", null, HttpStatus.BAD_REQUEST.value()));
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new GenericResponse(false,
+					"An internal server error occurred!", null, HttpStatus.INTERNAL_SERVER_ERROR.value()));
+		}
+	}
+
+	// Lấy toàn bộ thông tin người dùng
 	@Override
-	public UserProfileResponse getFullProfile(Optional<User> user,Pageable pageable) {
+	public UserProfileResponse getFullProfile(Optional<User> user, Pageable pageable) {
 		UserProfileResponse profileResponse = new UserProfileResponse(user.get());
 		List<FriendRequestResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId());
 		profileResponse.setFriends(fResponse);
-		
-		List<GroupPostResponse> groupPostResponses = postGroupRepository.findPostGroupInfoByUserId(user.get().getUserId(), pageable);
+
+		List<GroupPostResponse> groupPostResponses = postGroupRepository
+				.findPostGroupInfoByUserId(user.get().getUserId(), pageable);
 		profileResponse.setPostGroup(groupPostResponses);
 		return profileResponse;
 	}
 
 	
+	// Tìm tất cả người dùng trong hệ thống
+	@Override
+	public List<UserResponse> findAllUsers() {
+		List<UserResponse> users = userRepository.findAllUsers();
+		List<UserResponse> listUsers = new ArrayList<>();
+		for (UserResponse userItem : users) {
+			Optional<User> userOptional = findById(userItem.getUserId());
+			if (userOptional.isPresent()) {
+				userItem.setIsActive(userOptional.get().getAccount().isActive());
+				userItem.setRoleName(userOptional.get().getRole().getRoleName());
+			}
+			listUsers.add(userItem);
 
+		}
+		return users;
+	}
+
+	// Lấy tất cả người dùng trong hệ thống
+	@Override
+	public ResponseEntity<GenericResponse> getAllUsers(String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		List<UserResponse> users = findAllUsers();
+		if (users.isEmpty()) {
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("Empty").result(null).statusCode(404).build());
+		} else
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("Retrieved List Users Successfully")
+							.result(users).statusCode(HttpStatus.OK.value()).build());
+	}
 
 }

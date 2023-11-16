@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import vn.iostar.contants.RoleName;
 import vn.iostar.dto.CommentPostResponse;
 import vn.iostar.dto.CommentShareResponse;
 import vn.iostar.dto.CommentUpdateRequest;
@@ -478,6 +479,65 @@ public class CommentServiceImpl implements CommentService {
 					.body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
 		}
 
+	}
+	
+	@Override
+	@Transactional
+	public ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId,String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if(!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		Optional<Comment> optionalComment = findById(commentId);
+		// Tìm thấy bài comment với commentId
+		if (optionalComment.isPresent()) {
+			Comment comment = optionalComment.get();
+			commentRepository.delete(comment);
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		}
+		// Khi không tìm thấy comment với id
+		else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
+		}
+	}
+
+	@Override
+	public List<CommentPostResponse> findAllComments() {
+		List<Comment> comments = commentRepository.findAllAndCommentReplyIsNullByOrderByCreateTimeDesc();
+
+		List<CommentPostResponse> commentResponses = new ArrayList<>();
+		for (Comment comment : comments) {
+			CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+			commentResponses.add(cPostResponse);
+		}
+		return commentResponses;
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getAllComments(String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if(!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		List<CommentPostResponse> comments = findAllComments();
+		if (comments.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No Comments Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		return ResponseEntity.ok(
+				GenericResponse.builder().success(true).message("Retrieved List Comments Successfully")
+						.result(comments).statusCode(HttpStatus.OK.value()).build());
 	}
 
 }

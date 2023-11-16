@@ -23,6 +23,7 @@ public class UserProfileResponse {
 	private String about;
 	private Gender gender;
 	private boolean isActive;
+	private boolean isAccountActive;
 	private Date createdAt;
 	private Date updatedAt;
 	private RoleName role;
@@ -41,6 +42,7 @@ public class UserProfileResponse {
         this.about = user.getProfile().getBio();
         this.gender = user.getGender();
         this.isActive = user.isActive();
+        this.isAccountActive = user.getAccount().isActive();
         this.createdAt = user.getAccount().getCreatedAt();
         this.updatedAt = user.getAccount().getUpdatedAt();
         this.role = user.getRole().getRoleName();
