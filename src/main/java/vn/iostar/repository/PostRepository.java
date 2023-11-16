@@ -17,6 +17,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
 	// Lấy những bài post của cá nhân
 	List<Post> findByUserUserIdOrderByPostTimeDesc(String userId);
+	
+	// Lấy tất cả bài post trong hệ thống
+	List<Post> findAllByOrderByPostTimeDesc();
 
 	// Tìm tất cả hình ảnh từ tất cả bài post liên quan đến người dùng như bạn bè, nhóm 
 	@Query("SELECT p FROM Post p "

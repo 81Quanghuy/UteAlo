@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserProfileResponse;
+import vn.iostar.dto.UserResponse;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
@@ -53,4 +55,14 @@ public interface UserService {
 	ResponseEntity<GenericResponse> deleteUser(String idFromToken);
 
 	UserProfileResponse getFullProfile(Optional<User> user,Pageable pageable);
+	
+	// Tìm tất cả user trong hệ thống
+	List<UserResponse> findAllUsers();
+	
+	// Lấy danh sách tất cả user trong hệ thống
+	ResponseEntity<GenericResponse> getAllUsers(String authorizationHeader);
+	
+	// Quản lý tài khoản của user trong hệ thống
+	ResponseEntity<Object> accountManager(String authorizationHeader, UserManagerRequest request);
+	
 }

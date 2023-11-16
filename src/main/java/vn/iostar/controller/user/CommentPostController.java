@@ -67,10 +67,8 @@ public class CommentPostController {
 	public ResponseEntity<Object> updateUser(@ModelAttribute CommentUpdateRequest request,
 			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("commentId") Integer commentId,
 			BindingResult bindingResult) throws Exception {
-		
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-
 		return commentService.updateComment(commentId, request,currentUserId);
 
 	}
@@ -79,6 +77,5 @@ public class CommentPostController {
 	public ResponseEntity<GenericResponse> deleteCommentOfPost(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("commentId") Integer commentId) {
 		return commentService.deleteCommentOfPost(commentId);
-
 	}
 }

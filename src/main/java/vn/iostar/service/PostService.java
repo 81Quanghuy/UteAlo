@@ -33,11 +33,22 @@ public interface PostService {
 
 	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request, String currentUserId) throws Exception;
 
+	// Xóa bài post của mình
 	ResponseEntity<GenericResponse> deletePost(Integer postId, String token, String userId);
+	
+	// Admin xóa bài post trong hệ thống
+	ResponseEntity<GenericResponse> deletePostByAdmin(Integer postId, String authorizationHeader);
 
 	ResponseEntity<Object> createUserPost(String token, CreatePostRequestDTO requestDTO);
 
+	// Lấy những bài post của mình
 	public List<PostsResponse> findUserPosts(String userId);
+	
+	// Tìm tất cả bài post trong hệ thống
+	public List<PostsResponse> findAllPosts();
+	
+	// Lấy tất cả bài post trong hệ thống
+	ResponseEntity<GenericResponse> getAllPosts(String authorizationHeader);
 
 	List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
 

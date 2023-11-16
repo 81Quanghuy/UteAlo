@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import vn.iostar.contants.RoleName;
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostResponse;
@@ -151,6 +152,7 @@ public class PostServiceImpl implements PostService {
 				.statusCode(200).build());
 	}
 
+	// Xóa bài post của mình
 	@Override
 	@Transactional
 	public ResponseEntity<GenericResponse> deletePost(Integer postId, String token, String userId) {
@@ -176,7 +178,33 @@ public class PostServiceImpl implements PostService {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(new GenericResponse(false, "Cannot found post!", null, HttpStatus.NOT_FOUND.value()));
 		}
+	}
 
+	// Admin xóa bài post trong hệ thống
+	@Override
+	@Transactional
+	public ResponseEntity<GenericResponse> deletePostByAdmin(Integer postId, String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Delete denied!").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		Optional<Post> optionalPost = findById(postId);
+		// tìm thấy bài post với postId
+		if (optionalPost.isPresent()) {
+			Post post = optionalPost.get();
+			postRepository.delete(post);
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		}
+		// Khi không tìm thấy bài post với id
+		else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found post!", null, HttpStatus.NOT_FOUND.value()));
+		}
 	}
 
 	@Override
@@ -266,6 +294,41 @@ public class PostServiceImpl implements PostService {
 		return simplifiedUserPosts;
 	}
 
+	// Lấy tất cả bài post trong hệ thống
+	@Override
+	public List<PostsResponse> findAllPosts() {
+		List<Post> userPosts = postRepository.findAllByOrderByPostTimeDesc();
+		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+		for (Post post : userPosts) {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedUserPosts.add(postsResponse);
+		}
+		return simplifiedUserPosts;
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getAllPosts(String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		List<PostsResponse> userPosts = findAllPosts();
+		if (userPosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No Posts Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved List Posts Successfully")
+				.result(userPosts).statusCode(HttpStatus.OK.value()).build());
+	}
+
 	// Lấy những bài post của nhóm
 	@Override
 	public List<PostsResponse> findPostGroupPosts(Integer postGroupId) {
@@ -336,12 +399,12 @@ public class PostServiceImpl implements PostService {
 			if (post.getComments() != null && !post.getComments().isEmpty()) {
 				postsResponse.setComments(getIdComment(post.getComments()));
 			} else {
-			    postsResponse.setComments(new ArrayList<>()); 
+				postsResponse.setComments(new ArrayList<>());
 			}
 			if (post.getLikes() != null && !post.getLikes().isEmpty()) {
 				postsResponse.setLikes(getIdLikes(post.getLikes()));
 			} else {
-			    postsResponse.setLikes(new ArrayList<>()); 
+				postsResponse.setLikes(new ArrayList<>());
 			}
 			simplifiedUserPosts.add(postsResponse);
 		}

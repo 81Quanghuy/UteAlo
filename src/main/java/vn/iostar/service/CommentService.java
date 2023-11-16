@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
+import vn.iostar.dto.CommentPostResponse;
 import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.CreateCommentShareRequestDTO;
@@ -55,5 +56,15 @@ public interface CommentService {
 	ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request, String currentUserId)
 			throws Exception;
 
+	// Xóa comment của mình hoặc trong bài post của mình
 	ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId);
+	
+	// Admin xóa comment trong hệ thống
+	ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId,String authorizationHeader);
+	
+	// Lấy tất cả bài post trong hệ thống 
+	List<CommentPostResponse> findAllComments();
+	
+	ResponseEntity<GenericResponse> getAllComments(String authorizationHeader);
+	
 }
