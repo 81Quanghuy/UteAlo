@@ -62,7 +62,7 @@ public interface PostGroupService {
 
 	ResponseEntity<GenericResponse> getMemberRequiredByPostId(Integer postId, String currentUserId);
 
-	ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
+	ResponseEntity<GenericResponse> assignDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
 
 	ResponseEntity<GenericResponse> deleteMemberByPostId(PostGroupDTO postGroup, String currentUserId);
 
@@ -71,4 +71,8 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> getPostGroupByUserId(String authorizationHeader);
 
 	int getNumberOfFriendsInGroup(String userId, int postGroupId);
+
+	ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
+
+	ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
 }
