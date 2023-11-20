@@ -93,6 +93,7 @@ public class UserController {
 			@PathVariable("userId") String userId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+
 		Optional<User> user = userService.findById(userId);
 		Pageable pageable = PageRequest.of(0, 5);
 		UserProfileResponse profileResponse = userService.getFullProfile(user, pageable);

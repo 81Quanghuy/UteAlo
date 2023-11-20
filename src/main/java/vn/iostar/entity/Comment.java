@@ -1,5 +1,6 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -18,26 +19,27 @@ import lombok.Setter;
 @Table(name = "COMMENTS")
 public class Comment implements Serializable{
 
-	private static final long serialVersionUID = 1L;
+	@Serial
+    private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int commentId;
-    
-	@ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "postId")
     private Post post;
+
     @Column(columnDefinition = "nvarchar(255)")
     private String content;
-    private Date createTime;
-    private Date updateAt;
+
     private String photos;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId")
     private User user;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shareId")
     private Share share;
     
@@ -46,9 +48,11 @@ public class Comment implements Serializable{
     
     @OneToMany(mappedBy = "commentReply", cascade = CascadeType.ALL,orphanRemoval = true)
 	private List<Comment> subComments;
-    
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "comment_reply_id")
 	private Comment commentReply;
+
+    private Date createTime;
+    private Date updateAt;
 }

@@ -39,12 +39,13 @@ public class MessageController {
 	}
 
 	// Get Message with GroupId and AuthorizationHeader
-	@GetMapping("/groups/{groupId}")
+	@GetMapping("/group/{groupId}")
 	public ResponseEntity<GenericResponse> getListMessageByGroupIdAndUserId(@PathVariable("groupId") String groupId,
-			@RequestHeader("Authorization") String authorizationHeader) {
+			@RequestHeader("Authorization") String authorizationHeader,
+			@RequestParam Integer page, @RequestParam Integer size) {
 		String token = authorizationHeader.substring(7);
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-		PageRequest pageable = PageRequest.of(0, 20);
+		PageRequest pageable = PageRequest.of(page, size);
 		return messageService.getListMessageByGroupIdAndUserTokenId(groupId, userIdToken, pageable);
 	}
 

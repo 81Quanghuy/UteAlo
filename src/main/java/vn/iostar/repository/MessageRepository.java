@@ -14,11 +14,11 @@ import org.springframework.data.jpa.repository.Query;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, String> {
 
-	@Query("SELECT m FROM Message m WHERE (m.senderId = :senderId AND m.receiverId = :receiverId) OR (m.senderId = :receiverId AND m.receiverId = :senderId) ORDER BY m.createAt DESC")
+	@Query("SELECT m FROM Message m WHERE (m.sender.userId = :senderId AND m.receiver.userId = :receiverId) OR (m.sender.userId = :receiverId AND m.receiver.userId = :senderId) ORDER BY m.createAt DESC")
 	List<Message> findMessagesBetweenUsers(String senderId, String receiverId, PageRequest pageable);
 
-	List<Message> findByGroupIdOrderByCreateAt(String groupId, PageRequest pageable);
+	List<Message> findByGroupPostGroupIdOrderByCreateAt(String groupId, PageRequest pageable);
 
-	Optional<Message> findByCreateAtAndSenderIdAndReceiverIdAndContent(Date date, String senderId, String receiverId,
+	Optional<Message> findByCreateAtAndSenderUserIdAndReceiverUserIdAndContent(Date date, String senderId, String receiverId,
 			String content);
 }

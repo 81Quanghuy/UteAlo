@@ -45,16 +45,17 @@ public class ShareController {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Optional<Share> share = shareService.findById(shareId);
-		SharesResponse sharePosts = shareService.getSharePost(share.get());
+
 		if (share.isEmpty()) {
 			throw new RuntimeException("Post not found.");
 		} else if (currentUserId.equals(share.get().getUser().getUserId())) {
+			SharesResponse sharePosts = shareService.getSharePost(share.get());
 			return ResponseEntity.ok(
 					GenericResponse.builder().success(true).message("Retrieving share post successfully and access update")
 							.result(sharePosts).statusCode(HttpStatus.OK.value()).build());
 		} else {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieving share post successfully and access update denied").result(sharePosts)
+					.message("Retrieving share post successfully and access update denied")
 					.statusCode(HttpStatus.OK.value()).build());
 		}
 	}

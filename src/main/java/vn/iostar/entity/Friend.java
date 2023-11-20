@@ -1,5 +1,6 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import jakarta.persistence.Entity;
@@ -23,7 +24,8 @@ import lombok.Setter;
 @Table(name = "FRIENDS")
 public class Friend implements Serializable{
 
-	private static final long serialVersionUID = 1L;
+	@Serial
+    private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
