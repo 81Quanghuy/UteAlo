@@ -1,16 +1,10 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +20,7 @@ import vn.iostar.contants.MessageType;
 @Table(name = "MESSAGES")
 public class Message implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -34,13 +29,24 @@ public class Message implements Serializable {
 	
 	@Enumerated(EnumType.STRING)
 	private MessageType messageType;
+
 	@Column(columnDefinition = "nvarchar(255)")
 	private String content;
-	private Date createAt;
-	private String senderId;
-	private String receiverId;
-	private String groupId;
+
+	@ManyToOne
+	@JoinColumn(name = "senderId")
+	private User sender;
+
+	@ManyToOne
+	@JoinColumn(name = "receiverId")
+	private User receiver;
+
+	@ManyToOne
+	@JoinColumn(name = "groupId")
+	private PostGroup group;
 
 	@Enumerated(EnumType.STRING)
 	private ChatStatus status;
+
+	private Date createAt;
 }

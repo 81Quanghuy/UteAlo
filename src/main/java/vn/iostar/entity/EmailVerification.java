@@ -20,8 +20,6 @@ public class EmailVerification {
 	private String id;
 	
 	private String email;
-	
 	private String otp;
-	
 	private LocalDateTime expirationTime;
 }

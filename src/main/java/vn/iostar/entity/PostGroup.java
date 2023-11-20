@@ -1,5 +1,6 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import lombok.Setter;
 @Table(name = "POSTGROUP")
 public class PostGroup implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -39,13 +41,13 @@ public class PostGroup implements Serializable {
 
 	@Column(unique = true, columnDefinition = "nvarchar(255)")
 	private String postGroupName;
+
 	private String avatarGroup;
 	private String backgroundGroup;
 	
 	@Column(columnDefinition = "nvarchar(255)")
 	private String bio;
-	private Date createDate;
-	private Date updateDate;
+
 	private Boolean isPublic = true; // true: private, false: public
 	private Boolean isApprovalRequired = false; // Yêu cầu phê duyệt
 
@@ -53,13 +55,18 @@ public class PostGroup implements Serializable {
 	@JoinTable(name = "postGroup_postGroupMember", joinColumns = @JoinColumn(name = "postGroupId"), inverseJoinColumns = @JoinColumn(name = "postGroupMemberId"))
 	private Set<PostGroupMember> postGroupMembers = new HashSet<>();
 
-	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Post> posts;
 	
-	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Share> shares;
 
-	@OneToMany(mappedBy = "postGroup", orphanRemoval = true)
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<PostGroupRequest> postGroupRequests;
 
+	@OneToMany(mappedBy = "group", orphanRemoval = true,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Message> messages;
+
+	private Date createDate;
+	private Date updateDate;
 }
