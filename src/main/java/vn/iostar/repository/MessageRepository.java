@@ -17,7 +17,7 @@ public interface MessageRepository extends JpaRepository<Message, String> {
 	@Query("SELECT m FROM Message m WHERE (m.sender.userId = :senderId AND m.receiver.userId = :receiverId) OR (m.sender.userId = :receiverId AND m.receiver.userId = :senderId) ORDER BY m.createAt DESC")
 	List<Message> findMessagesBetweenUsers(String senderId, String receiverId, PageRequest pageable);
 
-	List<Message> findByGroupPostGroupIdOrderByCreateAt(String groupId, PageRequest pageable);
+	List<Message> findByGroupPostGroupIdOrderByCreateAt(int postGroupId,PageRequest pageable);
 
 	Optional<Message> findByCreateAtAndSenderUserIdAndReceiverUserIdAndContent(Date date, String senderId, String receiverId,
 			String content);

@@ -30,7 +30,7 @@ public class Role implements Serializable{
 	@Enumerated(EnumType.STRING)
     private RoleName roleName;
     
-    @OneToMany(mappedBy = "role",fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "role",cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<User> users;
     
 }
