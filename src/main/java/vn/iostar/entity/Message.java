@@ -3,14 +3,13 @@ package vn.iostar.entity;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import vn.iostar.contants.ChatStatus;
-import vn.iostar.contants.MessageType;
 
 @Getter
 @Setter
@@ -26,9 +25,6 @@ public class Message implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String messageId;
-	
-	@Enumerated(EnumType.STRING)
-	private MessageType messageType;
 
 	@Column(columnDefinition = "nvarchar(255)")
 	private String content;
@@ -45,8 +41,14 @@ public class Message implements Serializable {
 	@JoinColumn(name = "groupId")
 	private PostGroup group;
 
-	@Enumerated(EnumType.STRING)
-	private ChatStatus status;
+	@OneToMany
+	@JoinColumn(name = "fileId")
+	private List<Files> files;
+
+
 
 	private Date createAt;
+	private Date updateAt;
+
+
 }

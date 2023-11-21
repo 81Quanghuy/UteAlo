@@ -1,5 +1,6 @@
 package vn.iostar.controller.user;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Optional;
@@ -14,12 +15,16 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.transaction.annotation.Transactional;
+import vn.iostar.dto.MessageDTO;
 import vn.iostar.dto.MessageRequest;
 import vn.iostar.entity.Message;
 import vn.iostar.entity.Notification;
+import vn.iostar.entity.User;
 import vn.iostar.repository.MessageRepository;
+import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.MessageService;
 import vn.iostar.service.NotificationService;
+import vn.iostar.service.UserService;
 
 @Controller
 public class ChatController {
@@ -34,7 +39,6 @@ public class ChatController {
 
 	@Autowired
 	private NotificationService notificationService;
-
 	@MessageMapping("/public-message")
 	public Message receiveMessage(@Payload Message message) {
 		// Lưu tin nhắn vào cơ sở dữ liệu
@@ -52,12 +56,14 @@ public class ChatController {
     }
 
     @MessageMapping("/sendMessage/{roomId}")
-    public void sendMessage(@Payload Message chatMessage, @DestinationVariable String roomId) {
+    public Message sendMessage(@Payload MessageDTO chatMessage, @DestinationVariable String roomId) throws IOException {
         // Xử lý tin nhắn trong phòng
-		messageService.save(chatMessage);
+		Message entity = messageService.saveMessageByDTO(chatMessage);
+
         // Gửi tin nhắn đến tất cả người dùng trong phòng
         simpMessagingTemplate.convertAndSend("/chatroom/room/" + roomId, chatMessage);
-    }
+		return entity;
+	}
     @MessageMapping("/leaveRoom")
     public void leaveRoom(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
         // Xử lý yêu cầu rời phòng
@@ -65,20 +71,21 @@ public class ChatController {
         simpMessagingTemplate.convertAndSendToUser(message.getSender().getUserId(), "/public", message.getSender().getUserName()+" Đã rời nhóm!!!");
     }
 	@MessageMapping("/private-message")
-	public Message recMessage(@Payload Message message) {
-		// Lưu tin nhắn vào cơ sở dữ liệu
-		messageService.save(message);
-		simpMessagingTemplate.convertAndSendToUser(message.getReceiver().getUserId(), "/private", message);
-		return message;
+	public Message recMessage(@Payload MessageDTO message) throws IOException {
+
+		Message entity = messageService.saveMessageByDTO(message);
+		message.setFileEntities(entity.getFiles());
+		simpMessagingTemplate.convertAndSendToUser(message.getReceiverId(), "/private", message);
+		return entity;
 	}
 	//Tạo thông báo đến người dùng
-	@MessageMapping("/private-notification")
-	public void notification(@Payload Notification notification) {
-		// Lưu tin nhắn vào cơ sở dữ liệu
-		notification.setCreateAt(new Date());
-		notificationService.save(notification);
-		simpMessagingTemplate.convertAndSendToUser(notification.getUser().getUserId(), "/notify", notification);
-	}
+//	@MessageMapping("/private-notification")
+//	public void notification(@Payload Notification notification) {
+//		// Lưu tin nhắn vào cơ sở dữ liệu
+//		notification.setCreateAt(new Date());
+//		notificationService.save(notification);
+//		simpMessagingTemplate.convertAndSendToUser(notification.getUser().getUserId(), "/notify", notification);
+//	}
 	//Xóa tin nhắn khi nguời dùng xóa tin nhắn
 	@MessageMapping("/delete-message")
     @Transactional

@@ -88,6 +88,11 @@ public class UserController {
 		return userService.getProfile(userId);
 	}
 
+	@GetMapping("/avatarAndName/{userId}")
+	public ResponseEntity<GenericResponse> getAvatarAndName(@PathVariable("userId") String userId) {
+		return userService.getAvatarAndName(userId);
+	}
+
 	@GetMapping("/profile/{userId}")
 	public ResponseEntity<GenericResponse> getInformation(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("userId") String userId) {

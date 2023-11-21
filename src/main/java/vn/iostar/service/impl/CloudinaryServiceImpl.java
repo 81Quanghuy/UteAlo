@@ -35,6 +35,21 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 	}
 
 	@Override
+	public String uploadVideo(MultipartFile imageFile) throws IOException {
+		if (imageFile == null) {
+			throw new IllegalArgumentException("File is null. Please upload a valid file.");
+		}
+		if (!imageFile.getContentType().startsWith("video/")) {
+			throw new IllegalArgumentException("Only video files are allowed.");
+		}
+
+		Map<String, String> params = ObjectUtils.asMap("folder", "Social Media/User", "resource_type", "video");
+		Map uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), params);
+		return (String) uploadResult.get("secure_url");
+	}
+
+
+	@Override
 	public void deleteImage(String imageUrl) throws IOException {
 		Map<String, String> params = ObjectUtils.asMap("folder", "Social Media/User", "resource_type", "image");
 		Map result = cloudinary.uploader().destroy(getPublicIdImage(imageUrl), params);
