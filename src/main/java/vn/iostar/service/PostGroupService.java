@@ -1,5 +1,6 @@
 package vn.iostar.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,8 @@ import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.entity.PostGroup;
 
 public interface PostGroupService {
+
+	<S extends PostGroup> S save(S entity);
 
 	Optional<PostGroup> findById(Integer id);
 
@@ -75,4 +78,6 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
 
 	ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
+
+	Optional<PostGroup>  findByPostGroupName(String groupName);
 }
