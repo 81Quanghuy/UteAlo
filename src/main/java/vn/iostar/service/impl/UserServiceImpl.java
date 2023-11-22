@@ -291,7 +291,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserProfileResponse getFullProfile(Optional<User> user, Pageable pageable) {
 		UserProfileResponse profileResponse = new UserProfileResponse(user.get());
-		List<FriendRequestResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId());
+		List<FriendResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId());
 		profileResponse.setFriends(fResponse);
 
 		List<GroupPostResponse> groupPostResponses = postGroupRepository

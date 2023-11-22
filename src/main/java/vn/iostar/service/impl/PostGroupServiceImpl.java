@@ -1,12 +1,7 @@
 package vn.iostar.service.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import vn.iostar.contants.RoleUserGroup;
-import vn.iostar.dto.FriendRequestResponse;
+import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.InvitedPostGroupResponse;
@@ -82,6 +77,10 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Autowired
 	PostRepository postRepository;
+	@Override
+	public <S extends PostGroup> S save(S entity) {
+		return postGroupRepository.save(entity);
+	}
 
 	@Override
 	public Optional<PostGroup> findById(Integer id) {
@@ -121,9 +120,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 		PageRequest pageable = PageRequest.of(0, 10);
 
-		List<FriendRequestResponse> fList = friendRepository.findFriendTop10UserIdsByUserId(currentUserId, pageable);
+		List<FriendResponse> fList = friendRepository.findFriendByUserId(currentUserId, pageable);
 		Set<GroupPostResponse> listGroupSuggest = new HashSet<>();
-		for (FriendRequestResponse f : fList) {
+		for (FriendResponse f : fList) {
 			List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserIdOfUser(f.getUserId());
 			listGroupSuggest.addAll(list);
 		}
@@ -976,6 +975,11 @@ public class PostGroupServiceImpl implements PostGroupService {
 		return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE) // Sử dụng HttpStatus.NOT_ACCEPTABLE cho lỗi
 				.body(GenericResponse.builder().success(false).message("No Accept") // Thông báo lỗi "No Accept"
 						.statusCode(HttpStatus.NOT_ACCEPTABLE.value()).build());
+	}
+
+	@Override
+	public Optional<PostGroup>  findByPostGroupName(String groupName) {
+		return postGroupRepository.findByPostGroupName(groupName);
 	}
 
 	private void checkMemberInGroup(PostGroup groupPost, User userRemote, Optional<PostGroupMember> memberDeputyRemote) {
