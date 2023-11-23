@@ -15,8 +15,9 @@ public class UserResponse {
 	private String phone;
 	private Gender gender;
 	private Date dayOfBirth;
-	private Boolean isActive;
+	private String isActive;
 	private RoleName roleName;
+	private String email;
 
 	public UserResponse(String userId, String userName, String address, String phone, Gender gender, Date dayOfBirth) {
 		super();

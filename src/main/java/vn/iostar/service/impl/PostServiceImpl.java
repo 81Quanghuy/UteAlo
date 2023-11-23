@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,8 @@ import org.springframework.util.StringUtils;
 import vn.iostar.contants.RoleName;
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.PostResponse;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
@@ -296,37 +299,48 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy tất cả bài post trong hệ thống
 	@Override
-	public List<PostsResponse> findAllPosts() {
-		List<Post> userPosts = postRepository.findAllByOrderByPostTimeDesc();
-		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
-		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
-		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
-		for (Post post : userPosts) {
+	public Page<PostsResponse> findAllPosts(int page, int itemsPerPage) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Page<Post> userPostsPage = postRepository.findAll(pageable);
+
+		Page<PostsResponse> simplifiedUserPostsPage = userPostsPage.map(post -> {
 			PostsResponse postsResponse = new PostsResponse(post);
 			postsResponse.setComments(getIdComment(post.getComments()));
 			postsResponse.setLikes(getIdLikes(post.getLikes()));
-			simplifiedUserPosts.add(postsResponse);
-		}
-		return simplifiedUserPosts;
+			return postsResponse;
+		});
+
+		return simplifiedUserPostsPage;
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> getAllPosts(String authorizationHeader) {
+	public ResponseEntity<GenericResponseAdmin> getAllPosts(String authorizationHeader, int page, int itemsPerPage) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Optional<User> user = userService.findById(currentUserId);
 		RoleName roleName = user.get().getRole().getRoleName();
 		if (!roleName.name().equals("Admin")) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
 					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
-		List<PostsResponse> userPosts = findAllPosts();
-		if (userPosts.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+
+		Page<PostsResponse> userPostsPage = findAllPosts(page, itemsPerPage);
+		long totalPosts = postRepository.count();
+
+		PaginationInfo pagination = new PaginationInfo();
+		pagination.setPage(page);
+		pagination.setItemsPerPage(itemsPerPage);
+		pagination.setCount(totalPosts);
+		pagination.setPages((int) Math.ceil((double) totalPosts / itemsPerPage));
+
+		if (userPostsPage.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
 					.message("No Posts Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+					.message("Retrieved List Posts Successfully").result(userPostsPage)
+					.pagination(pagination).statusCode(HttpStatus.OK.value()).build());
 		}
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved List Posts Successfully")
-				.result(userPosts).statusCode(HttpStatus.OK.value()).build());
 	}
 
 	// Lấy những bài post của nhóm

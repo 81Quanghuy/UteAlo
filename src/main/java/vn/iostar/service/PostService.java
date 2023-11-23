@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Post;
@@ -45,10 +46,10 @@ public interface PostService {
 	public List<PostsResponse> findUserPosts(String userId);
 	
 	// Tìm tất cả bài post trong hệ thống
-	public List<PostsResponse> findAllPosts();
+	public Page<PostsResponse> findAllPosts(int page, int itemsPerPage);
 	
 	// Lấy tất cả bài post trong hệ thống
-	ResponseEntity<GenericResponse> getAllPosts(String authorizationHeader);
+	ResponseEntity<GenericResponseAdmin> getAllPosts(String authorizationHeader,int page, int itemsPerPage);
 
 	List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
 

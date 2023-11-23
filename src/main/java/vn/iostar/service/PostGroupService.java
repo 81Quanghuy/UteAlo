@@ -4,12 +4,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.PostGroupDTO;
+import vn.iostar.dto.SearchPostGroup;
 import vn.iostar.entity.PostGroup;
 
 public interface PostGroupService {
@@ -53,8 +56,8 @@ public interface PostGroupService {
 
 	// Tìm kiếm nhóm
 	ResponseEntity<GenericResponse> findByPostGroupNameContainingIgnoreCase(String search, String userIdToken);
-	
-	// Tìm kiếm tất cả nhóm và người dùng 
+
+	// Tìm kiếm tất cả nhóm và người dùng
 	ResponseEntity<GenericResponse> searchGroupAndUserContainingIgnoreCase(String search, String userIdToken);
 
 	ResponseEntity<GenericResponse> getPostGroupById(String currentUserId, Integer postId);
@@ -75,9 +78,19 @@ public interface PostGroupService {
 
 	int getNumberOfFriendsInGroup(String userId, int postGroupId);
 
+	// Tìm tất cả user trong hệ thống
+	Page<SearchPostGroup> findAllGroups(int page, int itemsPerPage);
+
+	// Lấy danh sách tất cả user trong hệ thống
+	ResponseEntity<GenericResponseAdmin> getAllGroups(String authorizationHeader, int page, int itemsPerPage);
+	
+	// Admin xóa nhóm trong hệ thống
+	ResponseEntity<GenericResponse> deletePostGroupByAdmin(Integer postId, String authorizationHeader);
+
 	ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
 
 	ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
 
 	Optional<PostGroup>  findByPostGroupName(String groupName);
+
 }

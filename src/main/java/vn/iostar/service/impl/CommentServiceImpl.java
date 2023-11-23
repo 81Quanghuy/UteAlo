@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,8 @@ import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.CreateCommentShareRequestDTO;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.ReplyCommentPostRequestDTO;
 import vn.iostar.dto.ReplyCommentShareRequestDTO;
 import vn.iostar.entity.Comment;
@@ -240,6 +243,7 @@ public class CommentServiceImpl implements CommentService {
 		}
 		return idComments;
 	}
+	
 
 	@Override
 	public ResponseEntity<GenericResponse> getCountCommentOfPost(int postId) {
@@ -508,36 +512,49 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	@Override
-	public List<CommentPostResponse> findAllComments() {
-		List<Comment> comments = commentRepository.findAllAndCommentReplyIsNullByOrderByCreateTimeDesc();
+	public Page<CommentPostResponse> findAllComments(int page, int itemsPerPage) {
+	    Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+	    Page<Comment> commentsPage = commentRepository.findAllByOrderByCreateTimeDesc(pageable);
 
-		List<CommentPostResponse> commentResponses = new ArrayList<>();
-		for (Comment comment : comments) {
-			CommentPostResponse cPostResponse = new CommentPostResponse(comment);
-			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
-			commentResponses.add(cPostResponse);
-		}
-		return commentResponses;
+	    Page<CommentPostResponse> commentResponsesPage = commentsPage.map(comment -> {
+	        CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+	        cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+	        return cPostResponse;
+	    });
+
+	    return commentResponsesPage;
 	}
+
 
 	@Override
-	public ResponseEntity<GenericResponse> getAllComments(String authorizationHeader) {
-		String token = authorizationHeader.substring(7);
-		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		Optional<User> user = userService.findById(currentUserId);
-		RoleName roleName = user.get().getRole().getRoleName();
-		if(!roleName.name().equals("Admin")) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		}
-		List<CommentPostResponse> comments = findAllComments();
-		if (comments.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("No Comments Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		}
-		return ResponseEntity.ok(
-				GenericResponse.builder().success(true).message("Retrieved List Comments Successfully")
-						.result(comments).statusCode(HttpStatus.OK.value()).build());
+	public ResponseEntity<GenericResponseAdmin> getAllComments(String authorizationHeader, int page, int itemsPerPage) {
+	    String token = authorizationHeader.substring(7);
+	    String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+	    Optional<User> user = userService.findById(currentUserId);
+	    RoleName roleName = user.get().getRole().getRoleName();
+	    if (!roleName.name().equals("Admin")) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+	                .message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+	    }
+
+	    Page<CommentPostResponse> commentsPage = findAllComments(page, itemsPerPage);
+	    long totalComments = commentRepository.count();
+
+	    PaginationInfo pagination = new PaginationInfo();
+	    pagination.setPage(page);
+	    pagination.setItemsPerPage(itemsPerPage);
+	    pagination.setCount(totalComments);
+	    pagination.setPages((int) Math.ceil((double) totalComments / itemsPerPage));
+
+	    if (commentsPage.isEmpty()) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+	                .message("No Comments Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+	    } else {
+	        return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+	                .message("Retrieved List Comments Successfully").result(commentsPage)
+	                .pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+	    }
 	}
+
 
 }

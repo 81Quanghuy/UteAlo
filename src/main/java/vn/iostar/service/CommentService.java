@@ -13,6 +13,7 @@ import vn.iostar.dto.CommentUpdateRequest;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.CreateCommentShareRequestDTO;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.ReplyCommentPostRequestDTO;
 import vn.iostar.dto.ReplyCommentShareRequestDTO;
 import vn.iostar.entity.Comment;
@@ -63,8 +64,8 @@ public interface CommentService {
 	ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId,String authorizationHeader);
 	
 	// Lấy tất cả bài post trong hệ thống 
-	List<CommentPostResponse> findAllComments();
+	Page<CommentPostResponse> findAllComments(int page, int itemsPerPage);
 	
-	ResponseEntity<GenericResponse> getAllComments(String authorizationHeader);
+	ResponseEntity<GenericResponseAdmin> getAllComments(String authorizationHeader,int page, int itemsPerPage);
 	
 }
