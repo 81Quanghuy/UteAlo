@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -17,12 +18,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import vn.iostar.contants.RoleName;
 import vn.iostar.contants.RoleUserGroup;
 import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.InvitedPostGroupResponse;
 import vn.iostar.dto.MemberGroupResponse;
+import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.dto.PostGroupResponse;
 import vn.iostar.dto.PostsResponse;
@@ -55,10 +59,10 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Autowired
 	PostGroupMemberRepository postGroupMemberRepository;
-	
+
 	@Autowired
 	FriendService friendService;
-	
+
 	@Autowired
 	UserService userService;
 
@@ -844,12 +848,11 @@ public class PostGroupServiceImpl implements PostGroupService {
 					new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
 		}
 	}
-	
+
 	@Override
 	public int getNumberOfFriendsInGroup(String userId, int postGroupId) {
 		return postGroupMemberRepository.countFriendsInGroup(userId, postGroupId);
 	}
-
 
 	@Override
 	public ResponseEntity<GenericResponse> findByPostGroupNameContainingIgnoreCase(String search, String userIdToken) {
@@ -870,19 +873,20 @@ public class PostGroupServiceImpl implements PostGroupService {
 				simplifiedGroupPosts.add(group);
 			}
 			group.setCountMember(postGroupOptional.get().getPostGroupMembers().size());
-			group.setCountFriendJoinnedGroup(getNumberOfFriendsInGroup(userIdToken,group.getPostGroupId()));
+			group.setCountFriendJoinnedGroup(getNumberOfFriendsInGroup(userIdToken, group.getPostGroupId()));
 
 		}
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully")
 				.result(simplifiedGroupPosts).statusCode(HttpStatus.OK.value()).build());
 	}
-	
+
 	@Override
 	public ResponseEntity<GenericResponse> searchGroupAndUserContainingIgnoreCase(String search, String userIdToken) {
 		Optional<User> user = userRepository.findById(userIdToken);
 		Pageable pageable = PageRequest.of(0, 3);
-		// List<SearchPostGroup> postGroups = postGroupRepository.findTop3PostGroupNamesContainingIgnoreCase(search,pageable);
+		// List<SearchPostGroup> postGroups =
+		// postGroupRepository.findTop3PostGroupNamesContainingIgnoreCase(search,pageable);
 		List<SearchPostGroup> postGroups = postGroupRepository.findPostGroupNamesContainingIgnoreCase(search);
 		List<SearchPostGroup> simplifiedGroupPosts = new ArrayList<>();
 		// Lặp qua danh sách SearchPostGroup và thiết lập giá trị checkUserInGroup
@@ -898,57 +902,56 @@ public class PostGroupServiceImpl implements PostGroupService {
 				simplifiedGroupPosts.add(group);
 			}
 			group.setCountMember(postGroupOptional.get().getPostGroupMembers().size());
-			group.setCountFriendJoinnedGroup(getNumberOfFriendsInGroup(userIdToken,group.getPostGroupId()));
+			group.setCountFriendJoinnedGroup(getNumberOfFriendsInGroup(userIdToken, group.getPostGroupId()));
 
 		}
-        List<SearchUser> users = postGroupRepository.findUsersByName(search);
-        List<SearchUser> simplifiedUsers = new ArrayList<>();
-        // Lặp qua danh sách SearchUser và thiết lập giá trị getStatusByUserId
-        for (SearchUser userItem : users) {
-        	ResponseEntity<GenericResponse> check = friendService.getStatusByUserId(userItem.getUserId(), userIdToken);
-        	if(check.equals("Bạn bè")) {
-        		userItem.setCheckStatusFriend("isFriend");
-        	} else {
-        		userItem.setCheckStatusFriend("isNotFriend");
-        	}
-        	simplifiedUsers.add(userItem);
-        	Optional<User> userOptional = userService.findById(userItem.getUserId());
-        	if(userOptional.isPresent()) {
-        		userItem.setNumberFriend(userOptional.get().getFriend1().size());
-        		userItem.setAddress(userOptional.get().getAddress());
-        		userItem.setAvatar(userOptional.get().getProfile().getAvatar());
-        		userItem.setBackground(userOptional.get().getProfile().getBackground());
-        		userItem.setBio(userOptional.get().getProfile().getBio());
-        	}
-        	
-        }
-        List<Post> posts = postRepository.findByContentContaining(search,pageable);
-        List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
-        for (Post post : posts) {
+		List<SearchUser> users = postGroupRepository.findUsersByName(search);
+		List<SearchUser> simplifiedUsers = new ArrayList<>();
+		// Lặp qua danh sách SearchUser và thiết lập giá trị getStatusByUserId
+		for (SearchUser userItem : users) {
+			ResponseEntity<GenericResponse> check = friendService.getStatusByUserId(userItem.getUserId(), userIdToken);
+			if (check.equals("Bạn bè")) {
+				userItem.setCheckStatusFriend("isFriend");
+			} else {
+				userItem.setCheckStatusFriend("isNotFriend");
+			}
+			simplifiedUsers.add(userItem);
+			Optional<User> userOptional = userService.findById(userItem.getUserId());
+			if (userOptional.isPresent()) {
+				userItem.setNumberFriend(userOptional.get().getFriend1().size());
+				userItem.setAddress(userOptional.get().getAddress());
+				userItem.setAvatar(userOptional.get().getProfile().getAvatar());
+				userItem.setBackground(userOptional.get().getProfile().getBackground());
+				userItem.setBio(userOptional.get().getProfile().getBio());
+			}
+
+		}
+		List<Post> posts = postRepository.findByContentContaining(search, pageable);
+		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+		for (Post post : posts) {
 			PostsResponse postsResponse = new PostsResponse(post);
 			if (post.getComments() != null && !post.getComments().isEmpty()) {
 				postsResponse.setComments(getIdComment(post.getComments()));
 			} else {
-			    postsResponse.setComments(new ArrayList<>()); 
+				postsResponse.setComments(new ArrayList<>());
 			}
 			if (post.getLikes() != null && !post.getLikes().isEmpty()) {
 				postsResponse.setLikes(getIdLikes(post.getLikes()));
 			} else {
-			    postsResponse.setLikes(new ArrayList<>()); 
+				postsResponse.setLikes(new ArrayList<>());
 			}
 			simplifiedUserPosts.add(postsResponse);
 		}
-      
-        
-        List<Object> combinedList = new ArrayList<>();
-        combinedList.addAll(postGroups);
-        combinedList.addAll(users);
+
+		List<Object> combinedList = new ArrayList<>();
+		combinedList.addAll(postGroups);
+		combinedList.addAll(users);
 		combinedList.addAll(simplifiedUserPosts);
-		
+
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully")
 				.result(combinedList).statusCode(HttpStatus.OK.value()).build());
 	}
-	
+
 	private List<Integer> getIdLikes(List<Like> likes) {
 		List<Integer> idComments = new ArrayList<>();
 		for (Like like : likes) {
@@ -964,4 +967,75 @@ public class PostGroupServiceImpl implements PostGroupService {
 		}
 		return idComments;
 	}
+
+	@Override
+	public Page<SearchPostGroup> findAllGroups(int page, int itemsPerPage) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Page<SearchPostGroup> postGroups = postGroupRepository.findAllPostGroups(pageable);
+
+		Page<SearchPostGroup> simplifiedGroupPosts = postGroups.map(group -> {
+			Optional<PostGroup> postGroupOptional = findById(group.getPostGroupId());
+			if (postGroupOptional.isPresent()) {
+				group.setCountMember(postGroupOptional.get().getPostGroupMembers().size());
+			}
+			return group;
+		});
+		return simplifiedGroupPosts;
+	}
+
+	@Override
+	public ResponseEntity<GenericResponseAdmin> getAllGroups(String authorizationHeader, int page, int itemsPerPage) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponseAdmin.builder().success(false)
+					.message("No access").statusCode(HttpStatus.FORBIDDEN.value()).build());
+		}
+
+		Page<SearchPostGroup> groups = findAllGroups(page, itemsPerPage);
+		long totalGroups = postGroupRepository.count();
+
+		PaginationInfo pagination = new PaginationInfo();
+		pagination.setPage(page);
+		pagination.setItemsPerPage(itemsPerPage);
+		pagination.setCount(totalGroups);
+		pagination.setPages((int) Math.ceil((double) totalGroups / itemsPerPage));
+
+		if (groups.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(true)
+					.message("Empty").result(null).statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(GenericResponseAdmin.builder().success(true).message("Retrieved List of Groups Successfully")
+							.result(groups).pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+		}
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> deletePostGroupByAdmin(Integer postGroupId, String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		Optional<PostGroup> posOptional = findById(postGroupId);
+		if (posOptional.isPresent()) {
+		    // Xóa dữ liệu trong PostGroup và postGroup_postGroupMember
+		    postGroupRepository.deletePostGroupAndMembers(postGroupId);
+
+		    return ResponseEntity.ok()
+		            .body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		} else {
+		    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+		            .body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
+		}
+
+
+	}
+
 }

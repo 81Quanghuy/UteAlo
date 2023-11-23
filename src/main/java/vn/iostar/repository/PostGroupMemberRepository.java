@@ -21,14 +21,14 @@ public interface PostGroupMemberRepository extends JpaRepository<PostGroupMember
 	@Query(value = "SELECT CASE WHEN EXISTS (SELECT 1 FROM post_group_post_group_member pgm JOIN PostGroupMember pg ON pgm.post_group_member_id = pg.post_group_member_id WHERE pgm.post_group_id = ?1 AND pg.user_id = ?2) THEN 1 ELSE 0 END", nativeQuery = true)
 	int hasPostGroupMemberAssociations(int postGroupId, String userId);
 
-
-    // Xóa dữ liệu trong bảng post_group_post_group_member
+	// Xóa dữ liệu trong bảng post_group_post_group_member
 	@Modifying
 	@Transactional
 	@Query(value = "DELETE FROM post_group_post_group_member WHERE post_group_id = ?1 AND post_group_member_id IN (SELECT post_group_member_id FROM PostGroupMember WHERE user_id = ?2)", nativeQuery = true)
 	void deletePostGroupMemberAssociations(int postGroupId, String userId);
-	
+
 	@Query("SELECT COUNT(pgm) FROM PostGroupMember pgm JOIN pgm.postGroup pg WHERE pgm.user.userId = :userId AND pg.postGroupId = :postGroupId")
-    int countFriendsInGroup(@Param("userId") String userId, @Param("postGroupId") int postGroupId);
+	int countFriendsInGroup(@Param("userId") String userId, @Param("postGroupId") int postGroupId);
+	
 
 }

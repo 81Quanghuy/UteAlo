@@ -50,6 +50,7 @@ public class PostController {
 	@Autowired
 	PostRepository postRepository;
 
+	// Xem chi tiết bài post
 	@GetMapping("/{postId}")
 	public ResponseEntity<GenericResponse> getPost(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postId") Integer postId) {
@@ -106,7 +107,6 @@ public class PostController {
 
 		List<PostsResponse> userPosts = postService.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user.get());
 
-
 		if (!userId.equals(currentUserId)) {
 			throw new RuntimeException("User not found.");
 		} else if (userPosts.isEmpty()) {
@@ -115,7 +115,6 @@ public class PostController {
 		} else
 			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved posts successfully")
 					.result(userPosts).statusCode(HttpStatus.OK.value()).build());
-
 	}
 
 	@PutMapping("/update/{postId}")

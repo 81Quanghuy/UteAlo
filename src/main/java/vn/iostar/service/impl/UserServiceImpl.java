@@ -1,6 +1,5 @@
 package vn.iostar.service.impl;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -8,6 +7,8 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,9 @@ import vn.iostar.contants.RoleName;
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.FriendRequestResponse;
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
+import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserResponse;
@@ -62,7 +65,7 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
-	
+
 	@Override
 	public <S extends User> S save(S entity) {
 		return userRepository.save(entity);
@@ -244,7 +247,6 @@ public class UserServiceImpl implements UserService {
 				.result(new UserProfileResponse(user.get())).statusCode(200).build());
 	}
 
-	
 	// Xóa user
 	@Override
 	public ResponseEntity<GenericResponse> deleteUser(String idFromToken) {
@@ -295,43 +297,84 @@ public class UserServiceImpl implements UserService {
 		return profileResponse;
 	}
 
-	
 	// Tìm tất cả người dùng trong hệ thống
 	@Override
-	public List<UserResponse> findAllUsers() {
-		List<UserResponse> users = userRepository.findAllUsers();
-		List<UserResponse> listUsers = new ArrayList<>();
-		for (UserResponse userItem : users) {
-			Optional<User> userOptional = findById(userItem.getUserId());
-			if (userOptional.isPresent()) {
-				userItem.setIsActive(userOptional.get().getAccount().isActive());
-				userItem.setRoleName(userOptional.get().getRole().getRoleName());
-			}
-			listUsers.add(userItem);
+	public Page<UserResponse> findAllUsers(int page, int itemsPerPage) {
+	    Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+	    Page<UserResponse> usersPage = userRepository.findAllUsers(pageable);
 
-		}
-		return users;
+	    Page<UserResponse> processedUsersPage = usersPage.map(userItem -> {
+	        Optional<User> userOptional = findById(userItem.getUserId());
+	        if (userOptional.isPresent()) {
+	        	boolean isActive = userOptional.get().getAccount().isActive();
+	            // Kiểm tra isActive và thiết lập trạng thái tương ứng
+	            if (isActive) {
+	                userItem.setIsActive("Hoạt động");
+	            } else {
+	                userItem.setIsActive("Bị khóa");
+	            }
+	            userItem.setRoleName(userOptional.get().getRole().getRoleName());
+	            userItem.setEmail(userOptional.get().getAccount().getEmail());
+	        }
+	        return userItem;
+	    });
+
+	    return processedUsersPage;
 	}
+
+
 
 	// Lấy tất cả người dùng trong hệ thống
 	@Override
-	public ResponseEntity<GenericResponse> getAllUsers(String authorizationHeader) {
-		String token = authorizationHeader.substring(7);
-		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		Optional<User> user = findById(currentUserId);
-		RoleName roleName = user.get().getRole().getRoleName();
-		if (!roleName.name().equals("Admin")) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		}
-		List<UserResponse> users = findAllUsers();
-		if (users.isEmpty()) {
-			return ResponseEntity
-					.ok(GenericResponse.builder().success(true).message("Empty").result(null).statusCode(404).build());
-		} else
-			return ResponseEntity
-					.ok(GenericResponse.builder().success(true).message("Retrieved List Users Successfully")
-							.result(users).statusCode(HttpStatus.OK.value()).build());
+	public ResponseEntity<GenericResponseAdmin> getAllUsers(
+	    String authorizationHeader, 
+	    int page, 
+	    int itemsPerPage
+	) {
+	    String token = authorizationHeader.substring(7);
+	    String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+	    Optional<User> user = findById(currentUserId);
+	    RoleName roleName = user.get().getRole().getRoleName();
+	    if (!roleName.name().equals("Admin")) {
+	        return ResponseEntity
+	            .status(HttpStatus.FORBIDDEN)
+	            .body(GenericResponseAdmin.builder()
+	                .success(false)
+	                .message("No access")
+	                .statusCode(HttpStatus.FORBIDDEN.value())
+	                .build());
+	    }
+	    
+
+	    Page<UserResponse> users = findAllUsers(page, itemsPerPage);
+	    long totalUsers = userRepository.count();
+	    
+	    PaginationInfo pagination = new PaginationInfo();
+	    pagination.setPage(page);
+	    pagination.setItemsPerPage(itemsPerPage);
+	    pagination.setCount(totalUsers);
+	    pagination.setPages((int) Math.ceil((double) totalUsers / itemsPerPage));
+
+	    if (users.isEmpty()) {
+	        return ResponseEntity
+	            .status(HttpStatus.NOT_FOUND)
+	            .body(GenericResponseAdmin.builder()
+	                .success(true)
+	                .message("Empty")
+	                .result(null)
+	                .statusCode(HttpStatus.NOT_FOUND.value())
+	                .build());
+	    } else {
+	        return ResponseEntity
+	            .status(HttpStatus.OK)
+	            .body(GenericResponseAdmin.builder()
+	                .success(true)
+	                .message("Retrieved List Users Successfully")
+	                .result(users)
+	                .pagination(pagination)
+	                .statusCode(HttpStatus.OK.value())
+	                .build());
+	    }
 	}
 
 }

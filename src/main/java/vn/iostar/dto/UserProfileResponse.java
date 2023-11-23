@@ -15,18 +15,18 @@ public class UserProfileResponse {
 	private String userId;
 	private String phone;
 	private String email;
-	private String fullName;
+	private String userName;
 	private String avatar;
 	private String background;
 	private String address;
-	private Date dateOfBirth;
+	private Date dayOfBirth;
 	private String about;
 	private Gender gender;
-	private boolean isActive;
+	private String isActive;
 	private boolean isAccountActive;
 	private Date createdAt;
 	private Date updatedAt;
-	private RoleName role;
+	private RoleName roleName;
 	private List<FriendRequestResponse> friends = new ArrayList<>();
 	private List<GroupPostResponse> postGroup;
 
@@ -34,18 +34,22 @@ public class UserProfileResponse {
 		this.userId = user.getUserId();
         this.phone = user.getPhone();
         this.email = user.getAccount().getEmail();
-        this.fullName = user.getUserName();
+        this.userName = user.getUserName();
         this.avatar = user.getProfile().getAvatar();
         this.background = user.getProfile().getBackground();
         this.address = user.getAddress();
-        this.dateOfBirth = user.getDayOfBirth();
+        this.dayOfBirth = user.getDayOfBirth();
         this.about = user.getProfile().getBio();
         this.gender = user.getGender();
-        this.isActive = user.isActive();
+        if(user.isActive()==true) {
+            this.isActive = "Hoạt động";
+        } else if (user.isActive()==false) {
+            this.isActive = "Bị khóa";
+        }
         this.isAccountActive = user.getAccount().isActive();
         this.createdAt = user.getAccount().getCreatedAt();
         this.updatedAt = user.getAccount().getUpdatedAt();
-        this.role = user.getRole().getRoleName();
+        this.roleName = user.getRole().getRoleName();
 	}
 
 }
