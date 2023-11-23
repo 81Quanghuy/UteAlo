@@ -26,11 +26,11 @@ public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
 	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName,pg.avatarGroup, pg.backgroundGroup, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId")
 	List<GroupPostResponse> findPostGroupInfoByUserId(@Param("userId") String userId, Pageable pageable);
 
-	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName,pg.avatarGroup, pg.backgroundGroup, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId  AND pgm.roleUserGroup = 'Admin'")
+	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName,pg.avatarGroup, pg.backgroundGroup, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId  AND (pgm.roleUserGroup = 'Admin' OR pgm.roleUserGroup = 'Deputy')")
 
 	List<GroupPostResponse> findPostGroupInfoByUserIdOfUser(@Param("userId") String userId);
 
-	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName,pg.avatarGroup, pg.backgroundGroup, pgm.roleUserGroup)start FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId  AND pgm.roleUserGroup = 'Member'")
+	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName,pg.avatarGroup, pg.backgroundGroup, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId  AND pgm.roleUserGroup = 'Member'")
 	List<GroupPostResponse> findPostGroupInfoByUserId(@Param("userId") String userId);
 
 	// Lời mời vào nhóm đã nhận được

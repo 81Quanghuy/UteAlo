@@ -1,22 +1,15 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import vn.iostar.contants.ChatStatus;
-import vn.iostar.contants.MessageType;
 
 @Getter
 @Setter
@@ -26,21 +19,36 @@ import vn.iostar.contants.MessageType;
 @Table(name = "MESSAGES")
 public class Message implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String messageId;
-	
-	@Enumerated(EnumType.STRING)
-	private MessageType messageType;
+
 	@Column(columnDefinition = "nvarchar(255)")
 	private String content;
-	private Date createAt;
-	private String senderId;
-	private String receiverId;
-	private String groupId;
 
-	@Enumerated(EnumType.STRING)
-	private ChatStatus status;
+	@ManyToOne
+	@JoinColumn(name = "senderId")
+	private User sender;
+
+	@ManyToOne
+	@JoinColumn(name = "receiverId")
+	private User receiver;
+
+	@ManyToOne
+	@JoinColumn(name = "groupId")
+	private PostGroup group;
+
+	@OneToMany
+	@JoinColumn(name = "fileId")
+	private List<Files> files;
+
+
+
+	private Date createAt;
+	private Date updateAt;
+
+
 }

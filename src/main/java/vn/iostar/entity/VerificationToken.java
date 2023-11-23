@@ -3,6 +3,7 @@ package vn.iostar.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 
@@ -13,7 +14,8 @@ import java.io.Serializable;
 @Entity
 public class VerificationToken implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	@Serial
+    private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.UUID)

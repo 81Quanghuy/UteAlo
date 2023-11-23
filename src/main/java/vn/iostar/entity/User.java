@@ -1,5 +1,6 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +20,7 @@ import vn.iostar.contants.Gender;
 @Table(name = "USERS")
 public class User implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -49,10 +51,10 @@ public class User implements Serializable {
 	@OneToOne(mappedBy = "user")
 	private Profile profile;
 
-	@OneToMany(mappedBy = "user1")
+	@OneToMany(mappedBy = "user1", fetch = FetchType.LAZY)
 	private List<Friend> friend1;
 
-	@OneToMany(mappedBy = "user2")
+	@OneToMany(mappedBy = "user2", fetch = FetchType.LAZY)
 	private List<Friend> friend2;
 
 	@OneToMany(mappedBy = "userFrom", fetch = FetchType.LAZY)
@@ -61,20 +63,17 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "userTo", fetch = FetchType.LAZY)
 	private List<FriendRequest> friendRequests2;
 
-	@OneToMany(mappedBy = "user")
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private List<Like> likes;
 
-	@OneToMany(mappedBy = "user")
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private List<Comment> comments;
 
-	@OneToMany(mappedBy = "user")
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private List<Post> posts;
 
 	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private List<PostGroupMember> postGroupMembers;
-
-	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-	private List<ChatGroupMember> chatGroupMembers;
 
 	@OneToMany(mappedBy = "user")
 	private List<RefreshToken> refreshTokens;
@@ -82,7 +81,7 @@ public class User implements Serializable {
 	@OneToOne(mappedBy = "user")
 	private VerificationToken verificationToken;
 
-	@OneToMany(mappedBy = "user")
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private List<Share> share;
 
 	@OneToMany(mappedBy = "invitedUser", fetch = FetchType.LAZY)
@@ -91,4 +90,12 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "invitingUser", fetch = FetchType.LAZY)
 	private List<PostGroupRequest> postGroupRequests1;
 
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+	private List<Notification> notifications;
+
+	@OneToMany(mappedBy = "sender", fetch = FetchType.LAZY)
+	private List<Message> messages;
+
+	@OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY)
+	private List<Message> messages1;
 }

@@ -1,12 +1,7 @@
 package vn.iostar.service.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import vn.iostar.contants.RoleName;
 import vn.iostar.contants.RoleUserGroup;
-import vn.iostar.dto.FriendRequestResponse;
+import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
@@ -86,6 +81,10 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Autowired
 	PostRepository postRepository;
+	@Override
+	public <S extends PostGroup> S save(S entity) {
+		return postGroupRepository.save(entity);
+	}
 
 	@Override
 	public Optional<PostGroup> findById(Integer id) {
@@ -125,9 +124,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 		PageRequest pageable = PageRequest.of(0, 10);
 
-		List<FriendRequestResponse> fList = friendRepository.findFriendTop10UserIdsByUserId(currentUserId, pageable);
+		List<FriendResponse> fList = friendRepository.findFriendByUserId(currentUserId, pageable);
 		Set<GroupPostResponse> listGroupSuggest = new HashSet<>();
-		for (FriendRequestResponse f : fList) {
+		for (FriendResponse f : fList) {
 			List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserIdOfUser(f.getUserId());
 			listGroupSuggest.addAll(list);
 		}
@@ -209,7 +208,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Override
 	public ResponseEntity<GenericResponse> updatePostGroupByPostIdAndUserId(PostGroupDTO postGroup,
-			String currentUserId) {
+																			String currentUserId) {
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -231,12 +230,11 @@ public class PostGroupServiceImpl implements PostGroupService {
 			postGroupRepository.save(entity);
 			return ResponseEntity.status(HttpStatus.OK) // Sử dụng HttpStatus.OK cho cập nhật thành công
 					.body(GenericResponse.builder().success(true).message("Cập nhật thành công") // Thông báo cập nhật
-																									// thành công
+							// thành công
 							.statusCode(HttpStatus.OK.value()).build());
 		} catch (Exception e) {
-			e.printStackTrace(); // In thông tin lỗi
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) // HttpStatus.INTERNAL_SERVER_ERROR cho lỗi
-																			// server
+					// server
 					.body(GenericResponse.builder().success(false).message("Lỗi khi cập nhật") // Thông báo lỗi
 							.statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
 
@@ -312,7 +310,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 			} else {
 				return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE) // Sử dụng HttpStatus.NOT_ACCEPTABLE cho lỗi
-																		// "NoAccept"
+						// "NoAccept"
 						.body(GenericResponse.builder().success(false).message("No Accept") // Thông báo lỗi "No Accept"
 								.statusCode(HttpStatus.NOT_ACCEPTABLE.value()).build());
 
@@ -549,6 +547,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 			if (postGroupMember.getUser().equals(user)) {
 				if (postGroupMember.getRoleUserGroup().equals(RoleUserGroup.Admin)) {
 					return "Admin";
+				} else if (postGroupMember.getRoleUserGroup().equals(RoleUserGroup.Deputy)) {
+					return "Deputy";
 				}
 				return "Member";
 			}
@@ -666,7 +666,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId) {
+	public ResponseEntity<GenericResponse> assignDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId) {
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -688,49 +688,29 @@ public class PostGroupServiceImpl implements PostGroupService {
 			// da truyen vao user de chi dinh lam admin
 			if (userIdToAdmin != null && !userIdToAdmin.equals(currentUserId)) {
 				Optional<User> userAdd = userRepository.findById(userIdToAdmin);
+				if (userAdd.isEmpty())
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+							.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 				// cap de xoa di
-				Optional<PostGroupMember> memberAdminAdd = groupMemberRepository
+				Optional<PostGroupMember> memberDelete = groupMemberRepository
 						.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Member);
-				Optional<PostGroupMember> memberAdmin = groupMemberRepository
-						.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
-
-				if (memberAdminAdd.isPresent() && memberAdmin.isPresent()) {
-					// cap de them vao
-					Optional<PostGroupMember> memberAdminAdd1 = groupMemberRepository
-							.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Member);
-					Optional<PostGroupMember> memberAdmin1 = groupMemberRepository
-							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Admin);
-
-					// Kiem tra user truyen vao da co member la admin chua
-					if (memberAdminAdd1.isPresent()) {
-						memberAdminAdd1.get().getPostGroup().add(groupPost.get());
-						groupPost.get().getPostGroupMembers().add(memberAdminAdd1.get());
-						groupMemberRepository.save(memberAdminAdd1.get());
-
-					} else {
-						PostGroupMember member = new PostGroupMember();
-						member.setUser(user.get());
-						member.setRoleUserGroup(RoleUserGroup.Member);
-						member.getPostGroup().add(groupPost.get());
-						groupPost.get().getPostGroupMembers().add(member);
-						groupMemberRepository.save(member);
-					}
-
+				if (memberDelete.isPresent()) {
+					Optional<PostGroupMember> memberAddDeputy = groupMemberRepository
+							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Deputy);
 					// Kiem tra user hien tai da co member la member chua
-					if (memberAdmin1.isPresent()) {
-						memberAdmin1.get().getPostGroup().add(groupPost.get());
-						groupPost.get().getPostGroupMembers().add(memberAdmin1.get());
-						groupMemberRepository.save(memberAdmin1.get());
+					if (memberAddDeputy.isPresent()) {
+						memberAddDeputy.get().getPostGroup().add(groupPost.get());
+						groupPost.get().getPostGroupMembers().add(memberAddDeputy.get());
+						groupMemberRepository.save(memberAddDeputy.get());
 					} else {
 						PostGroupMember member = new PostGroupMember();
 						member.setUser(userAdd.get());
-						member.setRoleUserGroup(RoleUserGroup.Admin);
+						member.setRoleUserGroup(RoleUserGroup.Deputy);
 						member.getPostGroup().add(groupPost.get());
 						groupPost.get().getPostGroupMembers().add(member);
 						groupMemberRepository.save(member);
 					}
-					groupPost.get().getPostGroupMembers().remove(memberAdminAdd.get());
-					groupPost.get().getPostGroupMembers().remove(memberAdmin.get());
+					groupPost.get().getPostGroupMembers().remove(memberDelete.get());
 					postGroupRepository.save(groupPost.get());
 					return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully")
 							.statusCode(HttpStatus.OK.value()).build());
@@ -770,6 +750,19 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 				return ResponseEntity.ok(GenericResponse.builder().success(true).message("Assign successfully")
 						.statusCode(HttpStatus.OK.value()).build());
+			}
+			else{
+				Optional<PostGroupMember> memberDeputy = groupMemberRepository.findByUserUserIdAndRoleUserGroup(userId,
+						RoleUserGroup.Deputy);
+				if (memberDeputy.isPresent() && memberDeputy.get().getPostGroup().contains(groupPost.get())) {
+					groupPost.get().getPostGroupMembers().remove(memberDeputy.get());
+					memberDeputy.get().getPostGroup().remove(groupPost.get());
+					postGroupRepository.save(groupPost.get());
+					groupMemberRepository.save(memberDeputy.get());
+
+					return ResponseEntity.ok(GenericResponse.builder().success(true).message("Assign successfully")
+							.statusCode(HttpStatus.OK.value()).build());
+				}
 			}
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found member").statusCode(HttpStatus.NOT_FOUND.value()).build());
@@ -853,6 +846,164 @@ public class PostGroupServiceImpl implements PostGroupService {
 	public int getNumberOfFriendsInGroup(String userId, int postGroupId) {
 		return postGroupMemberRepository.countFriendsInGroup(userId, postGroupId);
 	}
+
+	@Override
+	public ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		Optional<PostGroup> groupPost = postGroupRepository.findById(postGroup.getPostGroupId());
+		if (groupPost.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		Optional<PostGroupMember> postGroupMember = groupMemberRepository
+				.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
+
+		// user dang nhap phai la admin
+		if (postGroupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(postGroupMember.get())) {
+
+			// Check user muon thanh admin ton tai khong
+			String userIdToAdmin = postGroup.getUserId().stream().findFirst().orElse(null);
+
+			// da truyen vao user de chi dinh lam admin
+			if (userIdToAdmin != null && !userIdToAdmin.equals(currentUserId)) {
+				Optional<User> userAdd = userRepository.findById(userIdToAdmin);
+				// cap de xoa di
+				Optional<PostGroupMember> memberAdmin = groupMemberRepository
+						.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
+
+				if ( memberAdmin.isPresent()) {
+					// cap de them vao
+					Optional<PostGroupMember> memberAdminAdd1 = groupMemberRepository
+							.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Member);
+					Optional<PostGroupMember> memberAdmin1 = groupMemberRepository
+							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Admin);
+
+					// Kiem tra user hien tai da co member la member chua và thêm member đó vao nhóm
+					checkMemberInGroup(groupPost.get(), user.get(), memberAdminAdd1);
+
+					// Kiem tra user hien tai da co member la member chua
+					if (memberAdmin1.isPresent()) {
+						memberAdmin1.get().getPostGroup().add(groupPost.get());
+						groupPost.get().getPostGroupMembers().add(memberAdmin1.get());
+						groupMemberRepository.save(memberAdmin1.get());
+					} else {
+						PostGroupMember member = new PostGroupMember();
+						member.setUser(userAdd.get());
+						member.setRoleUserGroup(RoleUserGroup.Admin);
+						member.getPostGroup().add(groupPost.get());
+						groupPost.get().getPostGroupMembers().add(member);
+						groupMemberRepository.save(member);
+					}
+					groupPost.get().getPostGroupMembers().remove(memberAdmin.get());
+					// kiem tra neu user do co role la gi
+					Optional<PostGroupMember> memberDeputy = groupMemberRepository
+							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Deputy);
+					if (memberDeputy.isPresent() && groupPost.get().getPostGroupMembers().contains(memberDeputy.get())) {
+						groupPost.get().getPostGroupMembers().remove(memberDeputy.get());
+						memberDeputy.get().getPostGroup().remove(groupPost.get());
+						groupMemberRepository.save(memberDeputy.get());
+					}
+					// tuong tu voi role la member
+					Optional<PostGroupMember> memberMember = groupMemberRepository
+							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Member);
+					if (memberMember.isPresent() && groupPost.get().getPostGroupMembers().contains(memberMember.get())) {
+						groupPost.get().getPostGroupMembers().remove(memberMember.get());
+						memberMember.get().getPostGroup().remove(groupPost.get());
+						groupMemberRepository.save(memberMember.get());
+					}
+
+					postGroupRepository.save(groupPost.get());
+					return ResponseEntity.ok(GenericResponse.builder().success(true).message("Join successfully")
+							.statusCode(HttpStatus.OK.value()).build());
+				}
+			}
+			// Khong ton tai user do group member
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group member").statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		}
+		// User dang dang nhap khong phai la admin
+		return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE) // Sử dụng HttpStatus.NOT_ACCEPTABLE cho lỗi
+				.body(GenericResponse.builder().success(false).message("No Accept") // Thông báo lỗi "No Accept"
+						.statusCode(HttpStatus.NOT_ACCEPTABLE.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId) {
+		Optional<User> user = userRepository.findById(currentUserId);
+		if (user.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		Optional<PostGroup> groupPost = postGroupRepository.findById(postGroup.getPostGroupId());
+		if (groupPost.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		Optional<PostGroupMember> postGroupMember = groupMemberRepository
+				.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
+
+		// user dang nhap phai la admin
+		if (postGroupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(postGroupMember.get())) {
+
+			// Check user muon thanh admin ton tai khong
+			String userIdRemove = postGroup.getUserId().stream().findFirst().orElse(null);
+
+			// da truyen vao user de chi dinh lam admin
+			if (userIdRemove != null && !userIdRemove.equals(currentUserId)) {
+				Optional<User> userRemote = userRepository.findById(userIdRemove);
+				if (userRemote.isEmpty()){
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+							.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+				}
+				// cap de xoa di
+				Optional<PostGroupMember> memberDeputyRemote = groupMemberRepository
+						.findByUserUserIdAndRoleUserGroup(userIdRemove, RoleUserGroup.Member);
+				checkMemberInGroup(groupPost.get(), userRemote.get(), memberDeputyRemote);
+				Optional<PostGroupMember> memberRemove = groupMemberRepository
+						.findByUserUserIdAndRoleUserGroup(userIdRemove, RoleUserGroup.Deputy);
+				if (memberRemove.isEmpty())
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+							.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+				groupPost.get().getPostGroupMembers().remove(memberRemove.get());
+				postGroupRepository.save(groupPost.get());
+				postGroupRepository.save(groupPost.get());
+				return ResponseEntity.ok(GenericResponse.builder().success(true).message("Remote successfully")
+						.statusCode(HttpStatus.OK.value()).build());
+
+			}
+		}
+		// User dang dang nhap khong phai la admin
+		return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE) // Sử dụng HttpStatus.NOT_ACCEPTABLE cho lỗi
+				.body(GenericResponse.builder().success(false).message("No Accept") // Thông báo lỗi "No Accept"
+						.statusCode(HttpStatus.NOT_ACCEPTABLE.value()).build());
+	}
+
+	@Override
+	public Optional<PostGroup>  findByPostGroupName(String groupName) {
+		return postGroupRepository.findByPostGroupName(groupName);
+	}
+
+	private void checkMemberInGroup(PostGroup groupPost, User userRemote, Optional<PostGroupMember> memberDeputyRemote) {
+		if (memberDeputyRemote.isPresent()){
+			memberDeputyRemote.get().getPostGroup().add(groupPost);
+			groupPost.getPostGroupMembers().add(memberDeputyRemote.get());
+			groupMemberRepository.save(memberDeputyRemote.get());
+
+		}
+		else{
+			PostGroupMember member = new PostGroupMember();
+			member.setUser(userRemote);
+			member.setRoleUserGroup(RoleUserGroup.Member);
+			member.getPostGroup().add(groupPost);
+			groupPost.getPostGroupMembers().add(member);
+			groupMemberRepository.save(member);
+		}
+	}
+
+
 
 	@Override
 	public ResponseEntity<GenericResponse> findByPostGroupNameContainingIgnoreCase(String search, String userIdToken) {

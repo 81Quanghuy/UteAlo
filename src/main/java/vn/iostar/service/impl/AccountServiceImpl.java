@@ -16,8 +16,6 @@ import vn.iostar.contants.RoleUserGroup;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.RegisterRequest;
 import vn.iostar.entity.Account;
-import vn.iostar.entity.ChatGroup;
-import vn.iostar.entity.ChatGroupMember;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.PostGroupMember;
 import vn.iostar.entity.Profile;
@@ -25,8 +23,6 @@ import vn.iostar.entity.Role;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
 import vn.iostar.repository.AccountRepository;
-import vn.iostar.repository.ChatGroupMemberRepository;
-import vn.iostar.repository.ChatGroupRepository;
 import vn.iostar.repository.PostGroupMemberRepository;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.ProfileRepository;
@@ -44,12 +40,6 @@ public class AccountServiceImpl implements AccountService {
 
 	@Autowired
 	RoleRepository roleRepository;
-
-	@Autowired
-	ChatGroupRepository chatGroupRepository;
-
-	@Autowired
-	ChatGroupMemberRepository chatGroupMemberRepository;
 
 	@Autowired
 	PostGroupRepository postGroupRepository;
@@ -108,12 +98,12 @@ public class AccountServiceImpl implements AccountService {
 		saveUserAndAccount(registerRequest, role.get());
 		if (registerRequest.getRoleName().equals(RoleName.SinhVien.name())) {
 			Optional<PostGroup> poOptional = postGroupRepository.findByPostGroupName(registerRequest.getGroupName());
-			Optional<ChatGroup> chatOptional = chatGroupRepository.findByGroupName(registerRequest.getGroupName());
-			if (!poOptional.isPresent() || !chatOptional.isPresent()) {
+
+			if (!poOptional.isPresent() ) {
 				return ResponseEntity.status(409).body(GenericResponse.builder().success(false)
 						.message("Group name not found").result(null).statusCode(HttpStatus.CONFLICT.value()).build());
 			}
-			saveGroupandRole(registerRequest, poOptional.get(), chatOptional.get());
+			saveGroupandRole(registerRequest, poOptional.get());
 		}
 		emailVerificationService.sendOtp(registerRequest.getEmail());
 
@@ -122,13 +112,7 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Transactional
-	private void saveGroupandRole(RegisterRequest registerRequest, PostGroup postGroup, ChatGroup chatGroup) {
-
-		ChatGroupMember chatGroupMember = new ChatGroupMember();
-		chatGroupMember.setUser(userRegister);
-		chatGroupMember.setRoleUserGroup(RoleUserGroup.Member);
-		chatGroupMember.getChatGroup().add(chatGroup);
-		chatGroup.getChatGroupMembers().add(chatGroupMember);
+	public void saveGroupandRole(RegisterRequest registerRequest, PostGroup postGroup) {
 
 		PostGroupMember postGroupMember = new PostGroupMember();
 		postGroupMember.setUser(userRegister);
@@ -136,7 +120,6 @@ public class AccountServiceImpl implements AccountService {
 		postGroupMember.getPostGroup().add(postGroup);
 		postGroup.getPostGroupMembers().add(postGroupMember);
 
-		chatGroupMemberRepository.save(chatGroupMember);
 		postGroupMemberRepository.save(postGroupMember);
 	}
 

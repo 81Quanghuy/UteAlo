@@ -88,11 +88,17 @@ public class UserController {
 		return userService.getProfile(userId);
 	}
 
+	@GetMapping("/avatarAndName/{userId}")
+	public ResponseEntity<GenericResponse> getAvatarAndName(@PathVariable("userId") String userId) {
+		return userService.getAvatarAndName(userId);
+	}
+
 	@GetMapping("/profile/{userId}")
 	public ResponseEntity<GenericResponse> getInformation(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("userId") String userId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+
 		Optional<User> user = userService.findById(userId);
 		Pageable pageable = PageRequest.of(0, 5);
 		UserProfileResponse profileResponse = userService.getFullProfile(user, pageable);

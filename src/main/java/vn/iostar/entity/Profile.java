@@ -1,5 +1,6 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 
@@ -17,18 +18,20 @@ import lombok.Setter;
 @Table(name = "PROFILES")
 public class Profile implements Serializable{
 
-	private static final long serialVersionUID = 1L;
+	@Serial
+    private static final long serialVersionUID = 1L;
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int profileId;
     
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId")
     private User user;
     
     @Column(columnDefinition = "nvarchar(255)")
     private String bio;
+
     private String avatar;
     private String background;
     

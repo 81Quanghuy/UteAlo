@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import vn.iostar.dto.FriendRequestResponse;
+import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Friend;
 import vn.iostar.entity.FriendRequest;
@@ -32,7 +32,7 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 	FriendRepository friendRepository;
 
 	@Override
-	public List<FriendRequestResponse> findUserFromUserIdByUserToUserId(String userId) {
+	public List<FriendResponse> findUserFromUserIdByUserToUserId(String userId) {
 		return friendRequestRepository.findUserFromUserIdByUserToUserId(userId);
 	}
 
@@ -129,12 +129,12 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 	}
 
 	@Override
-	public List<FriendRequestResponse> findSuggestionListByUserId(String userId) {
+	public List<FriendResponse> findSuggestionListByUserId(String userId) {
 		return friendRequestRepository.findSuggestionListByUserId(userId);
 	}
 
 	@Override
-	public List<FriendRequestResponse> findUserToUserIdByUserFromUserIdPageable(String userId) {
+	public List<FriendResponse> findUserToUserIdByUserFromUserIdPageable(String userId) {
 		return friendRequestRepository.findUserToUserIdByUserFromUserIdPageable(userId);
 	}
 
@@ -156,7 +156,7 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 	}
 
 	@Override
-	public List<FriendRequestResponse> findUserFromUserIdByUserToUserIdPageable(String userId, Pageable pageable) {
+	public List<FriendResponse> findUserFromUserIdByUserToUserIdPageable(String userId, Pageable pageable) {
 		return friendRequestRepository.findUserFromUserIdByUserToUserIdPageable(userId, pageable);
 	}
 }
