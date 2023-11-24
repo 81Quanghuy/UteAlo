@@ -17,18 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import vn.iostar.contants.RoleName;
-
-import vn.iostar.dto.ChangePasswordRequest;
-import vn.iostar.dto.FriendRequestResponse;
-import vn.iostar.dto.GenericResponse;
-import vn.iostar.dto.GenericResponseAdmin;
-import vn.iostar.dto.GroupPostResponse;
-import vn.iostar.dto.PaginationInfo;
-import vn.iostar.dto.UserManagerRequest;
-import vn.iostar.dto.UserProfileResponse;
-import vn.iostar.dto.UserResponse;
-import vn.iostar.dto.UserUpdateRequest;
-
 import vn.iostar.dto.*;
 
 import vn.iostar.entity.PasswordResetOtp;

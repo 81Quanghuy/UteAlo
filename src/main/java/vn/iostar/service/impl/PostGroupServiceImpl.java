@@ -1177,7 +1177,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		Optional<PostGroup> posOptional = findById(postGroupId);
 		if (posOptional.isPresent()) {
 		    // Xóa dữ liệu trong PostGroup và postGroup_postGroupMember
-		    postGroupRepository.deletePostGroupAndMembers(postGroupId);
+		    //postGroupRepository.deletePostGroupAndMembers(postGroupId);
 
 		    return ResponseEntity.ok()
 		            .body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
