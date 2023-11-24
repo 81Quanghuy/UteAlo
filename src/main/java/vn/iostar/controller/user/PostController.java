@@ -100,11 +100,10 @@ public class PostController {
 	@GetMapping("/{userId}/posts")
 	public ResponseEntity<GenericResponse> getPostsByUserAndFriendsAndGroups(
 			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("userId") String userId) {
+		
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-
 		Optional<User> user = userService.findById(currentUserId);
-
 		List<PostsResponse> userPosts = postService.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user.get());
 
 		if (!userId.equals(currentUserId)) {
