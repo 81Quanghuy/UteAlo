@@ -50,24 +50,27 @@ public class PostController {
 	@Autowired
 	PostRepository postRepository;
 
+
 	// Xem chi tiết bài post
+	//Làm lại chuyển thanh cauquery trong repository
+
 	@GetMapping("/{postId}")
 	public ResponseEntity<GenericResponse> getPost(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postId") Integer postId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Optional<Post> post = postService.findById(postId);
-		PostsResponse userPosts = postService.getPost(post.get());
+
 		if (post.isEmpty()) {
 			throw new RuntimeException("Post not found.");
 		} else if (currentUserId.equals(post.get().getUser().getUserId())) {
+			PostsResponse userPosts = postService.getPost(post.get());
 			return ResponseEntity.ok(
 					GenericResponse.builder().success(true).message("Retrieving post successfully and access update")
 							.result(userPosts).statusCode(HttpStatus.OK.value()).build());
 		} else {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieving post successfully and access update denied").result(userPosts)
-					.statusCode(HttpStatus.OK.value()).build());
+					.message("Retrieving post successfully and access update denied").statusCode(HttpStatus.OK.value()).build());
 		}
 	}
 
@@ -84,10 +87,6 @@ public class PostController {
 		} else if (userPosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("No posts found for this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		} else if (!currentUserId.equals(userId)) {
-			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieved user posts successfully and access update denied").result(userPosts)
-					.statusCode(HttpStatus.OK.value()).build());
 		} else {
 			return ResponseEntity.ok(GenericResponse.builder().success(true)
 					.message("Retrieved user posts successfully and access update").result(userPosts)

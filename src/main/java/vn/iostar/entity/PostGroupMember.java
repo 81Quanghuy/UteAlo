@@ -1,5 +1,6 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ import vn.iostar.contants.RoleUserGroup;
 @Table(name = "POSTGROUPMEMBER")
 public class PostGroupMember implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -42,7 +44,7 @@ public class PostGroupMember implements Serializable {
 	@Cascade(value = { CascadeType.REMOVE })
 	private List<PostGroup> postGroup = new ArrayList<>();
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne
 	@JoinColumn(name = "userId")
 	private User user;
 

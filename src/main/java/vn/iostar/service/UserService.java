@@ -67,4 +67,6 @@ public interface UserService {
 	// Quản lý tài khoản của user trong hệ thống
 	ResponseEntity<Object> accountManager(String authorizationHeader, UserManagerRequest request);
 
+	ResponseEntity<GenericResponse> getAvatarAndName(String userId);
+
 }

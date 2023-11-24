@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
@@ -13,7 +14,8 @@ import java.util.Date;
 @Entity
 public class PasswordResetOtp implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	@Serial
+    private static final long serialVersionUID = 1L;
 
 	private static final int EXPIRATION = 5;
 
@@ -37,7 +39,7 @@ public class PasswordResetOtp implements Serializable {
         super();
 
         this.otp = otp;
-        this.expiryDate = calculateExpiryDate(EXPIRATION);
+        this.expiryDate = calculateExpiryDate();
     }
 
     public PasswordResetOtp(final String otp, final User user) {
@@ -45,20 +47,20 @@ public class PasswordResetOtp implements Serializable {
 
         this.otp = otp;
         this.user = user;
-        this.expiryDate = calculateExpiryDate(EXPIRATION);
+        this.expiryDate = calculateExpiryDate();
     }
 
 
-    private Date calculateExpiryDate(final int expiryTimeInMinutes) {
+    private Date calculateExpiryDate() {
         final Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(new Date().getTime());
-        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
+        cal.add(Calendar.MINUTE, PasswordResetOtp.EXPIRATION);
         return new Date(cal.getTime().getTime());
     }
 
     public void updateOtp(final String otp) {
         this.otp = otp;
-        this.expiryDate = calculateExpiryDate(EXPIRATION);
+        this.expiryDate = calculateExpiryDate();
     }
 
 

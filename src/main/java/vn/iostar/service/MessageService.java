@@ -1,5 +1,6 @@
 package vn.iostar.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -7,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.MessageDTO;
 import vn.iostar.dto.MessageRequest;
 import vn.iostar.entity.Message;
 
@@ -34,4 +36,5 @@ public interface MessageService {
 
 	ResponseEntity<GenericResponse> deleteMessage(String userIdToken, MessageRequest messageRequest);
 
+    Message saveMessageByDTO(MessageDTO message) throws IOException;
 }

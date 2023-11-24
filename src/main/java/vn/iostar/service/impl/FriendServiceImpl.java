@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import vn.iostar.dto.FriendRequestResponse;
+import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Friend;
 import vn.iostar.entity.FriendRequest;
@@ -32,13 +32,13 @@ public class FriendServiceImpl implements FriendService {
 	FriendRequestRepository friendRequestRepository;
 
 	@Override
-	public List<FriendRequestResponse> findFriendUserIdsByUserId(String userId) {
+	public List<FriendResponse> findFriendUserIdsByUserId(String userId) {
 		
 		return friendRepository.findFriendUserIdsByUserId(userId);
 	}
 	@Override
-	public List<FriendRequestResponse> findFriendTop10UserIdsByUserId(String userId, Pageable pageable) {
-		return friendRepository.findFriendTop10UserIdsByUserId(userId, pageable);
+	public List<FriendResponse> findFriendByUserId(String userId, Pageable pageable) {
+		return friendRepository.findFriendByUserId(userId, pageable);
 	}
 
 	@Override

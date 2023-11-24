@@ -1,5 +1,6 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -18,6 +19,7 @@ import jakarta.persistence.*;
 @Table(name = "SHARES")
 public class Share implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -31,7 +33,7 @@ public class Share implements Serializable {
     @JoinColumn(name = "postId")
     private Post post;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "postGroupId")
     private PostGroup postGroup;
 

@@ -27,7 +27,8 @@ public class UserProfileResponse {
 	private Date createdAt;
 	private Date updatedAt;
 	private RoleName roleName;
-	private List<FriendRequestResponse> friends = new ArrayList<>();
+	private List<FriendResponse> friends = new ArrayList<>();
+
 	private List<GroupPostResponse> postGroup;
 
 	public UserProfileResponse(User user) {

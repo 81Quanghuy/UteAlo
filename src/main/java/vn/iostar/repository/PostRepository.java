@@ -15,6 +15,7 @@ import vn.iostar.entity.User;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
 
+
 	// Lấy những bài post của cá nhân
 	List<Post> findByUserUserIdOrderByPostTimeDesc(String userId);
 	

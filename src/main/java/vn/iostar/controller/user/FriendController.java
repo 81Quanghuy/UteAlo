@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
-import vn.iostar.dto.FriendRequestResponse;
+import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.FriendRequestService;
@@ -40,7 +40,7 @@ public class FriendController {
 
 	@GetMapping("/list/{userId}")
 	public ResponseEntity<GenericResponse> getListFriendByUserId(@Valid @PathVariable("userId") String userId) {
-		List<FriendRequestResponse> friend = friendService.findFriendUserIdsByUserId(userId);
+		List<FriendResponse> friend = friendService.findFriendUserIdsByUserId(userId);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get List Friend Successfully")
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}
@@ -55,7 +55,7 @@ public class FriendController {
 	@GetMapping("/list/pageable/{userId}")
 	public ResponseEntity<GenericResponse> getListFriendTop10ByUserId(@Valid @PathVariable("userId") String userId) {
 		PageRequest pageable = PageRequest.of(0, 10);
-		List<FriendRequestResponse> friend = friendService.findFriendTop10UserIdsByUserId(userId, pageable);
+		List<FriendResponse> friend = friendService.findFriendByUserId(userId, pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get List Friend Successfully")
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}
@@ -71,7 +71,7 @@ public class FriendController {
 	/**
 	 * GET list FriendRequest by Authorization
 	 *
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -79,7 +79,7 @@ public class FriendController {
 	public ResponseEntity<GenericResponse> getRequestList(@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
-		List<FriendRequestResponse> friend = friendRequestService.findUserFromUserIdByUserToUserId(userId);
+		List<FriendResponse> friend = friendRequestService.findUserFromUserIdByUserToUserId(userId);
 		return ResponseEntity.ok(GenericResponse.builder().success(true)
 				.message("Retrieved user posts successfully and access update denied").result(friend)
 				.statusCode(HttpStatus.OK.value()).build());
@@ -88,7 +88,7 @@ public class FriendController {
 	/**
 	 * GET list FriendRequest by Authorization
 	 *
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -98,7 +98,7 @@ public class FriendController {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
 		PageRequest pageable = PageRequest.of(0, 10);
-		List<FriendRequestResponse> friend = friendRequestService.findUserFromUserIdByUserToUserIdPageable(userId,
+		List<FriendResponse> friend = friendRequestService.findUserFromUserIdByUserToUserIdPageable(userId,
 				pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true)
 				.message("Retrieved user posts successfully and access update denied").result(friend)
@@ -106,9 +106,9 @@ public class FriendController {
 	}
 
 	/**
-	 * GET list FriendRequest by Authorization
+	 * Gui loi moi ket ban
 	 *
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -124,7 +124,7 @@ public class FriendController {
 	/**
 	 * GET list FriendRequest by Authorization
 	 *
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -133,7 +133,7 @@ public class FriendController {
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
-		List<FriendRequestResponse> friend = friendRequestService.findUserToUserIdByUserFromUserIdPageable(userId);
+		List<FriendResponse> friend = friendRequestService.findUserToUserIdByUserFromUserIdPageable(userId);
 		return ResponseEntity.ok(GenericResponse.builder().success(true)
 				.message("Retrieved user posts successfully and access update denied").result(friend)
 				.statusCode(HttpStatus.OK.value()).build());
@@ -143,7 +143,7 @@ public class FriendController {
 	 * PUT delete FriendRequest by Authorization and userId
 	 *
 	 * @param userId
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -159,7 +159,7 @@ public class FriendController {
 	 * PUT delete FriendRequest by Authorization and userId
 	 *
 	 * @param userId
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -175,7 +175,7 @@ public class FriendController {
 	 * PUT accept FriendRequest by Authorization and userId
 	 *
 	 * @param userId
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -192,7 +192,7 @@ public class FriendController {
 	/**
 	 * GET list FriendRequest by Authorization
 	 *
-	 * @param authorization The JWT (JSON Web Token) provided in the "Authorization"
+	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
 	 * @return The resource if found, or a 404 Not Found response.
 	 */
@@ -201,7 +201,7 @@ public class FriendController {
 			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String userId = jwtTokenProvider.getUserIdFromJwt(token);
-		List<FriendRequestResponse> friend = friendRequestService.findSuggestionListByUserId(userId);
+		List<FriendResponse> friend = friendRequestService.findSuggestionListByUserId(userId);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get Suggestion List Successfully!")
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}

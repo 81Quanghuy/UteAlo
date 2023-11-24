@@ -17,16 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import vn.iostar.contants.RoleName;
-import vn.iostar.dto.ChangePasswordRequest;
-import vn.iostar.dto.FriendRequestResponse;
-import vn.iostar.dto.GenericResponse;
-import vn.iostar.dto.GenericResponseAdmin;
-import vn.iostar.dto.GroupPostResponse;
-import vn.iostar.dto.PaginationInfo;
-import vn.iostar.dto.UserManagerRequest;
-import vn.iostar.dto.UserProfileResponse;
-import vn.iostar.dto.UserResponse;
-import vn.iostar.dto.UserUpdateRequest;
+import vn.iostar.dto.*;
+
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
@@ -247,6 +239,21 @@ public class UserServiceImpl implements UserService {
 				.result(new UserProfileResponse(user.get())).statusCode(200).build());
 	}
 
+
+	@Override
+	public ResponseEntity<GenericResponse> getAvatarAndName(String userId) {
+		Optional<User> user = findById(userId);
+		if (user.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("User doesn't exist").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		UserMessage userMessage = new UserMessage();
+		userMessage.setAvatar(user.get().getProfile().getAvatar());
+		userMessage.setUserName(user.get().getUserName());
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get avatar and name successful")
+				.result(userMessage).statusCode(200).build());
+	}
+
+
 	// Xóa user
 	@Override
 	public ResponseEntity<GenericResponse> deleteUser(String idFromToken) {
@@ -288,7 +295,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserProfileResponse getFullProfile(Optional<User> user, Pageable pageable) {
 		UserProfileResponse profileResponse = new UserProfileResponse(user.get());
-		List<FriendRequestResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId());
+		List<FriendResponse> fResponse = friendRepository.findFriendUserIdsByUserId(user.get().getUserId());
 		profileResponse.setFriends(fResponse);
 
 		List<GroupPostResponse> groupPostResponses = postGroupRepository

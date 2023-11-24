@@ -1,5 +1,6 @@
 package vn.iostar.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,8 @@ import vn.iostar.dto.SearchPostGroup;
 import vn.iostar.entity.PostGroup;
 
 public interface PostGroupService {
+
+	<S extends PostGroup> S save(S entity);
 
 	Optional<PostGroup> findById(Integer id);
 
@@ -65,7 +68,7 @@ public interface PostGroupService {
 
 	ResponseEntity<GenericResponse> getMemberRequiredByPostId(Integer postId, String currentUserId);
 
-	ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
+	ResponseEntity<GenericResponse> assignDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
 
 	ResponseEntity<GenericResponse> deleteMemberByPostId(PostGroupDTO postGroup, String currentUserId);
 
@@ -83,4 +86,11 @@ public interface PostGroupService {
 	
 	// Admin xóa nhóm trong hệ thống
 	ResponseEntity<GenericResponse> deletePostGroupByAdmin(Integer postId, String authorizationHeader);
+
+	ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
+
+	ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
+
+	Optional<PostGroup>  findByPostGroupName(String groupName);
+
 }
