@@ -17,7 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "files")
-public class Files implements Serializable {
+public class FilesMedia implements Serializable {
 
         @Serial
         private static final long serialVersionUID = 1L;
@@ -26,6 +26,7 @@ public class Files implements Serializable {
         private String fileId;
         private String name;
         private String type;
+        private Long size;
         private String url;
 
         @ManyToOne

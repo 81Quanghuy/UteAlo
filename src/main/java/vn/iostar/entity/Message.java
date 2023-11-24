@@ -41,9 +41,8 @@ public class Message implements Serializable {
 	@JoinColumn(name = "groupId")
 	private PostGroup group;
 
-	@OneToMany
-	@JoinColumn(name = "fileId")
-	private List<Files> files;
+	@OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
+	private List<FilesMedia> files;
 
 
 

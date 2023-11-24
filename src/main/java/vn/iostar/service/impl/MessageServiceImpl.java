@@ -1,30 +1,34 @@
 package vn.iostar.service.impl;
 
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.util.*;
-
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.MessageDTO;
 import vn.iostar.dto.MessageRequest;
-import vn.iostar.entity.Files;
+import vn.iostar.entity.FilesMedia;
 import vn.iostar.entity.Message;
 import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.User;
-import vn.iostar.repository.MediaRepository;
+import vn.iostar.repository.FileRepository;
 import vn.iostar.repository.MessageRepository;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.UserRepository;
-import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.MessageService;
 
+import java.io.IOException;
+import java.net.URL;
+import java.sql.Timestamp;
+import java.util.*;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 @Service
 public class MessageServiceImpl implements MessageService {
 
@@ -32,7 +36,7 @@ public class MessageServiceImpl implements MessageService {
 	private MessageRepository messageRepository;
 
 	@Autowired
-	private CloudinaryService cloudinaryService;
+	static Cloudinary cloudinary;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -41,7 +45,7 @@ public class MessageServiceImpl implements MessageService {
 	private PostGroupRepository postGroupRepository;
 
 	@Autowired
-	private MediaRepository mediaRepository;
+	private FileRepository fileRepository;
 
 	@Override
 	public <S extends Message> S save(S entity) {
@@ -133,7 +137,9 @@ public class MessageServiceImpl implements MessageService {
 	}
 
 	@Override
+	@Transactional
 	public Message saveMessageByDTO(MessageDTO message) throws IOException {
+
         Message entity = new Message();
         entity.setContent(message.getContent());
 		if	(message.getSenderId() != null)
@@ -147,48 +153,41 @@ public class MessageServiceImpl implements MessageService {
 			Optional<PostGroup> group = postGroupRepository.findById(Integer.valueOf(message.getGroupId()));
 			group.ifPresent(entity::setGroup);
 		}
-
-        if (message.getFiles()!=null ) {
-			List<Files> mediaList = new ArrayList<>();
-            for (MultipartFile file : message.getFiles()) {
-                Files vi = new Files();
-                //check file is image
-                if (Objects.requireNonNull(file.getContentType()).contains("image")) {
-                    vi.setName(file.getOriginalFilename());
-                    vi.setUrl(cloudinaryService.uploadImage(file));
-                    vi.setType(file.getContentType());
-                    vi.setCreateAt(new Timestamp(System.currentTimeMillis()));
-                    vi.setUpdateAt(new Timestamp(System.currentTimeMillis()));
-
-                    mediaList.add(vi);
-                }
-                //check file is video
-                else if ("video".contains(file.getContentType())) {
-
-                    vi.setName(file.getOriginalFilename());
-                    vi.setUrl(cloudinaryService.uploadVideo(file));
-                    vi.setType(file.getContentType());
-                    vi.setCreateAt(new Timestamp(System.currentTimeMillis()));
-                    vi.setUpdateAt(new Timestamp(System.currentTimeMillis()));
-                    mediaList.add(vi);
-                } else {
-                    vi.setName(file.getOriginalFilename());
-                    vi.setUrl(cloudinaryService.uploadFile(file));
-                    vi.setType(file.getContentType());
-                    vi.setCreateAt(new Timestamp(System.currentTimeMillis()));
-                    vi.setUpdateAt(new Timestamp(System.currentTimeMillis()));
-                    mediaList.add(vi);
-                }
-            }
-			entity.setFiles(mediaRepository.saveAll(mediaList));
-        }
-
-        // Lưu tin nhắn vào cơ sở dữ liệu
 		entity.setCreateAt(message.getCreatedAt());
 		entity.setUpdateAt(message.getUpdatedAt());
-        save(entity);
+
+		if (!message.getFileEntities().isEmpty()){
+			List<FilesMedia> listFiles = new ArrayList<>();
+			for (FilesMedia file : message.getFileEntities()) {
+				FilesMedia file1 = new FilesMedia();
+				file1.setName(file.getName());
+				file1.setType(file.getType());
+				file1.setType(file.getType());
+				file1.setCreateAt(new Date());
+				file1.setUpdateAt(new Date());
+				file1.setUrl(getBlobUrlContent(file.getUrl(), file.getName()));
+				file1.setMessage(entity);
+				listFiles.add(file1);
+			}
+			entity.setFiles(listFiles);
+			fileRepository.saveAll(listFiles);
+		}
+			save(entity);
 
         return entity;
     }
+	private String getBlobUrlContent(String blobUrl,String originalFileName) {
+		// Đọc nội dung từ URL blob
+		try {
+			URL url = new URL(blobUrl);
+			byte[] bytes = Files.readAllBytes(Path.of(url.toURI()));
+			String publicId = "Social Media/User/" + originalFileName; // Sử dụng tên gốc làm public_id
 
+			Map params = ObjectUtils.asMap("public_id", publicId, "resource_type", "auto");
+			Map uploadResult = cloudinary.uploader().upload(bytes, params);
+			return (String) uploadResult.get("secure_url");
+		} catch (Exception e) {
+			throw new RuntimeException("Error reading blob content", e);
+		}
+	}
 }
