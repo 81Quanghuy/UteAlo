@@ -74,7 +74,6 @@ public class ChatController {
 	public Message recMessage(@Payload MessageDTO message) throws IOException {
 
 		Message entity = messageService.saveMessageByDTO(message);
-		message.setFileEntities(entity.getFiles());
 		simpMessagingTemplate.convertAndSendToUser(message.getReceiverId(), "/private", message);
 		return entity;
 	}

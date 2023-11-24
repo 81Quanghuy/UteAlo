@@ -8,8 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
-import vn.iostar.entity.Files;
+import vn.iostar.entity.FilesMedia;
 import vn.iostar.entity.Message;
 
 
@@ -25,8 +24,8 @@ public class MessageDTO {
 
     private String groupId;
 
-    private List<MultipartFile> files;
-    private List<Files> fileEntities;
+    private List<FilesMedia> fileEntities;
+
     private String content;
 
     private String senderAvatar;
@@ -39,8 +38,12 @@ public class MessageDTO {
     // create contractor by MessageEntity
     public MessageDTO(Message message) {
         this.senderId = message.getSender().getUserId();
-        this.receiverId = message.getReceiver().getUserId();
-        this.groupId = String.valueOf(message.getGroup().getPostGroupId());
+        if (message.getReceiver()!= null) {
+            this.receiverId = message.getReceiver().getUserId();
+        }
+        if (message.getGroup() != null){
+            this.groupId = String.valueOf(message.getGroup().getPostGroupId());
+        }
         this.fileEntities = message.getFiles();
         this.content = message.getContent();
         this.senderAvatar = message.getSender().getProfile().getAvatar();
