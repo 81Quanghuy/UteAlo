@@ -103,6 +103,7 @@ public class AuthController {
 		tokenMap.put("accessToken", accessToken);
 		tokenMap.put("refreshToken", token);
 		tokenMap.put("userId", userDetail.getUserId());
+		tokenMap.put("roleName", userDetail.getUser().getUser().getRole().getRoleName().name());
 
 		if (optionalUser.isPresent()) {
 			optionalUser.get().setLastLoginAt(new Date());

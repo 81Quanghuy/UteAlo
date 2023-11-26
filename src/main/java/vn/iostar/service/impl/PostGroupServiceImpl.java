@@ -201,10 +201,69 @@ public class PostGroupServiceImpl implements PostGroupService {
 		groupMemberRepository.save(postMember);
 		return ResponseEntity.status(HttpStatus.CREATED) // Sử dụng HttpStatus.CREATED cho tạo thành công
 				.body(GenericResponse.builder().success(true).message("Tạo thành công")
-						.result(groupEntity.getPostGroupId())// Thông báo tạo thành công
+						.result(Map.of("postGroupId", groupEntity.getPostGroupId()))// Thông báo tạo thành công
 						.statusCode(HttpStatus.CREATED.value()).build());
 
 	}
+	
+	@Override
+	@Transactional
+	public ResponseEntity<GenericResponse> createPostGroupByAdmin(PostGroupDTO postGroup, String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<PostGroup> group = postGroupRepository.findByPostGroupName(postGroup.getPostGroupName());
+		if (group.isPresent()) {
+			return ResponseEntity.status(HttpStatus.CONFLICT) // Sử dụng HttpStatus.CONFLICT cho lỗi đã tồn tại
+					.body(GenericResponse.builder().success(false).message("Lỗi đã tồn tại trong dữ liệu")
+							.statusCode(HttpStatus.CONFLICT.value()).build());
+
+		}
+		Optional<User> user = userRepository.findById(currentUserId);
+
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+
+	    Date date = new Date();
+	    PostGroup groupEntity = new PostGroup();
+	    groupEntity.setPostGroupName(postGroup.getPostGroupName());
+	    groupEntity.setIsPublic(postGroup.getIsPublic());
+	    groupEntity.setBio(postGroup.getBio());
+	    groupEntity.setIsApprovalRequired(postGroup.getIsApprovalRequired());
+	    groupEntity.setCreateDate(date);
+	    groupEntity.setUpdateDate(date);
+
+	    // Tạo người dùng là admin của nhóm
+	    PostGroupMember postMember = new PostGroupMember();
+	    postMember.setRoleUserGroup(RoleUserGroup.Admin);
+	    postMember.setUser(user.get());
+	    postMember.getPostGroup().add(groupEntity); // Thêm nhóm vào danh sách nhóm của người dùng
+	    groupEntity.getPostGroupMembers().add(postMember); // Thêm thành viên vào nhóm
+
+	    // Thêm các thành viên khác vào nhóm (nếu có)
+	    if (postGroup.getUserId() != null) {
+	        for (String idRequest : postGroup.getUserId()) {
+	            Optional<User> userMember = userRepository.findById(idRequest);
+	            if (userMember.isPresent() && (!userMember.get().getUserId().equals(user.get().getUserId()))) {
+	                PostGroupMember member = new PostGroupMember();
+	                member.setRoleUserGroup(RoleUserGroup.Member);
+	                member.setUser(userMember.get());
+	                member.getPostGroup().add(groupEntity);
+	                groupEntity.getPostGroupMembers().add(member);
+	            }
+	        }
+	    }
+
+	    // Lưu thông tin nhóm và thành viên vào cơ sở dữ liệu
+	    postGroupRepository.save(groupEntity);
+
+	    return ResponseEntity.status(HttpStatus.CREATED)
+	        .body(GenericResponse.builder().success(true).message("Tạo thành công")
+	            .result(Map.of("postGroupId", groupEntity.getPostGroupId()))
+	            .statusCode(HttpStatus.CREATED.value()).build());
+	}
+
 
 	@Override
 	public ResponseEntity<GenericResponse> updatePostGroupByPostIdAndUserId(PostGroupDTO postGroup,
@@ -1175,15 +1234,19 @@ public class PostGroupServiceImpl implements PostGroupService {
 					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 		Optional<PostGroup> posOptional = findById(postGroupId);
+		Page<SearchPostGroup> groups = findAllGroups(1, 10);
 		if (posOptional.isPresent()) {
-		    // Xóa dữ liệu trong PostGroup và postGroup_postGroupMember
-		    //postGroupRepository.deletePostGroupAndMembers(postGroupId);
-
+			PostGroup entity = posOptional.get();
+			// Đặt giá trị của dữ liệu trong bảng PostGroupMember là null
+			// Khi xóa thì chỉ xóa dữ liệu trong bảng PostGroup và PostGroup_PostGroupMember thôi
+			entity.setPostGroupMembers(null);
+			save(entity);
+		    postGroupRepository.delete(entity);
 		    return ResponseEntity.ok()
-		            .body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		            .body(new GenericResponse(true, "Delete Successful!", groups, HttpStatus.OK.value()));
 		} else {
 		    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-		            .body(new GenericResponse(false, "Cannot found comment!", null, HttpStatus.NOT_FOUND.value()));
+		            .body(new GenericResponse(false, "Cannot found post group!", null, HttpStatus.NOT_FOUND.value()));
 		}
 
 

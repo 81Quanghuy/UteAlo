@@ -384,4 +384,9 @@ public class UserServiceImpl implements UserService {
 	    }
 	}
 
+	// Lấy tất cả người dùng không phân trang
+	@Override
+    public List<ListUsers> getAllUsersIdAndName() {
+        return userRepository.findAllUsersIdAndName();
+    }
 }
