@@ -19,35 +19,32 @@ import lombok.Setter;
 @Table(name = "MESSAGES")
 public class Message implements Serializable {
 
-	@Serial
-	private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private String messageId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String messageId;
 
-	@Column(columnDefinition = "nvarchar(255)")
-	private String content;
+    @Column(columnDefinition = "nvarchar(255)")
+    private String content;
 
-	@ManyToOne
-	@JoinColumn(name = "senderId")
-	private User sender;
+    @ManyToOne
+    @JoinColumn(name = "senderId")
+    private User sender;
 
-	@ManyToOne
-	@JoinColumn(name = "receiverId")
-	private User receiver;
+    @ManyToOne
+    @JoinColumn(name = "receiverId")
+    private User receiver;
 
-	@ManyToOne
-	@JoinColumn(name = "groupId")
-	private PostGroup group;
+    @ManyToOne
+    @JoinColumn(name = "groupId")
+    private PostGroup group;
 
-	@OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
-	private List<FilesMedia> files;
-
-
-
-	private Date createAt;
-	private Date updateAt;
+    private String files;
+    private Boolean isDeleted = false;
+    private Date createAt;
+    private Date updateAt;
 
 
 }
