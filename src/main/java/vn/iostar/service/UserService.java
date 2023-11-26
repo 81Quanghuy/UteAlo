@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserResponse;
@@ -68,5 +69,7 @@ public interface UserService {
 	ResponseEntity<Object> accountManager(String authorizationHeader, UserManagerRequest request);
 
 	ResponseEntity<GenericResponse> getAvatarAndName(String userId);
+	
+	List<ListUsers> getAllUsersIdAndName();
 
 }

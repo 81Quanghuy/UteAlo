@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -63,15 +62,8 @@ public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
 			+ "WHERE u.userName LIKE %:search%")
 	List<SearchUser> findTop3UsersByName(@Param("search") String search, Pageable pageable);
 
-	@Query("SELECT NEW vn.iostar.dto.SearchPostGroup(pg.postGroupId, pg.postGroupName, pg.avatarGroup, pg.bio, pg.isPublic) FROM PostGroup pg")
+	@Query("SELECT NEW vn.iostar.dto.SearchPostGroup(pg.postGroupId, pg.postGroupName, pg.avatarGroup, pg.bio, pg.isPublic) FROM PostGroup pg ORDER BY pg.createDate DESC")
 	Page<SearchPostGroup> findAllPostGroups(Pageable pageable);
 
-//	@Modifying
-//	@Query(value = "DELETE FROM POSTGROUP WHERE postGroupId = :groupId")
-//	void deletePostGroupById(@Param("groupId") int groupId);
-//
-//	@Modifying
-//	@Query(value = "DELETE FROM post_group_post_group_member WHERE postGroupId = :groupId")
-//	void deleteMembersOfPostGroup(@Param("groupId") int groupId);
 
 }

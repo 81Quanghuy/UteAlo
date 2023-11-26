@@ -497,12 +497,13 @@ public class CommentServiceImpl implements CommentService {
 					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 		Optional<Comment> optionalComment = findById(commentId);
+		Page<CommentPostResponse> commentsPage = findAllComments(1, 10);
 		// Tìm thấy bài comment với commentId
 		if (optionalComment.isPresent()) {
 			Comment comment = optionalComment.get();
 			commentRepository.delete(comment);
 			return ResponseEntity.ok()
-					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+					.body(new GenericResponse(true, "Delete Successful!", commentsPage, HttpStatus.OK.value()));
 		}
 		// Khi không tìm thấy comment với id
 		else {

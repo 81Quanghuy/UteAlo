@@ -1,5 +1,7 @@
 package vn.iostar.controller.admin;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.UserService;
@@ -31,6 +34,13 @@ public class UserManagerController {
 			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int items) {
 		return userService.getAllUsers(authorizationHeader, page, items);
 	}
+	
+	// Lấy tất cả người dùng không phân trang
+	@GetMapping("/listUsers")
+    public List<ListUsers> getAllUsersByNameAndId() {
+        return  userService.getAllUsersIdAndName();
+
+    }
 
 	// Cập nhật trạng thái tài khoản của user
 	@PutMapping("/update")

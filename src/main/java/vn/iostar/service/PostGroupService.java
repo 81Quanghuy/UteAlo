@@ -1,6 +1,5 @@
 package vn.iostar.service;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +29,8 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> getSuggestionPostGroupByUserId(String authorizationHeader);
 
 	ResponseEntity<GenericResponse> createPostGroupByUserId(PostGroupDTO postGroup, String authorizationHeader);
+	
+	ResponseEntity<GenericResponse> createPostGroupByAdmin(PostGroupDTO postGroup, String authorizationHeader);
 
 	ResponseEntity<GenericResponse> updatePostGroupByPostIdAndUserId(PostGroupDTO postGroup, String currentUserId);
 

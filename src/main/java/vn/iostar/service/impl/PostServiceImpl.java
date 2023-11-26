@@ -196,12 +196,13 @@ public class PostServiceImpl implements PostService {
 					.message("Delete denied!").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 		Optional<Post> optionalPost = findById(postId);
+		Page<PostsResponse> userPostsPage = findAllPosts(1, 10);
 		// tìm thấy bài post với postId
 		if (optionalPost.isPresent()) {
 			Post post = optionalPost.get();
 			postRepository.delete(post);
 			return ResponseEntity.ok()
-					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+					.body(new GenericResponse(true, "Delete Successful!", userPostsPage, HttpStatus.OK.value()));
 		}
 		// Khi không tìm thấy bài post với id
 		else {
@@ -301,7 +302,7 @@ public class PostServiceImpl implements PostService {
 	@Override
 	public Page<PostsResponse> findAllPosts(int page, int itemsPerPage) {
 		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
-		Page<Post> userPostsPage = postRepository.findAll(pageable);
+		Page<Post> userPostsPage = postRepository.findAllByOrderByPostTimeDesc(pageable);
 
 		Page<PostsResponse> simplifiedUserPostsPage = userPostsPage.map(post -> {
 			PostsResponse postsResponse = new PostsResponse(post);

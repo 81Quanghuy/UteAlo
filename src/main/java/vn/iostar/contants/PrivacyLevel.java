@@ -4,5 +4,6 @@ public enum PrivacyLevel {
     PUBLIC, // Bài viết công khai
     FRIENDS, // Chỉ bạn bè có thể thấy
     GROUP_MEMBERS, // Chỉ thành viên trong nhóm có thể thấy
-    PRIVATE // Bài viết riêng tư
+    PRIVATE, // Bài viết riêng tư
+    ADMIN // Những bài đăng của admin để tất cả mọi người thấy
 }
