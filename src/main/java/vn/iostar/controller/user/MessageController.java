@@ -1,5 +1,6 @@
 package vn.iostar.controller.user;
 
+import jakarta.mail.Header;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -18,44 +19,43 @@ import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.MessageService;
 
 @RestController
-@RequestMapping("/api/v1/message")
+@RequestMapping("/api/v1/messages")
 public class MessageController {
 
-	@Autowired
-	MessageService messageService;
+    @Autowired
+    MessageService messageService;
 
-	@Autowired
-	JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
 
-	// Get Message with UserID and AuthorizationHeader
-	@GetMapping("/user/{userId}")
-	public ResponseEntity<GenericResponse> getListMessageByUserId1AndUserId2(
-			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("userId") String userId,
-			@RequestParam Integer page, @RequestParam Integer size) {
-		String token = authorizationHeader.substring(7);
-		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-		PageRequest pageable = PageRequest.of(page, size);
-		return messageService.getListMessageByUserIdAndUserTokenId(userId, userIdToken, pageable);
-	}
+    // Get Message with UserID and AuthorizationHeader
+    @GetMapping("/get/user/{userId}")
+    public ResponseEntity<GenericResponse> getListMessageByUserId1AndUserId2(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "20") Integer size,
+            @PathVariable("userId") String userId) {
+        String token = authorizationHeader.substring(7);
+        String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+        PageRequest pageable = PageRequest.of(page, size);
+        return messageService.getListMessageByUserIdAndUserTokenId(userId, userIdToken, pageable);
+    }
 
-	// Get Message with GroupId and AuthorizationHeader
-	@GetMapping("/group/{groupId}")
-	public ResponseEntity<GenericResponse> getListMessageByGroupIdAndUserId(@PathVariable("groupId") String groupId,
-			@RequestHeader("Authorization") String authorizationHeader,
-			@RequestParam Integer page, @RequestParam Integer size) {
-		String token = authorizationHeader.substring(7);
-		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-		PageRequest pageable = PageRequest.of(page, size);
-		return messageService.getListMessageByGroupIdAndUserTokenId(groupId, userIdToken, pageable);
-	}
+    // Get Message with GroupId and AuthorizationHeader
+    @GetMapping("/get/group/{groupId}")
+    public ResponseEntity<GenericResponse> getListMessageByGroupIdAndUserId(
+            @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "20") Integer size,
+            @PathVariable("groupId") String groupId) {
+        PageRequest pageable = PageRequest.of(page, size);
+        return messageService.getListMessageByGroupIdAndUserTokenId(groupId, pageable);
+    }
 
-	// delete one message by user
-	@PutMapping("/delete")
-	public ResponseEntity<GenericResponse> deleteMessages(@RequestBody MessageRequest messageRequest,
-			@RequestHeader("Authorization") String authorizationHeader) {
-		String token = authorizationHeader.substring(7);
-		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-		return messageService.deleteMessage( userIdToken, messageRequest);
-	}
+    // delete one message by user
+    @PutMapping("/delete")
+    public ResponseEntity<GenericResponse> deleteMessages(@RequestBody MessageRequest messageRequest,
+                                                          @RequestHeader("Authorization") String authorizationHeader) {
+        String token = authorizationHeader.substring(7);
+        String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+        return messageService.deleteMessage(userIdToken, messageRequest);
+    }
 
 }

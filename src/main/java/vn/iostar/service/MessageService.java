@@ -14,27 +14,27 @@ import vn.iostar.entity.Message;
 
 public interface MessageService {
 
-	void deleteAll();
+    void deleteAll();
 
-	void delete(Message entity);
+    void delete(Message entity);
 
-	void deleteById(String id);
+    void deleteById(String id);
 
-	long count();
+    long count();
 
-	Optional<Message> findById(String id);
+    Optional<Message> findById(String id);
 
-	List<Message> findAll();
+    List<Message> findAll();
 
-	<S extends Message> S save(S entity);
+    <S extends Message> S save(S entity);
 
-	ResponseEntity<GenericResponse> getListMessageByUserIdAndUserTokenId(String userId, String userIdToken,
-			PageRequest pageable);
+    ResponseEntity<GenericResponse> getListMessageByUserIdAndUserTokenId(String userId, String userIdToken,
+                                                                         PageRequest pageable);
 
-	ResponseEntity<GenericResponse> getListMessageByGroupIdAndUserTokenId(String groupId, String userIdToken,
-			PageRequest pageable);
+    ResponseEntity<GenericResponse> getListMessageByGroupIdAndUserTokenId(String groupId,
+                                                                          PageRequest pageable);
 
-	ResponseEntity<GenericResponse> deleteMessage(String userIdToken, MessageRequest messageRequest);
+    ResponseEntity<GenericResponse> deleteMessage(String userIdToken, MessageRequest messageRequest);
 
     Message saveMessageByDTO(MessageDTO message) throws IOException;
 }
