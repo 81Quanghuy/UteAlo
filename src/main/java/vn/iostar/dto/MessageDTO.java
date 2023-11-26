@@ -1,14 +1,12 @@
 package vn.iostar.dto;
 
 import java.util.Date;
-import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import vn.iostar.entity.FilesMedia;
 import vn.iostar.entity.Message;
 
 
@@ -19,12 +17,13 @@ import vn.iostar.entity.Message;
 @Builder
 public class MessageDTO {
     private String senderId;
+    private byte[] files;
+    private String fileUrl;
+    private Boolean isDeleted;
 
     private String receiverId;
 
     private String groupId;
-
-    private List<FilesMedia> fileEntities;
 
     private String content;
 
@@ -35,16 +34,29 @@ public class MessageDTO {
     private Date createdAt;
     private Date updatedAt;
 
+    //create contractor by Message
+    public MessageDTO(String senderId, String receiverId, Integer groupId, String files, String content, String senderAvatar, String senderName, Date createdAt, Boolean isDeleted) {
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.groupId = String.valueOf(groupId);
+        this.fileUrl = files;
+        this.content = content;
+        this.senderAvatar = senderAvatar;
+        this.senderName = senderName;
+        this.createdAt = createdAt;
+        this.isDeleted = isDeleted;
+    }
+
     // create contractor by MessageEntity
     public MessageDTO(Message message) {
         this.senderId = message.getSender().getUserId();
-        if (message.getReceiver()!= null) {
+        if (message.getReceiver() != null) {
             this.receiverId = message.getReceiver().getUserId();
         }
-        if (message.getGroup() != null){
+        if (message.getGroup() != null) {
             this.groupId = String.valueOf(message.getGroup().getPostGroupId());
         }
-        this.fileEntities = message.getFiles();
+        this.fileUrl = message.getFiles();
         this.content = message.getContent();
         this.senderAvatar = message.getSender().getProfile().getAvatar();
         this.senderName = message.getSender().getUserName();
