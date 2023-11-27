@@ -3,6 +3,7 @@ package vn.iostar.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.GenericResponse;
@@ -13,35 +14,36 @@ import vn.iostar.entity.User;
 
 public interface ShareService {
 
-	void deleteAll();
+    void deleteAll();
 
-	void delete(Share entity);
+    void delete(Share entity);
 
-	long count();
+    long count();
 
-	Optional<Share> findById(Integer id);
+    Optional<Share> findById(Integer id);
 
-	List<Share> findAll();
+    List<Share> findAll();
 
-	<S extends Share> S save(S entity);
+    <S extends Share> S save(S entity);
 
-	ResponseEntity<GenericResponse> getShare(Integer shareId);
-	
-	ResponseEntity<Object> sharePost(String token,SharePostRequestDTO requestDTO);
-	
-	ResponseEntity<Object> updateSharePost(Integer shareId, String content,String currentUserId);
-	
-	ResponseEntity<GenericResponse> deleteSharePost(Integer shareId,String token,String userId);
-	
-	SharesResponse getSharePost(Share share);
-	
-	public List<SharesResponse> findUserSharePosts(String userId);
-	
-	List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
-	
-	List<SharesResponse> findPostGroupShares(Integer postGroupId);
-	
-	ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId);
+    ResponseEntity<GenericResponse> getShare(Integer shareId);
 
+    ResponseEntity<Object> sharePost(String token, SharePostRequestDTO requestDTO);
+
+    ResponseEntity<Object> updateSharePost(Integer shareId, String content, String currentUserId);
+
+    ResponseEntity<GenericResponse> deleteSharePost(Integer shareId, String token, String userId);
+
+    SharesResponse getSharePost(Share share);
+
+    public List<SharesResponse> findUserSharePosts(String userId);
 	
+    List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId, Pageable pageable);
+
+    List<SharesResponse> findPostGroupShares(Integer postGroupId);
+
+    ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId);
+
+
+    ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size);
 }

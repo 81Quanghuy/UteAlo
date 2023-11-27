@@ -16,56 +16,55 @@ import vn.iostar.entity.User;
 
 public interface PostService {
 
-	void deleteAll();
+    void deleteAll();
 
-	void delete(Post entity);
+    void delete(Post entity);
 
-	void deleteById(Integer id);
+    void deleteById(Integer id);
 
-	long count();
+    long count();
 
-	List<Post> findAll();
+    List<Post> findAll();
 
-	Optional<Post> findById(Integer id);
+    Optional<Post> findById(Integer id);
 
-	<S extends Post> S save(S entity);
+    <S extends Post> S save(S entity);
 
-	ResponseEntity<GenericResponse> getPost(Integer postId);
+    ResponseEntity<GenericResponse> getPost(Integer postId);
 
-	ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request, String currentUserId) throws Exception;
+    ResponseEntity<Object> updatePost(Integer postId, PostUpdateRequest request, String currentUserId) throws Exception;
 
-	// Xóa bài post của mình
-	ResponseEntity<GenericResponse> deletePost(Integer postId, String token, String userId);
-	
-	// Admin xóa bài post trong hệ thống
-	ResponseEntity<GenericResponse> deletePostByAdmin(Integer postId, String authorizationHeader);
+    // Xóa bài post của mình
+    ResponseEntity<GenericResponse> deletePost(Integer postId, String token, String userId);
 
-	ResponseEntity<Object> createUserPost(String token, CreatePostRequestDTO requestDTO);
+    // Admin xóa bài post trong hệ thống
+    ResponseEntity<GenericResponse> deletePostByAdmin(Integer postId, String authorizationHeader);
 
-	// Lấy những bài post của mình
-	public List<PostsResponse> findUserPosts(String userId);
-	
-	// Tìm tất cả bài post trong hệ thống
-	public Page<PostsResponse> findAllPosts(int page, int itemsPerPage);
-	
-	// Lấy tất cả bài post trong hệ thống
-	ResponseEntity<GenericResponseAdmin> getAllPosts(String authorizationHeader,int page, int itemsPerPage);
+    ResponseEntity<Object> createUserPost(String token, CreatePostRequestDTO requestDTO);
 
-	List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user);
+    // Lấy những bài post của mình
+    public List<PostsResponse> findUserPosts(String userId);
 
-	PostsResponse getPost(Post post);
+    // Tìm tất cả bài post trong hệ thống
+    public Page<PostsResponse> findAllPosts(int page, int itemsPerPage);
 
-	List<String> findAllPhotosByUserIdOrderByPostTimeDesc(String userId);
+    // Lấy tất cả bài post trong hệ thống
+    ResponseEntity<GenericResponseAdmin> getAllPosts(String authorizationHeader, int page, int itemsPerPage);
 
-	Page<String> findLatestPhotosByUserId(String userId, int page, int size);
+    PostsResponse getPost(Post post);
 
-	List<PostsResponse> findPostGroupPosts(Integer postGroupId);
+    List<String> findAllPhotosByUserIdOrderByPostTimeDesc(String userId);
 
-	ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId);
+    Page<String> findLatestPhotosByUserId(String userId, int page, int size);
 
-	List<PostsResponse> findGroupPosts(String currentUserId);
+    List<PostsResponse> findPostGroupPosts(Integer postGroupId);
 
-	ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId, String userId);
-	
+    ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId);
 
+    List<PostsResponse> findGroupPosts(String currentUserId);
+
+    ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId, String userId);
+
+
+    ResponseEntity<GenericResponse> getPostTimelineByUserId(String userId, int page, int size) throws RuntimeException;
 }
