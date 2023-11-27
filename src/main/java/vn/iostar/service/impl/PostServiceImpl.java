@@ -18,13 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import vn.iostar.contants.RoleName;
-import vn.iostar.dto.CreatePostRequestDTO;
-import vn.iostar.dto.GenericResponse;
-import vn.iostar.dto.GenericResponseAdmin;
-import vn.iostar.dto.PaginationInfo;
-import vn.iostar.dto.PostResponse;
-import vn.iostar.dto.PostUpdateRequest;
-import vn.iostar.dto.PostsResponse;
+import vn.iostar.dto.*;
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
@@ -42,6 +36,7 @@ import vn.iostar.service.UserService;
 
 @Service
 public class PostServiceImpl implements PostService {
+
 	@Autowired
 	PostRepository postRepository;
 
@@ -402,6 +397,37 @@ public class PostServiceImpl implements PostService {
 		}
 	}
 
+    @Override
+    public ResponseEntity<GenericResponse> getPostTimelineByUserId(String userId, int page, int size) throws RuntimeException {
+        Optional<User> user = userService.findById(userId);
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+                    .message("User not found.").statusCode(HttpStatus.NOT_FOUND.value()).build());
+        }
+        PageRequest pageable = PageRequest.of(page, size);
+        List<Post> listPost = postRepository.findPostsByUserIdAndFriendsAndGroupsOrderByPostTimeDesc(userId,
+                pageable);
+        // Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+//		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+        List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+        for (Post post : listPost) {
+            PostsResponse postsResponse = new PostsResponse(post);
+            if (post.getComments() != null && !post.getComments().isEmpty()) {
+                postsResponse.setComments(getIdComment(post.getComments()));
+            } else {
+                postsResponse.setComments(new ArrayList<>());
+            }
+            if (post.getLikes() != null && !post.getLikes().isEmpty()) {
+                postsResponse.setLikes(getIdLikes(post.getLikes()));
+            } else {
+                postsResponse.setLikes(new ArrayList<>());
+            }
+            simplifiedUserPosts.add(postsResponse);
+        }
+
+        return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved user posts successfully")
+                .result(simplifiedUserPosts).statusCode(HttpStatus.OK.value()).build());
+    }
 	// Lấy những bài post liên quan đến user như cá nhân, nhóm, bạn bè
 	@Override
 	public List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user) {
@@ -460,5 +486,4 @@ public class PostServiceImpl implements PostService {
 		PageRequest pageable = PageRequest.of(page, size);
 		return postRepository.findLatestPhotosByUserIdAndNotNull(userId, pageable);
 	}
-
 }

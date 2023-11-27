@@ -9,25 +9,26 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import vn.iostar.dto.PostTimeLine;
 import vn.iostar.entity.Post;
 import vn.iostar.entity.User;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
 
+    // Tìm tất cả hình ảnh từ tất cả bài post liên quan đến người dùng như bạn bè, nhóm
+    @Query("SELECT p FROM Post p "
+            + "WHERE ((p.user.userId = :userId OR p.user.userId IN (SELECT f.user2.userId FROM Friend f WHERE f.user1.userId = :userId) "
+            + " OR p.user.userId  IN (SELECT f.user1.userId  FROM Friend f WHERE f.user2.userId = :userId) "
+            + "OR p.postGroup IN (SELECT pgm.postGroup FROM PostGroupMember pgm WHERE pgm.user.userId = :userId)) "
+            + "AND p.privacyLevel != 'PRIVATE' ) OR p.privacyLevel = 'ADMIN' " + "ORDER BY p.postTime DESC")
+    List<Post> findPostsByUserIdAndFriendsAndGroupsOrderByPostTimeDesc(@Param("userId") String userId, Pageable pageable);
+
 	// Lấy những bài post của cá nhân
 	List<Post> findByUserUserIdOrderByPostTimeDesc(String userId);
 
 	// Lấy tất cả bài post trong hệ thống
 	Page<Post> findAllByOrderByPostTimeDesc(Pageable pageable);
-
-	// Tìm tất cả hình ảnh từ tất cả bài post liên quan đến người dùng như bạn bè,
-	// nhóm, admin
-	@Query("SELECT p FROM Post p "
-			+ "WHERE ((p.user = :user OR p.user IN (SELECT f.user2 FROM Friend f WHERE f.user1 = :user) "
-			+ "OR p.postGroup IN (SELECT pgm.postGroup FROM PostGroupMember pgm WHERE pgm.user = :user)) "
-			+ "AND p.privacyLevel != 'PRIVATE') OR p.privacyLevel = 'ADMIN' " + "ORDER BY p.postTime DESC")
-	List<Post> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(@Param("user") User user);
 
 	// Tìm tất cả hình ảnh từ tất cả bài post của một người dùng
 	@Query("SELECT p.photos FROM Post p WHERE p.user.userId = :userId ORDER BY p.postTime DESC")

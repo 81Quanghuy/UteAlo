@@ -19,39 +19,39 @@ import vn.iostar.contants.PrivacyLevel;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "POSTS")
-public class Post implements Serializable{
+public class Post implements Serializable {
 
-	@Serial
+    @Serial
     private static final long serialVersionUID = 1L;
 
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int postId;
 
     private String photos;
     private String files;
     private String location;
-    
+
     @Column(columnDefinition = "nvarchar(255)")
     private String content;
 
     @Enumerated(EnumType.STRING)
     private PrivacyLevel privacyLevel;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "postGroupId")
     private PostGroup postGroup;
-    
-    @OneToMany(mappedBy = "post",fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Share> share;
-    
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likes;
-    
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
 

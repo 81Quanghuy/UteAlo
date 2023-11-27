@@ -10,17 +10,34 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.iostar.dto.EmailVerificationRequest;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.VerifyOtpRequest;
+import vn.iostar.entity.Account;
+import vn.iostar.service.AccountService;
 import vn.iostar.service.EmailVerificationService;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 public class EmailVerificationController {
-	
+
     @Autowired
     private EmailVerificationService emailVerificationService;
-    
+
+    @Autowired
+    private AccountService accountService;
+
     @PostMapping("/sendOTP")
     public ResponseEntity<GenericResponse> sendOtp(@RequestBody EmailVerificationRequest emailVerificationRequest) {
+        Optional<Account> account = accountService.findByEmail(emailVerificationRequest.getEmail());
+        if (account.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(GenericResponse.builder()
+                            .success(false)
+                            .message("Email not found.")
+                            .result(null)
+                            .statusCode(HttpStatus.BAD_REQUEST.value())
+                            .build());
+        }
         try {
             emailVerificationService.sendOtp(emailVerificationRequest.getEmail());
             return ResponseEntity.ok()
