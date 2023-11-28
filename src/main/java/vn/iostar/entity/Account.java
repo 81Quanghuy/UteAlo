@@ -46,6 +46,4 @@ public class Account implements Serializable {
 	private Date updatedAt;
 	private Date lastLoginAt;
 
-	
-
 }

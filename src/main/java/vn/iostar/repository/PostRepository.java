@@ -1,5 +1,6 @@
 package vn.iostar.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -9,9 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import vn.iostar.dto.PostTimeLine;
 import vn.iostar.entity.Post;
-import vn.iostar.entity.User;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
@@ -47,5 +46,15 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
 	@Query("SELECT p FROM Post p WHERE p.content LIKE %:searchTerm%")
 	List<Post> findByContentContaining(@Param("searchTerm") String searchTerm, Pageable pageable);
+	
+	// Lấy những bài post trong khoảng thời gian
+	List<Post> findByPostTimeBetween(Date startDate, Date endDate);
+	
+	// Đếm số lượng bài post trong khoảng thời gian
+	long countByPostTimeBetween(Date startDate, Date endDate);
+	
+	// Đếm số lượng bài post trong khoảng thời gian 1 tháng
+	@Query("SELECT COUNT(p) FROM Post p WHERE p.postTime BETWEEN :startDate AND :endDate")
+    long countPostsBetweenDates(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
 }

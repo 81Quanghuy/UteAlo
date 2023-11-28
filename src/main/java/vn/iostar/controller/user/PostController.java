@@ -24,7 +24,6 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Post;
-import vn.iostar.entity.User;
 import vn.iostar.repository.PostRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CloudinaryService;

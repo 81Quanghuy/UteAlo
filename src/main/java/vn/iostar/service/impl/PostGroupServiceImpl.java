@@ -1,6 +1,10 @@
 package vn.iostar.service.impl;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +85,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Autowired
 	PostRepository postRepository;
+
 	@Override
 	public <S extends PostGroup> S save(S entity) {
 		return postGroupRepository.save(entity);
@@ -205,7 +210,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 						.statusCode(HttpStatus.CREATED.value()).build());
 
 	}
-	
+
 	@Override
 	@Transactional
 	public ResponseEntity<GenericResponse> createPostGroupByAdmin(PostGroupDTO postGroup, String authorizationHeader) {
@@ -225,49 +230,48 @@ public class PostGroupServiceImpl implements PostGroupService {
 					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 
-	    Date date = new Date();
-	    PostGroup groupEntity = new PostGroup();
-	    groupEntity.setPostGroupName(postGroup.getPostGroupName());
-	    groupEntity.setIsPublic(postGroup.getIsPublic());
-	    groupEntity.setBio(postGroup.getBio());
-	    groupEntity.setIsApprovalRequired(postGroup.getIsApprovalRequired());
-	    groupEntity.setCreateDate(date);
-	    groupEntity.setUpdateDate(date);
+		Date date = new Date();
+		PostGroup groupEntity = new PostGroup();
+		groupEntity.setPostGroupName(postGroup.getPostGroupName());
+		groupEntity.setIsPublic(postGroup.getIsPublic());
+		groupEntity.setBio(postGroup.getBio());
+		groupEntity.setIsApprovalRequired(postGroup.getIsApprovalRequired());
+		groupEntity.setCreateDate(date);
+		groupEntity.setUpdateDate(date);
 
-	    // Tạo người dùng là admin của nhóm
-	    PostGroupMember postMember = new PostGroupMember();
-	    postMember.setRoleUserGroup(RoleUserGroup.Admin);
-	    postMember.setUser(user.get());
-	    postMember.getPostGroup().add(groupEntity); // Thêm nhóm vào danh sách nhóm của người dùng
-	    groupEntity.getPostGroupMembers().add(postMember); // Thêm thành viên vào nhóm
+		// Tạo người dùng là admin của nhóm
+		PostGroupMember postMember = new PostGroupMember();
+		postMember.setRoleUserGroup(RoleUserGroup.Admin);
+		postMember.setUser(user.get());
+		postMember.getPostGroup().add(groupEntity); // Thêm nhóm vào danh sách nhóm của người dùng
+		groupEntity.getPostGroupMembers().add(postMember); // Thêm thành viên vào nhóm
 
-	    // Thêm các thành viên khác vào nhóm (nếu có)
-	    if (postGroup.getUserId() != null) {
-	        for (String idRequest : postGroup.getUserId()) {
-	            Optional<User> userMember = userRepository.findById(idRequest);
-	            if (userMember.isPresent() && (!userMember.get().getUserId().equals(user.get().getUserId()))) {
-	                PostGroupMember member = new PostGroupMember();
-	                member.setRoleUserGroup(RoleUserGroup.Member);
-	                member.setUser(userMember.get());
-	                member.getPostGroup().add(groupEntity);
-	                groupEntity.getPostGroupMembers().add(member);
-	            }
-	        }
-	    }
+		// Thêm các thành viên khác vào nhóm (nếu có)
+		if (postGroup.getUserId() != null) {
+			for (String idRequest : postGroup.getUserId()) {
+				Optional<User> userMember = userRepository.findById(idRequest);
+				if (userMember.isPresent() && (!userMember.get().getUserId().equals(user.get().getUserId()))) {
+					PostGroupMember member = new PostGroupMember();
+					member.setRoleUserGroup(RoleUserGroup.Member);
+					member.setUser(userMember.get());
+					member.getPostGroup().add(groupEntity);
+					groupEntity.getPostGroupMembers().add(member);
+				}
+			}
+		}
 
-	    // Lưu thông tin nhóm và thành viên vào cơ sở dữ liệu
-	    postGroupRepository.save(groupEntity);
+		// Lưu thông tin nhóm và thành viên vào cơ sở dữ liệu
+		postGroupRepository.save(groupEntity);
 
-	    return ResponseEntity.status(HttpStatus.CREATED)
-	        .body(GenericResponse.builder().success(true).message("Tạo thành công")
-	            .result(Map.of("postGroupId", groupEntity.getPostGroupId()))
-	            .statusCode(HttpStatus.CREATED.value()).build());
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(GenericResponse.builder().success(true).message("Tạo thành công")
+						.result(Map.of("postGroupId", groupEntity.getPostGroupId()))
+						.statusCode(HttpStatus.CREATED.value()).build());
 	}
-
 
 	@Override
 	public ResponseEntity<GenericResponse> updatePostGroupByPostIdAndUserId(PostGroupDTO postGroup,
-																			String currentUserId) {
+			String currentUserId) {
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -725,7 +729,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> assignDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId) {
+	public ResponseEntity<GenericResponse> assignDeputyByUserIdAndGroupId(PostGroupDTO postGroup,
+			String currentUserId) {
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -809,8 +814,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 				return ResponseEntity.ok(GenericResponse.builder().success(true).message("Assign successfully")
 						.statusCode(HttpStatus.OK.value()).build());
-			}
-			else{
+			} else {
 				Optional<PostGroupMember> memberDeputy = groupMemberRepository.findByUserUserIdAndRoleUserGroup(userId,
 						RoleUserGroup.Deputy);
 				if (memberDeputy.isPresent() && memberDeputy.get().getPostGroup().contains(groupPost.get())) {
@@ -933,7 +937,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 				Optional<PostGroupMember> memberAdmin = groupMemberRepository
 						.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
 
-				if ( memberAdmin.isPresent()) {
+				if (memberAdmin.isPresent()) {
 					// cap de them vao
 					Optional<PostGroupMember> memberAdminAdd1 = groupMemberRepository
 							.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Member);
@@ -960,7 +964,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 					// kiem tra neu user do co role la gi
 					Optional<PostGroupMember> memberDeputy = groupMemberRepository
 							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Deputy);
-					if (memberDeputy.isPresent() && groupPost.get().getPostGroupMembers().contains(memberDeputy.get())) {
+					if (memberDeputy.isPresent()
+							&& groupPost.get().getPostGroupMembers().contains(memberDeputy.get())) {
 						groupPost.get().getPostGroupMembers().remove(memberDeputy.get());
 						memberDeputy.get().getPostGroup().remove(groupPost.get());
 						groupMemberRepository.save(memberDeputy.get());
@@ -968,7 +973,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 					// tuong tu voi role la member
 					Optional<PostGroupMember> memberMember = groupMemberRepository
 							.findByUserUserIdAndRoleUserGroup(userIdToAdmin, RoleUserGroup.Member);
-					if (memberMember.isPresent() && groupPost.get().getPostGroupMembers().contains(memberMember.get())) {
+					if (memberMember.isPresent()
+							&& groupPost.get().getPostGroupMembers().contains(memberMember.get())) {
 						groupPost.get().getPostGroupMembers().remove(memberMember.get());
 						memberMember.get().getPostGroup().remove(groupPost.get());
 						groupMemberRepository.save(memberMember.get());
@@ -991,7 +997,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId) {
+	public ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup,
+			String currentUserId) {
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -1013,7 +1020,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 			// da truyen vao user de chi dinh lam admin
 			if (userIdRemove != null && !userIdRemove.equals(currentUserId)) {
 				Optional<User> userRemote = userRepository.findById(userIdRemove);
-				if (userRemote.isEmpty()){
+				if (userRemote.isEmpty()) {
 					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 							.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
 				}
@@ -1041,18 +1048,18 @@ public class PostGroupServiceImpl implements PostGroupService {
 	}
 
 	@Override
-	public Optional<PostGroup>  findByPostGroupName(String groupName) {
+	public Optional<PostGroup> findByPostGroupName(String groupName) {
 		return postGroupRepository.findByPostGroupName(groupName);
 	}
 
-	private void checkMemberInGroup(PostGroup groupPost, User userRemote, Optional<PostGroupMember> memberDeputyRemote) {
-		if (memberDeputyRemote.isPresent()){
+	private void checkMemberInGroup(PostGroup groupPost, User userRemote,
+			Optional<PostGroupMember> memberDeputyRemote) {
+		if (memberDeputyRemote.isPresent()) {
 			memberDeputyRemote.get().getPostGroup().add(groupPost);
 			groupPost.getPostGroupMembers().add(memberDeputyRemote.get());
 			groupMemberRepository.save(memberDeputyRemote.get());
 
-		}
-		else{
+		} else {
 			PostGroupMember member = new PostGroupMember();
 			member.setUser(userRemote);
 			member.setRoleUserGroup(RoleUserGroup.Member);
@@ -1061,8 +1068,6 @@ public class PostGroupServiceImpl implements PostGroupService {
 			groupMemberRepository.save(member);
 		}
 	}
-
-
 
 	@Override
 	public ResponseEntity<GenericResponse> findByPostGroupNameContainingIgnoreCase(String search, String userIdToken) {
@@ -1238,18 +1243,147 @@ public class PostGroupServiceImpl implements PostGroupService {
 		if (posOptional.isPresent()) {
 			PostGroup entity = posOptional.get();
 			// Đặt giá trị của dữ liệu trong bảng PostGroupMember là null
-			// Khi xóa thì chỉ xóa dữ liệu trong bảng PostGroup và PostGroup_PostGroupMember thôi
+			// Khi xóa thì chỉ xóa dữ liệu trong bảng PostGroup và PostGroup_PostGroupMember
+			// thôi
 			entity.setPostGroupMembers(null);
 			save(entity);
-		    postGroupRepository.delete(entity);
-		    return ResponseEntity.ok()
-		            .body(new GenericResponse(true, "Delete Successful!", groups, HttpStatus.OK.value()));
+			postGroupRepository.delete(entity);
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", groups, HttpStatus.OK.value()));
 		} else {
-		    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-		            .body(new GenericResponse(false, "Cannot found post group!", null, HttpStatus.NOT_FOUND.value()));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found post group!", null, HttpStatus.NOT_FOUND.value()));
 		}
 
+	}
 
+	// Đếm số lượng nhóm từng tháng trong năm
+	@Override
+	public Map<String, Long> countGroupsByMonthInYear() {
+		LocalDateTime now = LocalDateTime.now();
+		int currentYear = now.getYear();
+
+		// Tạo một danh sách các tháng
+		List<Month> months = Arrays.asList(Month.values());
+		Map<String, Long> groupCountsByMonth = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để duy trì thứ tự
+
+		for (Month month : months) {
+			LocalDateTime startDate = LocalDateTime.of(currentYear, month, 1, 0, 0);
+			LocalDateTime endDate = startDate.plusMonths(1).minusSeconds(1);
+
+			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+			long grpupCount = postGroupRepository.countByCreateDateBetween(startDateAsDate, endDateAsDate);
+			groupCountsByMonth.put(month.toString(), grpupCount);
+		}
+
+		return groupCountsByMonth;
+	}
+
+	// Chuyển sang giờ bắt đầu của 1 ngày là 00:00:00
+	public Date getStartOfDay(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime();
+	}
+
+	// Chuyển sang giờ kết thức của 1 ngày là 23:59:59
+	public Date getEndOfDay(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return calendar.getTime();
+	}
+
+	// Đếm số lượng user trong ngày hôm nay
+	@Override
+	public long countGroupsToday() {
+		Date startDate = getStartOfDay(new Date());
+		Date endDate = getEndOfDay(new Date());
+		return postGroupRepository.countByCreateDateBetween(startDate, endDate);
+	}
+
+	// Đếm số lượng user trong 7 ngày
+	@Override
+	public long countGroupsInWeek() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime weekAgo = now.minus(1, ChronoUnit.WEEKS);
+		Date startDate = Date.from(weekAgo.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDate = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
+		return postGroupRepository.countByCreateDateBetween(startDate, endDate);
+	}
+
+	// Đếm số lượng user trong 1 tháng
+	@Override
+	public long countGroupsInMonthFromNow() {
+		// Lấy thời gian hiện tại
+		LocalDateTime now = LocalDateTime.now();
+
+		// Thời gian bắt đầu là thời điểm hiện tại trừ 1 tháng
+		LocalDateTime startDate = now.minusMonths(1);
+
+		// Thời gian kết thúc là thời điểm hiện tại
+		LocalDateTime endDate = now;
+
+		// Chuyển LocalDateTime sang Date (với ZoneId cụ thể, ở đây là
+		// ZoneId.systemDefault())
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+		// Truy vấn số lượng user trong khoảng thời gian này
+		return postGroupRepository.countByCreateDateBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 3 tháng
+	@Override
+	public long countGroupsInThreeMonthsFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(3);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return postGroupRepository.countByCreateDateBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 6 tháng
+	@Override
+	public long countGroupsInSixMonthsFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(6);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return postGroupRepository.countByCreateDateBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 9 tháng
+	@Override
+	public long countGroupsInNineMonthsFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(9);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return postGroupRepository.countByCreateDateBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 1 năm
+	@Override
+	public long countGroupsInOneYearFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusYears(1);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return postGroupRepository.countByCreateDateBetween(startDateAsDate, endDateAsDate);
 	}
 
 }

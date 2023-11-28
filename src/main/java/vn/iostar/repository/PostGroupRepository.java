@@ -1,5 +1,6 @@
 package vn.iostar.repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,5 +66,7 @@ public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
 	@Query("SELECT NEW vn.iostar.dto.SearchPostGroup(pg.postGroupId, pg.postGroupName, pg.avatarGroup, pg.bio, pg.isPublic) FROM PostGroup pg ORDER BY pg.createDate DESC")
 	Page<SearchPostGroup> findAllPostGroups(Pageable pageable);
 
+	// Đếm số lượng nhóm trong khoảng thời gian
+	long countByCreateDateBetween(Date startDateAsDate, Date endDateAsDate);
 
 }
