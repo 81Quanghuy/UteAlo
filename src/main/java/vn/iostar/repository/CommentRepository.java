@@ -1,5 +1,6 @@
 package vn.iostar.repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,4 +34,7 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 
 	// Lấy tất cả comment trong hệ thống
 	Page<Comment> findAllByOrderByCreateTimeDesc(Pageable pageable);
+
+	// Đếm số lượng comment trong khoảng thời gian
+	long countByCreateTimeBetween(Date startDateAsDate, Date endDateAsDate);
 }

@@ -1,8 +1,15 @@
 package vn.iostar.service.impl;
 
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +23,20 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import vn.iostar.contants.DateFilter;
 import vn.iostar.contants.RoleName;
-import vn.iostar.dto.*;
-
+import vn.iostar.dto.ChangePasswordRequest;
+import vn.iostar.dto.FriendResponse;
+import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.GroupPostResponse;
+import vn.iostar.dto.ListUsers;
+import vn.iostar.dto.PaginationInfo;
+import vn.iostar.dto.UserManagerRequest;
+import vn.iostar.dto.UserMessage;
+import vn.iostar.dto.UserProfileResponse;
+import vn.iostar.dto.UserResponse;
+import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
@@ -57,6 +75,8 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
+
+	DateFilter dateFilter;
 
 	@Override
 	public <S extends User> S save(S entity) {
@@ -233,12 +253,12 @@ public class UserServiceImpl implements UserService {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("User doesn't exist").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
+		user.get().getRole().setRoleName(request.getRoleName());
 		user.get().getAccount().setActive(request.getIsActive());
 		save(user.get());
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
 				.result(new UserProfileResponse(user.get())).statusCode(200).build());
 	}
-
 
 	@Override
 	public ResponseEntity<GenericResponse> getAvatarAndName(String userId) {
@@ -252,7 +272,6 @@ public class UserServiceImpl implements UserService {
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get avatar and name successful")
 				.result(userMessage).statusCode(200).build());
 	}
-
 
 	// Xóa user
 	@Override
@@ -307,86 +326,241 @@ public class UserServiceImpl implements UserService {
 	// Tìm tất cả người dùng trong hệ thống
 	@Override
 	public Page<UserResponse> findAllUsers(int page, int itemsPerPage) {
-	    Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
-	    Page<UserResponse> usersPage = userRepository.findAllUsers(pageable);
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Page<UserResponse> usersPage = userRepository.findAllUsers(pageable);
 
-	    Page<UserResponse> processedUsersPage = usersPage.map(userItem -> {
-	        Optional<User> userOptional = findById(userItem.getUserId());
-	        if (userOptional.isPresent()) {
-	        	boolean isActive = userOptional.get().getAccount().isActive();
-	            // Kiểm tra isActive và thiết lập trạng thái tương ứng
-	            if (isActive) {
-	                userItem.setIsActive("Hoạt động");
-	            } else {
-	                userItem.setIsActive("Bị khóa");
-	            }
-	            userItem.setRoleName(userOptional.get().getRole().getRoleName());
-	            userItem.setEmail(userOptional.get().getAccount().getEmail());
-	        }
-	        return userItem;
-	    });
+		Page<UserResponse> processedUsersPage = usersPage.map(userItem -> {
+			Optional<User> userOptional = findById(userItem.getUserId());
+			if (userOptional.isPresent()) {
+				boolean isActive = userOptional.get().getAccount().isActive();
+				// Kiểm tra isActive và thiết lập trạng thái tương ứng
+				if (isActive) {
+					userItem.setIsActive("Hoạt động");
+				} else {
+					userItem.setIsActive("Bị khóa");
+				}
+				userItem.setRoleName(userOptional.get().getRole().getRoleName());
+				userItem.setEmail(userOptional.get().getAccount().getEmail());
+			}
+			return userItem;
+		});
 
-	    return processedUsersPage;
+		return processedUsersPage;
 	}
-
-
 
 	// Lấy tất cả người dùng trong hệ thống
 	@Override
-	public ResponseEntity<GenericResponseAdmin> getAllUsers(
-	    String authorizationHeader, 
-	    int page, 
-	    int itemsPerPage
-	) {
-	    String token = authorizationHeader.substring(7);
-	    String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-	    Optional<User> user = findById(currentUserId);
-	    RoleName roleName = user.get().getRole().getRoleName();
-	    if (!roleName.name().equals("Admin")) {
-	        return ResponseEntity
-	            .status(HttpStatus.FORBIDDEN)
-	            .body(GenericResponseAdmin.builder()
-	                .success(false)
-	                .message("No access")
-	                .statusCode(HttpStatus.FORBIDDEN.value())
-	                .build());
-	    }
-	    
+	public ResponseEntity<GenericResponseAdmin> getAllUsers(String authorizationHeader, int page, int itemsPerPage) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(GenericResponseAdmin.builder().success(false)
+					.message("No access").statusCode(HttpStatus.FORBIDDEN.value()).build());
+		}
 
-	    Page<UserResponse> users = findAllUsers(page, itemsPerPage);
-	    long totalUsers = userRepository.count();
-	    
-	    PaginationInfo pagination = new PaginationInfo();
-	    pagination.setPage(page);
-	    pagination.setItemsPerPage(itemsPerPage);
-	    pagination.setCount(totalUsers);
-	    pagination.setPages((int) Math.ceil((double) totalUsers / itemsPerPage));
+		Page<UserResponse> users = findAllUsers(page, itemsPerPage);
+		long totalUsers = userRepository.count();
 
-	    if (users.isEmpty()) {
-	        return ResponseEntity
-	            .status(HttpStatus.NOT_FOUND)
-	            .body(GenericResponseAdmin.builder()
-	                .success(true)
-	                .message("Empty")
-	                .result(null)
-	                .statusCode(HttpStatus.NOT_FOUND.value())
-	                .build());
-	    } else {
-	        return ResponseEntity
-	            .status(HttpStatus.OK)
-	            .body(GenericResponseAdmin.builder()
-	                .success(true)
-	                .message("Retrieved List Users Successfully")
-	                .result(users)
-	                .pagination(pagination)
-	                .statusCode(HttpStatus.OK.value())
-	                .build());
-	    }
+		PaginationInfo pagination = new PaginationInfo();
+		pagination.setPage(page);
+		pagination.setItemsPerPage(itemsPerPage);
+		pagination.setCount(totalUsers);
+		pagination.setPages((int) Math.ceil((double) totalUsers / itemsPerPage));
+
+		if (users.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(true)
+					.message("Empty").result(null).statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(GenericResponseAdmin.builder().success(true).message("Retrieved List Users Successfully")
+							.result(users).pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+		}
 	}
 
 	// Lấy tất cả người dùng không phân trang
 	@Override
-    public List<ListUsers> getAllUsersIdAndName() {
-        return userRepository.findAllUsersIdAndName();
-    }
+	public List<ListUsers> getAllUsersIdAndName() {
+		return userRepository.findAllUsersIdAndName();
+	}
+
+	// Thống kê user trong ngày hôm nay
+	@Override
+	public List<UserResponse> getUsersToday() {
+		Date startDate = getStartOfDay(new Date());
+		Date endDate = getEndOfDay(new Date());
+		List<UserResponse> users = userRepository.findUsersByAccountCreatedAtBetween(startDate, endDate);
+		return users;
+	}
+
+	// Thống kê user trong 1 ngày
+	@Override
+	public List<UserResponse> getUsersInDay(Date day) {
+		Date startDate = getStartOfDay(day);
+		Date endDate = getEndOfDay(day);
+		List<UserResponse> users = userRepository.findUsersByAccountCreatedAtBetween(startDate, endDate);
+		return users;
+	}
+
+	// Thống kê user trong 7 ngày
+	@Override
+	public List<UserResponse> getUsersIn7Days() {
+		Date startDate = getStartOfDay(getNDaysAgo(6));
+		Date endDate = getEndOfDay(new Date());
+		List<UserResponse> users = userRepository.findUsersByAccountCreatedAtBetween(startDate, endDate);
+		return users;
+	}
+
+	// Thống kê user trong 1 tháng
+	@Override
+	public List<UserResponse> getUsersInMonth(Date month) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(month);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		Date startDate = getStartOfDay(calendar.getTime());
+
+		calendar.add(Calendar.MONTH, 1);
+		calendar.add(Calendar.DATE, -1);
+		Date endDate = getEndOfDay(calendar.getTime());
+
+		List<UserResponse> users = userRepository.findUsersByAccountCreatedAtBetween(startDate, endDate);
+		return users;
+	}
+
+	// Chuyển sang giờ bắt đầu của 1 ngày là 00:00:00
+	public Date getStartOfDay(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime();
+	}
+
+	// Chuyển sang giờ kết thức của 1 ngày là 23:59:59
+	public Date getEndOfDay(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return calendar.getTime();
+	}
+
+	public Date getNDaysAgo(int days) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.DAY_OF_MONTH, -days);
+		return calendar.getTime();
+	}
+
+	// Đếm số lượng user từng tháng trong năm
+	@Override
+	public Map<String, Long> countUsersByMonthInYear() {
+		LocalDateTime now = LocalDateTime.now();
+		int currentYear = now.getYear();
+
+		// Tạo một danh sách các tháng
+		List<Month> months = Arrays.asList(Month.values());
+		Map<String, Long> userCountsByMonth = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để duy trì thứ tự
+
+		for (Month month : months) {
+			LocalDateTime startDate = LocalDateTime.of(currentYear, month, 1, 0, 0);
+			LocalDateTime endDate = startDate.plusMonths(1).minusSeconds(1);
+
+			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+			long userCount = userRepository.countUsersByAccountCreatedAtBetween(startDateAsDate, endDateAsDate);
+			userCountsByMonth.put(month.toString(), userCount);
+		}
+
+		return userCountsByMonth;
+	}
+
+	// Đếm số lượng user trong ngày hôm nay
+	@Override
+	public long countUsersToday() {
+		Date startDate = getStartOfDay(new Date());
+		Date endDate = getEndOfDay(new Date());
+		return userRepository.countUsersByAccountCreatedAtBetween(startDate, endDate);
+	}
+
+	// Đếm số lượng user trong 7 ngày
+	@Override
+	public long countUsersInWeek() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime weekAgo = now.minus(1, ChronoUnit.WEEKS);
+		Date startDate = Date.from(weekAgo.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDate = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
+		return userRepository.countUsersByAccountCreatedAtBetween(startDate, endDate);
+	}
+
+	// Đếm số lượng user trong 1 tháng
+	@Override
+	public long countUsersInMonthFromNow() {
+		// Lấy thời gian hiện tại
+		LocalDateTime now = LocalDateTime.now();
+
+		// Thời gian bắt đầu là thời điểm hiện tại trừ 1 tháng
+		LocalDateTime startDate = now.minusMonths(1);
+
+		// Thời gian kết thúc là thời điểm hiện tại
+		LocalDateTime endDate = now;
+
+		// Chuyển LocalDateTime sang Date (với ZoneId cụ thể, ở đây là
+		// ZoneId.systemDefault())
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+		// Truy vấn số lượng user trong khoảng thời gian này
+		return userRepository.countUsersByAccountCreatedAtBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 3 tháng
+	@Override
+	public long countUsersInThreeMonthsFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(3);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return userRepository.countUsersByAccountCreatedAtBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 6 tháng
+	@Override
+	public long countUsersInSixMonthsFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(6);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return userRepository.countUsersByAccountCreatedAtBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 9 tháng
+	@Override
+	public long countUsersInNineMonthsFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(9);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return userRepository.countUsersByAccountCreatedAtBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Đếm số lượng user trong 1 năm
+	@Override
+	public long countUsersInOneYearFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusYears(1);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return userRepository.countUsersByAccountCreatedAtBetween(startDateAsDate, endDateAsDate);
+	}
+
 }

@@ -1,6 +1,7 @@
 package vn.iostar.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Example;
@@ -37,21 +38,21 @@ public interface CommentService {
 	<S extends Comment> S save(S entity);
 
 	ResponseEntity<GenericResponse> getCommentOfPost(int postId);
-	
+
 	ResponseEntity<GenericResponse> getCommentOfShare(int shareId);
 
 	ResponseEntity<GenericResponse> getCommentReplyOfComment(int commentId);
-	
+
 	ResponseEntity<GenericResponse> getCommentReplyOfCommentShare(int commentId);
 
 	ResponseEntity<GenericResponse> getCountCommentOfPost(int postId);
 
 	ResponseEntity<Object> createCommentPost(String token, CreateCommentPostRequestDTO requestDTO);
-	
+
 	ResponseEntity<Object> createCommentShare(String token, CreateCommentShareRequestDTO requestDTO);
 
 	ResponseEntity<Object> replyCommentPost(String token, ReplyCommentPostRequestDTO requestDTO);
-	
+
 	ResponseEntity<Object> replyCommentShare(String token, ReplyCommentShareRequestDTO requestDTO);
 
 	ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request, String currentUserId)
@@ -59,13 +60,19 @@ public interface CommentService {
 
 	// Xóa comment của mình hoặc trong bài post của mình
 	ResponseEntity<GenericResponse> deleteCommentOfPost(Integer commentId);
-	
+
 	// Admin xóa comment trong hệ thống
-	ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId,String authorizationHeader);
-	
-	// Lấy tất cả bài post trong hệ thống 
+	ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId, String authorizationHeader);
+
+	// Lấy tất cả bài post trong hệ thống
 	Page<CommentPostResponse> findAllComments(int page, int itemsPerPage);
-	
-	ResponseEntity<GenericResponseAdmin> getAllComments(String authorizationHeader,int page, int itemsPerPage);
-	
+
+	ResponseEntity<GenericResponseAdmin> getAllComments(String authorizationHeader, int page, int itemsPerPage);
+
+	// Đếm số lượng comment từng tháng trong năm
+	Map<String, Long> countCommentsByMonthInYear();
+
+	// Đếm số lượng comment trong 1 năm
+	long countCommentsInOneYearFromNow();
+
 }

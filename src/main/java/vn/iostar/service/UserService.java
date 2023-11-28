@@ -1,6 +1,8 @@
 package vn.iostar.service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Example;
@@ -69,7 +71,43 @@ public interface UserService {
 	ResponseEntity<Object> accountManager(String authorizationHeader, UserManagerRequest request);
 
 	ResponseEntity<GenericResponse> getAvatarAndName(String userId);
-	
+
 	List<ListUsers> getAllUsersIdAndName();
+
+	// Thống kê user trong ngày hôm nay
+	List<UserResponse> getUsersToday();
+
+	// Thống kê user trong 1 ngày
+	List<UserResponse> getUsersInDay(Date day);
+
+	// Thống kê user trong 7 ngày
+	List<UserResponse> getUsersIn7Days();
+
+	// Thống kê user trong 1 tháng
+	List<UserResponse> getUsersInMonth(Date month);
+
+	// Đếm số lượng user từng tháng trong năm
+	Map<String, Long> countUsersByMonthInYear();
+
+	// Đếm số lượng user trong ngày hôm nay
+	long countUsersToday();
+
+	// Đếm số lượng user trong 7 ngày
+	public long countUsersInWeek();
+
+	// Đếm số lượng user trong 1 tháng
+	long countUsersInMonthFromNow();
+
+	// Đếm số lượng user trong 1 năm
+	long countUsersInOneYearFromNow();
+
+	// Đếm số lượng user trong 9 tháng
+	long countUsersInNineMonthsFromNow();
+
+	// Đếm số lượng user trong 6 tháng
+	long countUsersInSixMonthsFromNow();
+
+	// Đếm số lượng user trong 3 tháng
+	long countUsersInThreeMonthsFromNow();
 
 }
