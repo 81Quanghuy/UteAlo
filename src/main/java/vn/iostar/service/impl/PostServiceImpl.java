@@ -124,15 +124,14 @@ public class PostServiceImpl implements PostService {
 		post.setUpdateAt(new Date());
 		try {
 			if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
-				post.setPhotos("");
-			} else if (request.getPhotos().equals(postOp.get().getPhotos())) {
-				post.setPhotos(postOp.get().getPhotos());
-			} else {
+				post.setPhotos(request.getPhotoUrl());
+			} 
+			else {
 				post.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
 			}
 
 			if (request.getFiles() == null || request.getFiles().getContentType() == null) {
-				post.setFiles("");
+				post.setFiles(request.getFileUrl());
 			} else {
 				String fileExtension = StringUtils.getFilenameExtension(request.getFiles().getOriginalFilename());
 				if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
@@ -146,8 +145,9 @@ public class PostServiceImpl implements PostService {
 			e.printStackTrace();
 		}
 		save(post);
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
-				.statusCode(200).build());
+		PostsResponse postResponse = new PostsResponse(post);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
+				.result(postResponse).statusCode(200).build());
 	}
 
 	// Xóa bài post của mình
@@ -333,16 +333,16 @@ public class PostServiceImpl implements PostService {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
 					.message("No Posts Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		} else {
-			return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
-					.message("Retrieved List Posts Successfully").result(userPostsPage)
-					.pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+			return ResponseEntity
+					.ok(GenericResponseAdmin.builder().success(true).message("Retrieved List Posts Successfully")
+							.result(userPostsPage).pagination(pagination).statusCode(HttpStatus.OK.value()).build());
 		}
 	}
 
 	// Lấy những bài post của nhóm
 	@Override
-	public List<PostsResponse> findPostGroupPosts(Integer postGroupId) {
-		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId);
+	public List<PostsResponse> findPostGroupPosts(Integer postGroupId,Pageable pageable) {
+		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId,pageable);
 		List<PostsResponse> simplifiedGroupPosts = new ArrayList<>();
 		for (Post post : groupPosts) {
 			PostsResponse postsResponse = new PostsResponse(post);
@@ -355,8 +355,9 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy những bài post của nhóm
 	@Override
-	public ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId) {
-		List<PostsResponse> groupPosts = findPostGroupPosts(postGroupId);
+	public ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId,Integer page, Integer size) {
+		Pageable pageable = PageRequest.of(page, size);
+		List<PostsResponse> groupPosts = findPostGroupPosts(postGroupId,pageable);
 		if (groupPosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
@@ -397,45 +398,21 @@ public class PostServiceImpl implements PostService {
 		}
 	}
 
-    @Override
-    public ResponseEntity<GenericResponse> getPostTimelineByUserId(String userId, int page, int size) throws RuntimeException {
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-                    .message("User not found.").statusCode(HttpStatus.NOT_FOUND.value()).build());
-        }
-        PageRequest pageable = PageRequest.of(page, size);
-        List<Post> listPost = postRepository.findPostsByUserIdAndFriendsAndGroupsOrderByPostTimeDesc(userId,
-                pageable);
-        // Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
-//		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
-        List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
-        for (Post post : listPost) {
-            PostsResponse postsResponse = new PostsResponse(post);
-            if (post.getComments() != null && !post.getComments().isEmpty()) {
-                postsResponse.setComments(getIdComment(post.getComments()));
-            } else {
-                postsResponse.setComments(new ArrayList<>());
-            }
-            if (post.getLikes() != null && !post.getLikes().isEmpty()) {
-                postsResponse.setLikes(getIdLikes(post.getLikes()));
-            } else {
-                postsResponse.setLikes(new ArrayList<>());
-            }
-            simplifiedUserPosts.add(postsResponse);
-        }
-
-        return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved user posts successfully")
-                .result(simplifiedUserPosts).statusCode(HttpStatus.OK.value()).build());
-    }
 	// Lấy những bài post liên quan đến user như cá nhân, nhóm, bạn bè
 	@Override
-	public List<PostsResponse> findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(User user) {
-		List<Post> userPosts = postRepository.findPostsByUserAndFriendsAndGroupsOrderByPostTimeDesc(user);
+	public ResponseEntity<GenericResponse> getPostTimelineByUserId(String userId, int page, int size)
+			throws RuntimeException {
+		Optional<User> user = userService.findById(userId);
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("User not found.").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		PageRequest pageable = PageRequest.of(page, size);
+		List<Post> listPost = postRepository.findPostsByUserIdAndFriendsAndGroupsOrderByPostTimeDesc(userId, pageable);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
-		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+//		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
-		for (Post post : userPosts) {
+		for (Post post : listPost) {
 			PostsResponse postsResponse = new PostsResponse(post);
 			if (post.getComments() != null && !post.getComments().isEmpty()) {
 				postsResponse.setComments(getIdComment(post.getComments()));
@@ -449,7 +426,9 @@ public class PostServiceImpl implements PostService {
 			}
 			simplifiedUserPosts.add(postsResponse);
 		}
-		return simplifiedUserPosts;
+
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved user posts successfully")
+				.result(simplifiedUserPosts).statusCode(HttpStatus.OK.value()).build());
 	}
 
 	private List<Integer> getIdLikes(List<Like> likes) {

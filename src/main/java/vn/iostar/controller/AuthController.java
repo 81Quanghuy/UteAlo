@@ -77,7 +77,7 @@ public class AuthController {
 
 		if (userService.findByEmail(loginDTO.getCredentialId()).isEmpty()
 				&& userService.findByPhone(loginDTO.getCredentialId()).isEmpty()) {
-			return ResponseEntity.ok().body(GenericResponse.builder().success(true).message("not found user")
+			return ResponseEntity.ok().body(GenericResponse.builder().success(false).message("not found user")
 					.result(null).statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 

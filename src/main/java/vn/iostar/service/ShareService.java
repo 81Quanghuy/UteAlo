@@ -10,7 +10,6 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.SharePostRequestDTO;
 import vn.iostar.dto.SharesResponse;
 import vn.iostar.entity.Share;
-import vn.iostar.entity.User;
 
 public interface ShareService {
 
@@ -30,7 +29,7 @@ public interface ShareService {
 
     ResponseEntity<Object> sharePost(String token, SharePostRequestDTO requestDTO);
 
-    ResponseEntity<Object> updateSharePost(Integer shareId, String content, String currentUserId);
+    ResponseEntity<Object> updateSharePost(SharePostRequestDTO requestDTO, String currentUserId);
 
     ResponseEntity<GenericResponse> deleteSharePost(Integer shareId, String token, String userId);
 
@@ -40,9 +39,9 @@ public interface ShareService {
 	
     List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId, Pageable pageable);
 
-    List<SharesResponse> findPostGroupShares(Integer postGroupId);
+    List<SharesResponse> findPostGroupShares(Integer postGroupId,Pageable pageable);
 
-    ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId);
+    ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId,Integer page, Integer size);
 
 
     ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size);

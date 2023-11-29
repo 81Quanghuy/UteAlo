@@ -7,13 +7,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.SharePostRequestDTO;
 import vn.iostar.dto.SharesResponse;
 import vn.iostar.entity.Share;
-import vn.iostar.entity.User;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.ShareService;
 import vn.iostar.service.UserService;
@@ -89,20 +96,20 @@ public class ShareController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Object> createPost(@ModelAttribute SharePostRequestDTO requestDTO,
+    public ResponseEntity<Object> createPost(@RequestBody SharePostRequestDTO requestDTO,
                                              @RequestHeader("Authorization") String token) {
         return shareService.sharePost(token, requestDTO);
     }
 
-    @PutMapping("/update/{shareId}")
-    public ResponseEntity<Object> updateUser(@ModelAttribute("content") String content,
-                                             @RequestHeader("Authorization") String authorizationHeader, @PathVariable("shareId") Integer shareId,
+    @PutMapping("/update")
+    public ResponseEntity<Object> updateUser(@RequestBody SharePostRequestDTO requestDTO,
+                                             @RequestHeader("Authorization") String authorizationHeader, 
                                              BindingResult bindingResult) throws Exception {
 
         String token = authorizationHeader.substring(7);
         String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 
-        return shareService.updateSharePost(shareId, content, currentUserId);
+        return shareService.updateSharePost(requestDTO, currentUserId);
 
     }
 

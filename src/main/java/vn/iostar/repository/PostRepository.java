@@ -9,9 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import vn.iostar.dto.PostTimeLine;
 import vn.iostar.entity.Post;
-import vn.iostar.entity.User;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
@@ -39,7 +37,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	Page<String> findLatestPhotosByUserIdAndNotNull(String userId, Pageable pageable);
 
 	// Lấy những bài post của nhóm
-	List<Post> findByPostGroupPostGroupIdOrderByPostTimeDesc(Integer postGroupId);
+	List<Post> findByPostGroupPostGroupIdOrderByPostTimeDesc(Integer postGroupId,Pageable pageable);
 
 	// Lấy tất cả các bài post của những nhóm mình tham gia
 	@Query("SELECT p FROM Post p WHERE p.postGroup IN (SELECT pg FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId)")
