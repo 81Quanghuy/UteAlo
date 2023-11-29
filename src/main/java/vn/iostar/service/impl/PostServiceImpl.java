@@ -137,15 +137,14 @@ public class PostServiceImpl implements PostService {
 		post.setUpdateAt(new Date());
 		try {
 			if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
-				post.setPhotos("");
-			} else if (request.getPhotos().equals(postOp.get().getPhotos())) {
-				post.setPhotos(postOp.get().getPhotos());
-			} else {
+				post.setPhotos(request.getPhotoUrl());
+			} 
+			else {
 				post.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
 			}
 
 			if (request.getFiles() == null || request.getFiles().getContentType() == null) {
-				post.setFiles("");
+				post.setFiles(request.getFileUrl());
 			} else {
 				String fileExtension = StringUtils.getFilenameExtension(request.getFiles().getOriginalFilename());
 				if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
@@ -159,8 +158,9 @@ public class PostServiceImpl implements PostService {
 			e.printStackTrace();
 		}
 		save(post);
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
-				.statusCode(200).build());
+		PostsResponse postResponse = new PostsResponse(post);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
+				.result(postResponse).statusCode(200).build());
 	}
 
 	// Xóa bài post của mình
@@ -354,8 +354,8 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy những bài post của nhóm
 	@Override
-	public List<PostsResponse> findPostGroupPosts(Integer postGroupId) {
-		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId);
+	public List<PostsResponse> findPostGroupPosts(Integer postGroupId,Pageable pageable) {
+		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId,pageable);
 		List<PostsResponse> simplifiedGroupPosts = new ArrayList<>();
 		for (Post post : groupPosts) {
 			PostsResponse postsResponse = new PostsResponse(post);
@@ -368,8 +368,9 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy những bài post của nhóm
 	@Override
-	public ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId) {
-		List<PostsResponse> groupPosts = findPostGroupPosts(postGroupId);
+	public ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId,Integer page, Integer size) {
+		Pageable pageable = PageRequest.of(page, size);
+		List<PostsResponse> groupPosts = findPostGroupPosts(postGroupId,pageable);
 		if (groupPosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
@@ -410,6 +411,7 @@ public class PostServiceImpl implements PostService {
 		}
 	}
 
+	// Lấy những bài post liên quan đến user như cá nhân, nhóm, bạn bè
 	@Override
 	public ResponseEntity<GenericResponse> getPostTimelineByUserId(String userId, int page, int size)
 			throws RuntimeException {

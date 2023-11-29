@@ -18,7 +18,7 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, In
 	@Query("SELECT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName)  FROM FriendRequest fr JOIN User u ON fr.userFrom.userId = u.userId WHERE fr.userTo.userId = :userId")
 	List<FriendResponse> findUserFromUserIdByUserToUserId(@Param("userId") String userId);
 
-	@Query("SELECT NEW vn.iostar.dto.FriendRequestResponse(u.userId,u.profile.background, u.profile.avatar, u.userName)  FROM FriendRequest fr JOIN User u ON fr.userFrom.userId = u.userId WHERE fr.userTo.userId = :userId")
+	@Query("SELECT NEW vn.iostar.dto.FriendResponse(u.userId,u.profile.background, u.profile.avatar, u.userName)  FROM FriendRequest fr JOIN User u ON fr.userFrom.userId = u.userId WHERE fr.userTo.userId = :userId")
 	List<FriendResponse> findUserFromUserIdByUserToUserIdPageable(@Param("userId") String userId,
                                                                   Pageable pageable);
 

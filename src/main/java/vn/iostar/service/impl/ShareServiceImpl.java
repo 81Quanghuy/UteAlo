@@ -1,7 +1,6 @@
 package vn.iostar.service.impl;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,229 +34,247 @@ import vn.iostar.service.UserService;
 @Service
 public class ShareServiceImpl implements ShareService {
 
-    @Autowired
-    ShareRepository shareRepository;
+	@Autowired
+	ShareRepository shareRepository;
 
-    @Autowired
-    JwtTokenProvider jwtTokenProvider;
+	@Autowired
+	JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    UserService userService;
+	@Autowired
+	UserService userService;
 
-    @Autowired
-    PostService postService;
+	@Autowired
+	PostService postService;
 
-    @Autowired
-    PostGroupService postGroupService;
+	@Autowired
+	PostGroupService postGroupService;
 
-    @Autowired
-    LikeRepository likeRepository;
+	@Autowired
+	LikeRepository likeRepository;
 
-    @Autowired
-    CommentRepository commentRepository;
+	@Autowired
+	CommentRepository commentRepository;
 
-    @Override
-    public <S extends Share> S save(S entity) {
-        return shareRepository.save(entity);
-    }
+	@Override
+	public <S extends Share> S save(S entity) {
+		return shareRepository.save(entity);
+	}
 
-    @Override
-    public List<Share> findAll() {
-        return shareRepository.findAll();
-    }
+	@Override
+	public List<Share> findAll() {
+		return shareRepository.findAll();
+	}
 
-    @Override
-    public Optional<Share> findById(Integer id) {
-        return shareRepository.findById(id);
-    }
+	@Override
+	public Optional<Share> findById(Integer id) {
+		return shareRepository.findById(id);
+	}
 
-    @Override
-    public long count() {
-        return shareRepository.count();
-    }
+	@Override
+	public long count() {
+		return shareRepository.count();
+	}
 
-    @Override
-    public void delete(Share entity) {
-        shareRepository.delete(entity);
-    }
+	@Override
+	public void delete(Share entity) {
+		shareRepository.delete(entity);
+	}
 
-    @Override
-    public void deleteAll() {
-        shareRepository.deleteAll();
-    }
+	@Override
+	public void deleteAll() {
+		shareRepository.deleteAll();
+	}
 
-    @Override
-    public ResponseEntity<GenericResponse> getShare(Integer shareId) {
-        Optional<Share> share = shareRepository.findById(shareId);
-        if (share.isEmpty())
-            throw new RuntimeException("Share not found");
-        return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieving user profile successfully")
-                .result(new ShareResponse(share.get())).statusCode(HttpStatus.OK.value()).build());
-    }
+	@Override
+	public ResponseEntity<GenericResponse> getShare(Integer shareId) {
+		Optional<Share> share = shareRepository.findById(shareId);
+		if (share.isEmpty())
+			throw new RuntimeException("Share not found");
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieving user profile successfully")
+				.result(new ShareResponse(share.get())).statusCode(HttpStatus.OK.value()).build());
+	}
 
-    @Override
-    public ResponseEntity<Object> sharePost(String token, SharePostRequestDTO requestDTO) {
-        String jwt = token.substring(7);
-        String userId = jwtTokenProvider.getUserIdFromJwt(jwt);
-        Optional<User> user = userService.findById(userId);
-        if (user.isEmpty())
-            return ResponseEntity.badRequest().body("User not found");
-        Optional<Post> post = postService.findById(requestDTO.getPostId());
-        if (post.isEmpty())
-            return ResponseEntity.badRequest().body("Post not found");
+	@Override
+	public ResponseEntity<Object> sharePost(String token, SharePostRequestDTO requestDTO) {
+		String jwt = token.substring(7);
+		String userId = jwtTokenProvider.getUserIdFromJwt(jwt);
+		Optional<User> user = userService.findById(userId);
+		if (user.isEmpty())
+			return ResponseEntity.badRequest().body("User not found");
+		Optional<Post> post = postService.findById(requestDTO.getPostId());
+		if (post.isEmpty())
+			return ResponseEntity.badRequest().body("Post not found");
 
-        Share share = new Share();
-        share.setContent(requestDTO.getContent());
-        share.setCreateAt(new Date());
-        share.setUpdateAt(new Date());
-        share.setPost(post.get());
-        share.setUser(user.get());
-        Optional<PostGroup> postGroup = postGroupService.findById(requestDTO.getPostGroupId());
-        if (postGroup.isPresent()) {
-            share.setPostGroup(postGroup.get());
-        }
-        save(share);
-        SharesResponse sharesResponse = new SharesResponse(share);
-        List<Integer> count = new ArrayList<>();
-        sharesResponse.setComments(count);
-        sharesResponse.setLikes(count);
+		Share share = new Share();
+		share.setContent(requestDTO.getContent());
+		share.setCreateAt(requestDTO.getCreateAt());
+		share.setUpdateAt(requestDTO.getCreateAt());
+		share.setPost(post.get());
+		share.setUser(user.get());
+		share.setPrivacyLevel(requestDTO.getPrivacyLevel());
+		if (requestDTO.getPostGroupId() != null)
+			if (requestDTO.getPostGroupId() != 0) {
+				Optional<PostGroup> postGroup = postGroupService.findById(requestDTO.getPostGroupId());
+				if (postGroup.isPresent()) {
+					share.setPostGroup(postGroup.get());
+				}
+			}
+		save(share);
+		SharesResponse sharesResponse = new SharesResponse(share);
+		List<Integer> count = new ArrayList<>();
+		sharesResponse.setComments(count);
+		sharesResponse.setLikes(count);
 
-        GenericResponse response = GenericResponse.builder().success(true).message("Share Post Successfully")
-                .result(sharesResponse).statusCode(200).build();
+		GenericResponse response = GenericResponse.builder().success(true).message("Share Post Successfully")
+				.result(sharesResponse).statusCode(200).build();
 
-        return ResponseEntity.ok(response);
-    }
+		return ResponseEntity.ok(response);
+	}
 
-    @Override
-    public ResponseEntity<Object> updateSharePost(Integer shareId, String content, String currentUserId) {
-        Optional<Share> shareOp = findById(shareId);
-        if (shareOp.isEmpty())
-            return ResponseEntity.badRequest().body("Share post doesn't exist");
-        if (!currentUserId.equals(shareOp.get().getUser().getUserId()))
-            return ResponseEntity.badRequest().body("Update denied");
-        Share share = shareOp.get();
-        share.setContent(content);
-        share.setUpdateAt(new Date());
-        save(share);
-        return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
-                .statusCode(200).build());
-    }
+	@Override
+	public ResponseEntity<Object> updateSharePost(SharePostRequestDTO requestDTO, String currentUserId) {
+		Optional<Share> shareOp = findById(Integer.valueOf(requestDTO.getShareId()));
+		if (shareOp.isEmpty())
+			return ResponseEntity.badRequest().body("Share post doesn't exist");
+		if (!currentUserId.equals(shareOp.get().getUser().getUserId()))
+			return ResponseEntity.badRequest().body("Update denied");
+		Share share = shareOp.get();
+		share.setContent(requestDTO.getContent());
+		share.setPrivacyLevel(requestDTO.getPrivacyLevel());
+		if (requestDTO.getPostGroupId() != null) {
+			if (requestDTO.getPostGroupId() != 0) {
+				Optional<PostGroup> poOptional = postGroupService.findById(requestDTO.getPostGroupId());
+				if (poOptional.isPresent()) {
+					share.setPostGroup(poOptional.get());
+				}
+			}
+		}
 
-    @Override
-    @Transactional
-    public ResponseEntity<GenericResponse> deleteSharePost(Integer shareId, String token, String userId) {
-        String jwt = token.substring(7);
-        String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
-        if (!currentUserId.equals(userId.replaceAll("^\"|\"$", ""))) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));
-        }
+		share.setUpdateAt(requestDTO.getUpdateAt());
+		save(share);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
+				.statusCode(200).build());
+	}
 
-        Optional<Share> optionalShare = findById(shareId);
+	@Override
+	@Transactional
+	public ResponseEntity<GenericResponse> deleteSharePost(Integer shareId, String token, String userId) {
+		String jwt = token.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(jwt);
+		if (!currentUserId.equals(userId.replaceAll("^\"|\"$", ""))) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));
+		}
 
-        if (optionalShare.isPresent()) {
-            Share share = optionalShare.get();
+		Optional<Share> optionalShare = findById(shareId);
 
-            shareRepository.delete(share);
+		if (optionalShare.isPresent()) {
+			Share share = optionalShare.get();
 
-            return ResponseEntity.ok()
-                    .body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
-        }
-        // Khi không tìm thấy bài post với id
-        else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new GenericResponse(false, "Cannot found share post!", null, HttpStatus.NOT_FOUND.value()));
-        }
-    }
+			shareRepository.delete(share);
 
-    @Override
-    public SharesResponse getSharePost(Share share) {
-        SharesResponse sharesResponse = new SharesResponse(share);
-        sharesResponse.setComments(getIdComment(share.getComments()));
-        sharesResponse.setLikes(getIdLikes(share.getLikes()));
-        return sharesResponse;
-    }
+			return ResponseEntity.ok()
+					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
+		}
+		// Khi không tìm thấy bài post với id
+		else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found share post!", null, HttpStatus.NOT_FOUND.value()));
+		}
+	}
 
-    private List<Integer> getIdLikes(List<Like> likes) {
-        List<Integer> idComments = new ArrayList<>();
-        for (Like like : likes) {
-            idComments.add(like.getLikeId());
-        }
-        return idComments;
-    }
+	@Override
+	public SharesResponse getSharePost(Share share) {
+		SharesResponse sharesResponse = new SharesResponse(share);
+		sharesResponse.setComments(getIdComment(share.getComments()));
+		sharesResponse.setLikes(getIdLikes(share.getLikes()));
+		return sharesResponse;
+	}
 
-    private List<Integer> getIdComment(List<Comment> comments) {
-        List<Integer> idComments = new ArrayList<>();
-        for (Comment cmt : comments) {
-            idComments.add(cmt.getCommentId());
-        }
-        return idComments;
-    }
+	private List<Integer> getIdLikes(List<Like> likes) {
+		List<Integer> idComments = new ArrayList<>();
+		for (Like like : likes) {
+			idComments.add(like.getLikeId());
+		}
+		return idComments;
+	}
 
-    @Override
-    public List<SharesResponse> findUserSharePosts(String userId) {
-        List<Share> userSharePosts = shareRepository.findByUserUserId(userId);
-        List<SharesResponse> sharesResponses = new ArrayList<>();
-        for (Share share : userSharePosts) {
-            SharesResponse sharesResponse = new SharesResponse(share);
-            sharesResponse.setComments(getIdComment(share.getComments()));
-            sharesResponse.setLikes(getIdLikes(share.getLikes()));
-            sharesResponses.add(sharesResponse);
-        }
-        return sharesResponses;
-    }
+	private List<Integer> getIdComment(List<Comment> comments) {
+		List<Integer> idComments = new ArrayList<>();
+		for (Comment cmt : comments) {
+			idComments.add(cmt.getCommentId());
+		}
+		return idComments;
+	}
 
-    @Override
-    public List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId, Pageable pageable) {
-        List<Share> userSharePosts = shareRepository.findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(userId, pageable);
-        List<SharesResponse> sharesResponses = new ArrayList<>();
-        for (Share share : userSharePosts) {
-            SharesResponse sharesResponse = new SharesResponse(share);
-            sharesResponse.setComments(getIdComment(share.getComments()));
-            sharesResponse.setLikes(getIdLikes(share.getLikes()));
-            sharesResponses.add(sharesResponse);
-        }
-        return sharesResponses;
-    }
+	@Override
+	public List<SharesResponse> findUserSharePosts(String userId) {
+		List<Share> userSharePosts = shareRepository.findByUserUserId(userId);
+		List<SharesResponse> sharesResponses = new ArrayList<>();
+		for (Share share : userSharePosts) {
+			SharesResponse sharesResponse = new SharesResponse(share);
+			sharesResponse.setComments(getIdComment(share.getComments()));
+			sharesResponse.setLikes(getIdLikes(share.getLikes()));
+			sharesResponses.add(sharesResponse);
+		}
+		return sharesResponses;
+	}
 
-    @Override
-    public List<SharesResponse> findPostGroupShares(Integer postGroupId) {
-        List<Share> groupSharePosts = shareRepository.findByPostGroupPostGroupId(postGroupId);
-        List<SharesResponse> sharesResponses = new ArrayList<>();
-        for (Share share : groupSharePosts) {
-            SharesResponse sharesResponse = new SharesResponse(share);
-            sharesResponse.setComments(getIdComment(share.getComments()));
-            sharesResponse.setLikes(getIdLikes(share.getLikes()));
-            sharesResponses.add(sharesResponse);
-        }
-        return sharesResponses;
-    }
+	@Override
+	public List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId,
+			Pageable pageable) {
+		List<Share> userSharePosts = shareRepository.findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(userId,
+				pageable);
+		List<SharesResponse> sharesResponses = new ArrayList<>();
+		for (Share share : userSharePosts) {
+			SharesResponse sharesResponse = new SharesResponse(share);
+			sharesResponse.setComments(getIdComment(share.getComments()));
+			sharesResponse.setLikes(getIdLikes(share.getLikes()));
+			sharesResponses.add(sharesResponse);
+		}
+		return sharesResponses;
+	}
 
-    @Override
-    public ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId) {
-        List<SharesResponse> groupSharePosts = findPostGroupShares(postGroupId);
+	@Override
+	public List<SharesResponse> findPostGroupShares(Integer postGroupId,Pageable pageable) {
+		List<Share> groupSharePosts = shareRepository.findByPostGroupPostGroupId(postGroupId,pageable);
+		List<SharesResponse> sharesResponses = new ArrayList<>();
+		for (Share share : groupSharePosts) {
+			SharesResponse sharesResponse = new SharesResponse(share);
+			sharesResponse.setComments(getIdComment(share.getComments()));
+			sharesResponse.setLikes(getIdLikes(share.getLikes()));
+			sharesResponses.add(sharesResponse);
+		}
+		return sharesResponses;
+	}
 
-        if (groupSharePosts.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-                    .message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
-        } else {
-            return ResponseEntity.ok(GenericResponse.builder().success(true)
-                    .message("Retrieved group posts successfully").result(groupSharePosts)
-                    .statusCode(HttpStatus.OK.value()).build());
-        }
-    }
+	@Override
+	public ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId,Integer page, Integer size) {
+		Pageable pageable = PageRequest.of(page, size);
+		List<SharesResponse> groupSharePosts = findPostGroupShares(postGroupId,pageable);
 
-    @Override
-    public ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size) {
+		if (groupSharePosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("Retrieved group posts successfully")
+							.result(groupSharePosts).statusCode(HttpStatus.OK.value()).build());
+		}
+	}
 
-        Optional<User> user = userService.findById(currentUserId);
-        if (user.isEmpty())
-            return ResponseEntity.ofNullable(GenericResponse.builder().success(false).message("User not found")
-                    .result(null).statusCode(HttpStatus.NOT_FOUND.value()).build());
-        Pageable pageable = PageRequest.of(page, size);
-        List<SharesResponse> userPosts = findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(currentUserId, pageable);
-        return ResponseEntity.ok(GenericResponse.builder().success(true)
-                .message("Retrieved user posts successfully and access update").result(userPosts)
-                .statusCode(HttpStatus.OK.value()).build());
-    }
+	@Override
+	public ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size) {
+
+		Optional<User> user = userService.findById(currentUserId);
+		if (user.isEmpty())
+			return ResponseEntity.ofNullable(GenericResponse.builder().success(false).message("User not found")
+					.result(null).statusCode(HttpStatus.NOT_FOUND.value()).build());
+		Pageable pageable = PageRequest.of(page, size);
+		List<SharesResponse> userPosts = findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(currentUserId,
+				pageable);
+		return ResponseEntity.ok(
+				GenericResponse.builder().success(true).message("Retrieved user posts successfully and access update")
+						.result(userPosts).statusCode(HttpStatus.OK.value()).build());
+	}
 }

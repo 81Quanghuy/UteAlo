@@ -30,6 +30,8 @@ public class Post implements Serializable {
 
     private String photos;
     private String files;
+    
+    @Column(columnDefinition = "nvarchar(255)")
     private String location;
 
     @Column(columnDefinition = "nvarchar(255)")

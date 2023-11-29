@@ -36,7 +36,7 @@ public class PostGroupController {
 
 	@Autowired
 	PostGroupRepository postGroupRepository;
-	
+
 	@Autowired
 	ShareService shareService;
 
@@ -182,8 +182,9 @@ public class PostGroupController {
 
 	// Lấy những bài share post của nhóm
 	@GetMapping("/{postGroupId}/shares")
-	public ResponseEntity<GenericResponse> getGroupSharePosts(@PathVariable("postGroupId") Integer postGroupId) {
-		return shareService.getGroupSharePosts(postGroupId);
+	public ResponseEntity<GenericResponse> getGroupSharePosts(@PathVariable("postGroupId") Integer postGroupId,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		return shareService.getGroupSharePosts(postGroupId, page, size);
 	}
 
 	// Lấy tất cả các bài post của những nhóm mình tham gia
@@ -226,15 +227,16 @@ public class PostGroupController {
 	// nhuong quyen âdmin
 	@PostMapping("/appoint-admin")
 	public ResponseEntity<GenericResponse> assignAdminByUserIdAndGroupId(@RequestBody PostGroupDTO postGroup,
-																		 @RequestHeader("Authorization") String authorizationHeader) {
+			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.assignAdminByUserIdAndGroupId(postGroup, currentUserId);
 	}
+
 	// xóa quyền phó quản trị viên
 	@PostMapping("/remove-deputy")
 	public ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(@RequestBody PostGroupDTO postGroup,
-																		 @RequestHeader("Authorization") String authorizationHeader) {
+			@RequestHeader("Authorization") String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.removeDeputyByUserIdAndGroupId(postGroup, currentUserId);
@@ -260,8 +262,9 @@ public class PostGroupController {
 
 	// Lấy tất cả bài post của 1 nhóm
 	@GetMapping("/{postGroupId}/posts")
-	public ResponseEntity<GenericResponse> getPostOfPostGroup(@PathVariable Integer postGroupId) {
-		return postService.getGroupPosts(postGroupId);
+	public ResponseEntity<GenericResponse> getPostOfPostGroup(@PathVariable Integer postGroupId,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		return postService.getGroupPosts(postGroupId, page, size);
 	}
 
 	// cancel request in group
@@ -284,13 +287,12 @@ public class PostGroupController {
 		return groupService.leaveGroup(userIdToken, postGroupId);
 	}
 
-	
 	@GetMapping("/getPostGroups/key")
-	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,@RequestParam("search") String search) {
+	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,
+			@RequestParam("search") String search) {
 		String token = authorizationHeader.substring(7);
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.findByPostGroupNameContainingIgnoreCase(search,userIdToken);
+		return groupService.findByPostGroupNameContainingIgnoreCase(search, userIdToken);
 	}
-	
 
 }

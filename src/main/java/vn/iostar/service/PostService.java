@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.CreatePostRequestDTO;
@@ -58,9 +59,10 @@ public interface PostService {
 
 	Page<String> findLatestPhotosByUserId(String userId, int page, int size);
 
-	List<PostsResponse> findPostGroupPosts(Integer postGroupId);
+  List<PostsResponse> findPostGroupPosts(Integer postGroupId,Pageable pageable);
 
-	ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId);
+  ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId, Integer page, Integer size);
+
 
 	List<PostsResponse> findGroupPosts(String currentUserId);
 
