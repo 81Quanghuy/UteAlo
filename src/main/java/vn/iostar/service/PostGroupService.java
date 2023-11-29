@@ -1,6 +1,7 @@
 package vn.iostar.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -29,7 +30,7 @@ public interface PostGroupService {
 	ResponseEntity<GenericResponse> getSuggestionPostGroupByUserId(String authorizationHeader);
 
 	ResponseEntity<GenericResponse> createPostGroupByUserId(PostGroupDTO postGroup, String authorizationHeader);
-	
+
 	ResponseEntity<GenericResponse> createPostGroupByAdmin(PostGroupDTO postGroup, String authorizationHeader);
 
 	ResponseEntity<GenericResponse> updatePostGroupByPostIdAndUserId(PostGroupDTO postGroup, String currentUserId);
@@ -84,7 +85,7 @@ public interface PostGroupService {
 
 	// Lấy danh sách tất cả user trong hệ thống
 	ResponseEntity<GenericResponseAdmin> getAllGroups(String authorizationHeader, int page, int itemsPerPage);
-	
+
 	// Admin xóa nhóm trong hệ thống
 	ResponseEntity<GenericResponse> deletePostGroupByAdmin(Integer postId, String authorizationHeader);
 
@@ -92,6 +93,30 @@ public interface PostGroupService {
 
 	ResponseEntity<GenericResponse> removeDeputyByUserIdAndGroupId(PostGroupDTO postGroup, String currentUserId);
 
-	Optional<PostGroup>  findByPostGroupName(String groupName);
+	Optional<PostGroup> findByPostGroupName(String groupName);
+
+	// Đếm số lượng nhóm từng tháng trong năm
+	Map<String, Long> countGroupsByMonthInYear();
+
+	// Đếm số lượng user trong ngày hôm nay
+	long countGroupsToday();
+
+	// Đếm số lượng user trong 7 ngày
+	public long countGroupsInWeek();
+
+	// Đếm số lượng user trong 1 tháng
+	long countGroupsInMonthFromNow();
+
+	// Đếm số lượng user trong 1 năm
+	long countGroupsInOneYearFromNow();
+
+	// Đếm số lượng user trong 9 tháng
+	long countGroupsInNineMonthsFromNow();
+
+	// Đếm số lượng user trong 6 tháng
+	long countGroupsInSixMonthsFromNow();
+
+	// Đếm số lượng user trong 3 tháng
+	long countGroupsInThreeMonthsFromNow();
 
 }

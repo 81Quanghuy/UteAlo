@@ -1,9 +1,15 @@
 package vn.iostar.service.impl;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +64,7 @@ public class CommentServiceImpl implements CommentService {
 
 	@Autowired
 	PostService postService;
-	
+
 	@Autowired
 	ShareService shareService;
 
@@ -119,14 +125,14 @@ public class CommentServiceImpl implements CommentService {
 				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
 						.result(comments).statusCode(HttpStatus.OK.value()).build());
 	}
-	
+
 	@Override
 	public ResponseEntity<GenericResponse> getCommentOfShare(int shareId) {
 		Optional<Share> share = shareService.findById(shareId);
 		if (share.isEmpty())
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("Share not found").result(false)
 					.statusCode(HttpStatus.OK.value()).build());
-		List<CommentShareResponse> comments =  getCommentsOfShare(shareId);
+		List<CommentShareResponse> comments = getCommentsOfShare(shareId);
 		if (comments.isEmpty())
 			return ResponseEntity.ok(GenericResponse.builder().success(false).message("This share has no comment")
 					.result(false).statusCode(HttpStatus.OK.value()).build());
@@ -150,7 +156,7 @@ public class CommentServiceImpl implements CommentService {
 				.ok(GenericResponse.builder().success(true).message("Retrieving comment of post successfully")
 						.result(comments).statusCode(HttpStatus.OK.value()).build());
 	}
-	
+
 	@Override
 	public ResponseEntity<GenericResponse> getCommentReplyOfCommentShare(int commentId) {
 		Optional<Comment> comment = findById(commentId);
@@ -168,7 +174,8 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	public List<CommentPostResponse> getCommentsOfPost(int postId) {
-		List<Comment> commentPost = commentRepository.findByPostPostIdAndCommentReplyIsNullOrderByCreateTimeDesc(postId);
+		List<Comment> commentPost = commentRepository
+				.findByPostPostIdAndCommentReplyIsNullOrderByCreateTimeDesc(postId);
 
 		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
 		for (Comment comment : commentPost) {
@@ -178,9 +185,10 @@ public class CommentServiceImpl implements CommentService {
 		}
 		return commentPostResponses;
 	}
-	
+
 	public List<CommentShareResponse> getCommentsOfShare(int shareId) {
-		List<Comment> commentPost = commentRepository.findByShareShareIdAndCommentReplyIsNullOrderByCreateTimeDesc(shareId);
+		List<Comment> commentPost = commentRepository
+				.findByShareShareIdAndCommentReplyIsNullOrderByCreateTimeDesc(shareId);
 
 		List<CommentShareResponse> commentPostResponses = new ArrayList<>();
 		for (Comment comment : commentPost) {
@@ -192,49 +200,48 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	public List<CommentPostResponse> getCommentsOfComment(int commentId) {
-	    List<CommentPostResponse> commentPostResponses = new ArrayList<>();
+		List<CommentPostResponse> commentPostResponses = new ArrayList<>();
 
-	    // Tìm các comment reply trực tiếp cho commentId
-	    List<Comment> directReplies = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
+		// Tìm các comment reply trực tiếp cho commentId
+		List<Comment> directReplies = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
 
-	    // Lấy comment reply của commentId
-	    for (Comment directReply : directReplies) {
-	        CommentPostResponse directReplyResponse = new CommentPostResponse(directReply);
-	        directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
-	        commentPostResponses.add(directReplyResponse);
+		// Lấy comment reply của commentId
+		for (Comment directReply : directReplies) {
+			CommentPostResponse directReplyResponse = new CommentPostResponse(directReply);
+			directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
+			commentPostResponses.add(directReplyResponse);
 
-	        // Tìm các comment reply cho directReply
-	        List<CommentPostResponse> subReplies = getCommentsOfComment(directReply.getCommentId());
+			// Tìm các comment reply cho directReply
+			List<CommentPostResponse> subReplies = getCommentsOfComment(directReply.getCommentId());
 
-	        // Thêm tất cả các comment reply của directReply
-	        commentPostResponses.addAll(subReplies);
-	    }
+			// Thêm tất cả các comment reply của directReply
+			commentPostResponses.addAll(subReplies);
+		}
 
-	    return commentPostResponses;
+		return commentPostResponses;
 	}
-	
+
 	public List<CommentShareResponse> getCommentsOfCommentShare(int commentId) {
-	    List<CommentShareResponse> commentPostResponses = new ArrayList<>();
+		List<CommentShareResponse> commentPostResponses = new ArrayList<>();
 
-	    // Tìm các comment reply trực tiếp cho commentId
-	    List<Comment> directReplies = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
+		// Tìm các comment reply trực tiếp cho commentId
+		List<Comment> directReplies = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
 
-	    // Lấy comment reply của commentId
-	    for (Comment directReply : directReplies) {
-	    	CommentShareResponse directReplyResponse = new CommentShareResponse(directReply);
-	        directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
-	        commentPostResponses.add(directReplyResponse);
+		// Lấy comment reply của commentId
+		for (Comment directReply : directReplies) {
+			CommentShareResponse directReplyResponse = new CommentShareResponse(directReply);
+			directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
+			commentPostResponses.add(directReplyResponse);
 
-	        // Tìm các comment reply cho directReply
-	        List<CommentShareResponse> subReplies = getCommentsOfCommentShare(directReply.getCommentId());
+			// Tìm các comment reply cho directReply
+			List<CommentShareResponse> subReplies = getCommentsOfCommentShare(directReply.getCommentId());
 
-	        // Thêm tất cả các comment reply của directReply
-	        commentPostResponses.addAll(subReplies);
-	    }
+			// Thêm tất cả các comment reply của directReply
+			commentPostResponses.addAll(subReplies);
+		}
 
-	    return commentPostResponses;
+		return commentPostResponses;
 	}
-
 
 	private List<Integer> getIdLikes(List<Like> likes) {
 		List<Integer> idComments = new ArrayList<>();
@@ -243,7 +250,6 @@ public class CommentServiceImpl implements CommentService {
 		}
 		return idComments;
 	}
-	
 
 	@Override
 	public ResponseEntity<GenericResponse> getCountCommentOfPost(int postId) {
@@ -302,7 +308,7 @@ public class CommentServiceImpl implements CommentService {
 
 		return ResponseEntity.ok(response);
 	}
-	
+
 	@Override
 	public ResponseEntity<Object> createCommentShare(String token, CreateCommentShareRequestDTO requestDTO) {
 		String jwt = token.substring(7);
@@ -388,7 +394,6 @@ public class CommentServiceImpl implements CommentService {
 		return ResponseEntity.ok(response);
 	}
 
-	
 	@Override
 	public ResponseEntity<Object> replyCommentShare(String token, ReplyCommentShareRequestDTO requestDTO) {
 		String jwt = token.substring(7);
@@ -434,7 +439,6 @@ public class CommentServiceImpl implements CommentService {
 		return ResponseEntity.ok(response);
 	}
 
-	
 	@Override
 	public ResponseEntity<Object> updateComment(Integer commentId, CommentUpdateRequest request, String currentUserId)
 			throws Exception {
@@ -484,15 +488,15 @@ public class CommentServiceImpl implements CommentService {
 		}
 
 	}
-	
+
 	@Override
 	@Transactional
-	public ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId,String authorizationHeader) {
+	public ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId, String authorizationHeader) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Optional<User> user = userService.findById(currentUserId);
 		RoleName roleName = user.get().getRole().getRoleName();
-		if(!roleName.name().equals("Admin")) {
+		if (!roleName.name().equals("Admin")) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
@@ -514,48 +518,81 @@ public class CommentServiceImpl implements CommentService {
 
 	@Override
 	public Page<CommentPostResponse> findAllComments(int page, int itemsPerPage) {
-	    Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
-	    Page<Comment> commentsPage = commentRepository.findAllByOrderByCreateTimeDesc(pageable);
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Page<Comment> commentsPage = commentRepository.findAllByOrderByCreateTimeDesc(pageable);
 
-	    Page<CommentPostResponse> commentResponsesPage = commentsPage.map(comment -> {
-	        CommentPostResponse cPostResponse = new CommentPostResponse(comment);
-	        cPostResponse.setLikes(getIdLikes(comment.getLikes()));
-	        return cPostResponse;
-	    });
+		Page<CommentPostResponse> commentResponsesPage = commentsPage.map(comment -> {
+			CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+			return cPostResponse;
+		});
 
-	    return commentResponsesPage;
+		return commentResponsesPage;
 	}
-
 
 	@Override
 	public ResponseEntity<GenericResponseAdmin> getAllComments(String authorizationHeader, int page, int itemsPerPage) {
-	    String token = authorizationHeader.substring(7);
-	    String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-	    Optional<User> user = userService.findById(currentUserId);
-	    RoleName roleName = user.get().getRole().getRoleName();
-	    if (!roleName.name().equals("Admin")) {
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
-	                .message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
-	    }
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(currentUserId);
+		RoleName roleName = user.get().getRole().getRoleName();
+		if (!roleName.name().equals("Admin")) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
 
-	    Page<CommentPostResponse> commentsPage = findAllComments(page, itemsPerPage);
-	    long totalComments = commentRepository.count();
+		Page<CommentPostResponse> commentsPage = findAllComments(page, itemsPerPage);
+		long totalComments = commentRepository.count();
 
-	    PaginationInfo pagination = new PaginationInfo();
-	    pagination.setPage(page);
-	    pagination.setItemsPerPage(itemsPerPage);
-	    pagination.setCount(totalComments);
-	    pagination.setPages((int) Math.ceil((double) totalComments / itemsPerPage));
+		PaginationInfo pagination = new PaginationInfo();
+		pagination.setPage(page);
+		pagination.setItemsPerPage(itemsPerPage);
+		pagination.setCount(totalComments);
+		pagination.setPages((int) Math.ceil((double) totalComments / itemsPerPage));
 
-	    if (commentsPage.isEmpty()) {
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
-	                .message("No Comments Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
-	    } else {
-	        return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
-	                .message("Retrieved List Comments Successfully").result(commentsPage)
-	                .pagination(pagination).statusCode(HttpStatus.OK.value()).build());
-	    }
+		if (commentsPage.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("No Comments Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity
+					.ok(GenericResponseAdmin.builder().success(true).message("Retrieved List Comments Successfully")
+							.result(commentsPage).pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+		}
 	}
 
+	// Đếm số lượng comment từng tháng trong năm
+	@Override
+	public Map<String, Long> countCommentsByMonthInYear() {
+		LocalDateTime now = LocalDateTime.now();
+		int currentYear = now.getYear();
+
+		// Tạo một danh sách các tháng
+		List<Month> months = Arrays.asList(Month.values());
+		Map<String, Long> commentCountsByMonth = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để duy trì thứ tự
+
+		for (Month month : months) {
+			LocalDateTime startDate = LocalDateTime.of(currentYear, month, 1, 0, 0);
+			LocalDateTime endDate = startDate.plusMonths(1).minusSeconds(1);
+
+			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+			long commentCount = commentRepository.countByCreateTimeBetween(startDateAsDate, endDateAsDate);
+			commentCountsByMonth.put(month.toString(), commentCount);
+		}
+
+		return commentCountsByMonth;
+	}
+
+	// Đếm số lượng comment trong 1 năm
+	@Override
+	public long countCommentsInOneYearFromNow() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusYears(1);
+		LocalDateTime endDate = now;
+		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		return commentRepository.countByCreateTimeBetween(startDateAsDate, endDateAsDate);
+	}
 
 }
