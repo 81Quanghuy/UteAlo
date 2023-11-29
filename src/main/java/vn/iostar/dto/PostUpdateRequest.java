@@ -18,6 +18,8 @@ public class PostUpdateRequest {
     @NotBlank(message = "Location is required")
     private String location;
 
+    private String photoUrl;
+    private String fileUrl;
     
     @Nationalized
     private MultipartFile photos;
