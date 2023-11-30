@@ -33,15 +33,19 @@ public interface ShareService {
 
     ResponseEntity<GenericResponse> deleteSharePost(Integer shareId, String token, String userId);
 
-    SharesResponse getSharePost(Share share);
+    ResponseEntity<GenericResponse> getShareOfPostGroup(String currentUserId, Pageable pageable);
 
-    public List<SharesResponse> findUserSharePosts(String userId);
-	
+    SharesResponse getSharePost(Share share, String currentUserId);
+
+    List<SharesResponse> findUserSharePosts(String currentUserId, String userId, Pageable pageable);
+
+    List<SharesResponse> findMySharePosts(String currentUserId, Pageable pageable);
+
     List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId, Pageable pageable);
 
-    List<SharesResponse> findPostGroupShares(Integer postGroupId,Pageable pageable);
+    List<SharesResponse> findPostGroupShares(String currentUserId, Integer postGroupId, Pageable pageable);
 
-    ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId,Integer page, Integer size);
+    ResponseEntity<GenericResponse> getGroupSharePosts(String currentUserId, Integer postGroupId, Integer page, Integer size);
 
 
     ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size);

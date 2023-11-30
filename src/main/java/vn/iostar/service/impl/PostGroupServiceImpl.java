@@ -1144,7 +1144,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		List<Post> posts = postRepository.findByContentContaining(search, pageable);
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : posts) {
-			PostsResponse postsResponse = new PostsResponse(post);
+			PostsResponse postsResponse = new PostsResponse(post,userIdToken);
 			if (post.getComments() != null && !post.getComments().isEmpty()) {
 				postsResponse.setComments(getIdComment(post.getComments()));
 			} else {
