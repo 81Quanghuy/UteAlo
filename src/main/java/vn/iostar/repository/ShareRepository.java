@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vn.iostar.contants.PrivacyLevel;
-import vn.iostar.entity.Post;
 import vn.iostar.entity.Share;
 
 @Repository

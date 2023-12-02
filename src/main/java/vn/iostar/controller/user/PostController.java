@@ -3,7 +3,6 @@ package vn.iostar.controller.user;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -34,104 +33,93 @@ import vn.iostar.service.UserService;
 @RequestMapping("/api/v1/post")
 public class PostController {
 
-    @Autowired
-    JwtTokenProvider jwtTokenProvider;
+	@Autowired
+	JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    PostService postService;
+	@Autowired
+	PostService postService;
 
-    @Autowired
-    UserService userService;
+	@Autowired
+	UserService userService;
 
-    @Autowired
-    CloudinaryService cloudinaryService;
+	@Autowired
+	CloudinaryService cloudinaryService;
 
-    @Autowired
-    PostRepository postRepository;
+	@Autowired
+	PostRepository postRepository;
 
-    // Xem chi tiết bài post
-    @GetMapping("/{postId}")
-    public ResponseEntity<GenericResponse> getPost(@RequestHeader("Authorization") String authorizationHeader,
-                                                   @PathVariable("postId") Integer postId) {
-        String token = authorizationHeader.substring(7);
-        String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-        return postService.getPost(currentUserId, postId);
-    }
+	// Xem chi tiết bài post
+	@GetMapping("/{postId}")
+	public ResponseEntity<GenericResponse> getPost(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("postId") Integer postId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return postService.getPost(currentUserId, postId);
+	}
 
-    // Lấy những bài post của mình
-    @GetMapping("/user")
-    public ResponseEntity<GenericResponse> getUserPosts(@RequestHeader("Authorization") String authorizationHeader,
-                                                        @RequestParam(defaultValue = "0") int page,
-                                                        @RequestParam(defaultValue = "20") int size) {
-        String token = authorizationHeader.substring(7);
-        String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-        Pageable pageable = PageRequest.of(page, size);
-        List<PostsResponse> userPosts = postService.findUserPostsByUserIdToken(currentUserId, pageable);
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<GenericResponse> getPostByUserId(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("userId") String userId, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Pageable pageable = PageRequest.of(page, size);
+		List<PostsResponse> userPosts = postService.findUserPosts(currentUserId, userId, pageable);
 
-        return ResponseEntity.ok(GenericResponse.builder().success(true)
-                .message("Retrieved user posts successfully and access update").result(userPosts)
-                .statusCode(HttpStatus.OK.value()).build());
+		return ResponseEntity.ok(
+				GenericResponse.builder().success(true).message("Retrieved user posts successfully and access update")
+						.result(userPosts).statusCode(HttpStatus.OK.value()).build());
+	}
 
-    }
+	// Lấy những bài post liên quan đến mình như: nhóm, bạn bè, cá nhân
+	@GetMapping("/get/timeLine")
+	public ResponseEntity<GenericResponse> getPostsByUserAndFriendsAndGroups(
+			@RequestHeader("Authorization") String authorizationHeader, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return postService.getPostTimelineByUserId(currentUserId, page, size);
+	}
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<GenericResponse> getPostByUserId(@RequestHeader("Authorization") String authorizationHeader,
-                                                           @PathVariable("userId") String userId,
-                                                           @RequestParam(defaultValue = "0") int page,
-                                                           @RequestParam(defaultValue = "20") int size) {
-        String token = authorizationHeader.substring(7);
-        String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-        Pageable pageable = PageRequest.of(page, size);
-        List<PostsResponse> userPosts = postService.findUserPosts(currentUserId, userId, pageable);
+	@PutMapping("/update/{postId}")
+	public ResponseEntity<Object> updatePost(@ModelAttribute PostUpdateRequest request,
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
+			BindingResult bindingResult) throws Exception {
 
-        return ResponseEntity.ok(GenericResponse.builder().success(true)
-                .message("Retrieved user posts successfully and access update").result(userPosts)
-                .statusCode(HttpStatus.OK.value()).build());
-    }
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return postService.updatePost(postId, request, currentUserId);
 
-    // Lấy những bài post liên quan đến mình như: nhóm, bạn bè, cá nhân
-    @GetMapping("/get/timeLine")
-    public ResponseEntity<GenericResponse> getPostsByUserAndFriendsAndGroups(
-            @RequestHeader("Authorization") String authorizationHeader, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        String token = authorizationHeader.substring(7);
-        String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-        return postService.getPostTimelineByUserId(currentUserId, page, size);
-    }
+	}
 
-    @PutMapping("/update/{postId}")
-    public ResponseEntity<Object> updatePost(@ModelAttribute PostUpdateRequest request,
-                                             @RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
-                                             BindingResult bindingResult) throws Exception {
+	@PutMapping("/delete/{postId}")
+	public ResponseEntity<GenericResponse> deletePost(@RequestHeader("Authorization") String token,
+			@PathVariable("postId") Integer postId, @RequestBody String userId) {
+		return postService.deletePost(postId, token, userId);
 
-        String token = authorizationHeader.substring(7);
-        String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-        return postService.updatePost(postId, request, currentUserId);
+	}
 
-    }
+	@PostMapping("/create")
+	public ResponseEntity<Object> createUserPost(@ModelAttribute CreatePostRequestDTO requestDTO,
+			@RequestHeader("Authorization") String token) {
+		return postService.createUserPost(token, requestDTO);
+	}
 
-    @PutMapping("/delete/{postId}")
-    public ResponseEntity<GenericResponse> deletePost(@RequestHeader("Authorization") String token,
-                                                      @PathVariable("postId") Integer postId, @RequestBody String userId) {
-        return postService.deletePost(postId, token, userId);
+	// Lấy tất cả hình của user đó
+	@GetMapping("/user/{userId}/photos")
+	public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@PathVariable String userId) {
+		return postService.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
+	}
 
-    }
-
-    @PostMapping("/create")
-    public ResponseEntity<Object> createUserPost(@ModelAttribute CreatePostRequestDTO requestDTO,
-                                                 @RequestHeader("Authorization") String token) {
-        return postService.createUserPost(token, requestDTO);
-    }
-
-    @GetMapping("/user/{userId}/photos")
-    public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@PathVariable String userId) {
-        return postService.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
-    }
-
-    @GetMapping("/user/{userId}/latest-photos")
-    public Page<String> getLatestPhotosByUserId(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "9") int size, @PathVariable("userId") String userId) {
-        return postService.findLatestPhotosByUserId(userId, page, size);
-    }
+	// Lấy 9 hình đầu tiên của user
+	@GetMapping("/getPhotos/{userId}")
+	public ResponseEntity<Object> getLatestPhotosByUserId(@RequestHeader("Authorization") String authorizationHeader,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "9") int size,
+			@PathVariable("userId") String userId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Pageable pageable = PageRequest.of(page, size);
+		return postService.findLatestPhotosByUserId(currentUserId, userId, pageable);
+	}
 
 }

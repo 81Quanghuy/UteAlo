@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
 		if (request.getNewPassword().length() < 8 || request.getNewPassword().length() > 32)
 			throw new RuntimeException("Password must be between 8 and 32 characters long");
 
-		if (!request.getNewPassword().equals(request.getConfirmNewPassword()))
+		if (!request.getNewPassword().equals(request.getConfirmPassword()))
 			throw new RuntimeException("Password and confirm password do not match");
 
 		Optional<User> userOptional = findById(userId);
@@ -144,7 +144,7 @@ public class UserServiceImpl implements UserService {
 			throw new RuntimeException("User is not found");
 
 		User user = userOptional.get();
-		if (!passwordEncoder.matches(request.getCurrentPassword(), user.getAccount().getPassword()))
+		if (!passwordEncoder.matches(request.getPassword(), user.getAccount().getPassword()))
 			throw new BadCredentialsException("Current password is incorrect");
 
 		if (passwordEncoder.matches(request.getNewPassword(), user.getAccount().getPassword()))
@@ -218,23 +218,35 @@ public class UserServiceImpl implements UserService {
 	// Cập nhật thông tin người dùng
 	@Override
 	public ResponseEntity<Object> updateProfile(String userId, UserUpdateRequest request) throws Exception {
-		Optional<User> user = findById(userId);
-		if (user.isEmpty())
-			throw new Exception("User doesn't exist");
+		Optional<User> userOptional = findById(userId);
 
-		if (request.getDateOfBirth().after(new Date()))
+		User user = userOptional.orElseThrow(() -> new Exception("User doesn't exist"));
+
+		// Kiểm tra DateOfBirth trước
+		if (request.getDateOfBirth() != null && request.getDateOfBirth().after(new Date())) {
 			throw new Exception("Invalid date of birth");
+		}
 
-		user.get().setUserName(request.getFullName());
-		user.get().setPhone(request.getPhone());
-		user.get().setGender(request.getGender());
-		user.get().setDayOfBirth(request.getDateOfBirth());
-		user.get().setAddress(request.getAddress());
-		user.get().getProfile().setBio(request.getAbout());
-		save(user.get());
+		// Sử dụng ifPresent để kiểm tra và thực hiện hành động
+		userOptional.ifPresent(u -> {
+			if (request.getFullName() != null)
+				u.setUserName(request.getFullName());
+			if (request.getPhone() != null)
+				u.setPhone(request.getPhone());
+			if (request.getGender() != null)
+				u.setGender(request.getGender());
+			if (request.getDateOfBirth() != null)
+				u.setDayOfBirth(request.getDateOfBirth());
+			if (request.getAddress() != null)
+				u.setAddress(request.getAddress());
+			u.getProfile().setBio(request.getAbout());
+		});
+
+		// Sử dụng orElse để tránh gọi save(user) nếu user không tồn tại
+		save(user);
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
-				.result(new UserProfileResponse(user.get())).statusCode(200).build());
+				.result(new UserProfileResponse(user)).statusCode(200).build());
 	}
 
 	// Quản lý tài khoản người dùng
