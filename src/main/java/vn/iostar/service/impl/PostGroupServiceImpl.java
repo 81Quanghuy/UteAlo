@@ -359,17 +359,12 @@ public class PostGroupServiceImpl implements PostGroupService {
 		try {
 			Optional<PostGroupMember> groupMember = groupMemberRepository
 					.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
+			// Kiểm tra user đó có phải là admin không
 			if (groupMember.isPresent() && entity.getPostGroupMembers().contains(groupMember.get())) {
 				groupMember.get().setPostGroup(null);
 				entity.setPostGroupMembers(null);
 				groupMemberRepository.save(groupMember.get());
-				try {
-					postGroupRepository.delete(entity);
-				} catch (Exception e) {
-					return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
-							.body(GenericResponse.builder().success(false).message(e.getMessage())
-									.statusCode(HttpStatus.EXPECTATION_FAILED.value()).build());
-				}
+				postGroupRepository.delete(entity);
 
 			} else {
 				return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE) // Sử dụng HttpStatus.NOT_ACCEPTABLE cho lỗi
@@ -389,11 +384,6 @@ public class PostGroupServiceImpl implements PostGroupService {
 	@Override
 	public ResponseEntity<GenericResponse> acceptPostGroup(Integer postId, String currentUserId) {
 		Optional<User> user = userRepository.findById(currentUserId);
-
-		if (user.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		}
 		Optional<PostGroup> groupPost = postGroupRepository.findById(postId);
 		if (groupPost.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -406,12 +396,20 @@ public class PostGroupServiceImpl implements PostGroupService {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found Request").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
-		// TH Group kiem tra quyen tu dong vao nhom
-		// TH: Group kiem tra thanh vien nhom
-		if (Boolean.TRUE.equals(groupPost.get().getIsApprovalRequired())) {
-			poOptional.get().setIsAccept(true);
-			postGroupRequestRepository.save(poOptional.get());
+		// Tìm admin or debuty của nhóm
+		boolean checkAdminOrDeputy = groupPost.get().getPostGroupMembers().stream()
+				.anyMatch(memberGroup -> (memberGroup.getRoleUserGroup().equals(RoleUserGroup.Admin)
+						|| memberGroup.getRoleUserGroup().equals(RoleUserGroup.Deputy))
+						&& memberGroup.getUser().getUserId().equals(poOptional.get().getInvitingUser().getUserId()));
 
+		// kiểm tra xét duyệt thành viên
+		if (Boolean.TRUE.equals(groupPost.get().getIsApprovalRequired()) && !checkAdminOrDeputy) {
+
+			poOptional.get().setIsAccept(true);
+			poOptional.get().setInvitingUser(poOptional.get().getInvitedUser());
+			postGroupRequestRepository.save(poOptional.get());
+			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Accept successfully")
+					.result("Waiting Accept").statusCode(HttpStatus.OK.value()).build());
 			// Tu dong vao nhom
 		} else {
 			Optional<PostGroupMember> postGroupMember = groupMemberRepository
@@ -428,10 +426,9 @@ public class PostGroupServiceImpl implements PostGroupService {
 			groupMemberRepository.save(postMember1);
 			postGroupRepository.save(groupPost.get());
 			postGroupRequestRepository.delete(poOptional.get());
+			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Accept successfully")
+					.result("Member").statusCode(HttpStatus.OK.value()).build());
 		}
-
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Accept successfully")
-				.statusCode(HttpStatus.OK.value()).build());
 
 	}
 
@@ -454,12 +451,13 @@ public class PostGroupServiceImpl implements PostGroupService {
 					.message("Not found group request").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 		postGroupRequestRepository.delete(poOptional.get());
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Delete successfully")
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Delete successfully").result("None")
 				.statusCode(HttpStatus.OK.value()).build());
 	}
 
 	@Override
 	public ResponseEntity<GenericResponse> invitePostGroup(PostGroupDTO postGroup, String currentUserId) {
+		List<String> nameUser = new ArrayList<>();
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -481,20 +479,33 @@ public class PostGroupServiceImpl implements PostGroupService {
 		// Lap qua mang UserId de gui loi moi vao nhom
 		if (postGroup.getUserId() != null) {
 			for (String idRequest : postGroup.getUserId()) {
+
+				Optional<PostGroupRequest> requestGroup = postGroupRequestRepository.findRequestJoinGroup(currentUserId,
+						idRequest, postGroup.getPostGroupId());
 				Optional<User> userMember = userRepository.findById(idRequest);
-				if (userMember.isPresent() && (!userMember.equals(user))) {
-					Date date = new Date();
-					PostGroupRequest postGroupRequest = new PostGroupRequest();
-					postGroupRequest.setCreateDate(date);
-					postGroupRequest.setInvitedUser(userMember.get());
-					postGroupRequest.setInvitingUser(user.get());
-					postGroupRequest.setPostGroup(groupPost.get());
-					postGroupRequest.setIsAccept(false);
-					postGroupRequestRepository.save(postGroupRequest);
+
+				// Kiểm tra người được mời có tồn tại không
+				if (userMember.isPresent()) {
+					// Kiểm tra người được mời có nằm trong nhóm đó hay chưa
+					boolean checkInGroup = postGroupRepository.isUserInPostGroup(groupPost.get(), userMember.get());
+
+					// Kiểm tra chưa mời, không mời chính mình và chưa có trong nhóm đó
+					if (requestGroup.isEmpty() && (!userMember.equals(user)) && !checkInGroup) {
+						Date date = new Date();
+						PostGroupRequest postGroupRequest = new PostGroupRequest();
+						postGroupRequest.setCreateDate(date);
+						postGroupRequest.setInvitedUser(userMember.get());
+						postGroupRequest.setInvitingUser(user.get());
+						postGroupRequest.setPostGroup(groupPost.get());
+						postGroupRequest.setIsAccept(false);
+						postGroupRequestRepository.save(postGroupRequest);
+					} else {
+						nameUser.add(userMember.get().getUserName());
+					}
 				}
 			}
 		}
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Invite successfully")
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Invite successfully").result(nameUser)
 				.statusCode(HttpStatus.OK.value()).build());
 	}
 
@@ -590,15 +601,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 
-		PostGroupResponse response = new PostGroupResponse();
-		response.setPostGroupId(postId);
-		response.setPostGroupName(postGroup.get().getPostGroupName());
-		response.setAvatar(postGroup.get().getAvatarGroup());
-		response.setBackground(postGroup.get().getBackgroundGroup());
-		response.setGroupType(Boolean.TRUE.equals(postGroup.get().getIsPublic()) ? "Public" : "Private");
-		response.setUserJoinStatus(Boolean.TRUE.equals(postGroup.get().getIsApprovalRequired()) ? "denied" : "allowed");
-		response.setBio(postGroup.get().getBio());
-		response.setCountMember(postGroup.get().getPostGroupMembers().size());
+		PostGroupResponse response = new PostGroupResponse(postGroup.get());
 		response.setRoleGroup(checkUserInGroup(user.get(), postGroup.get()));
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get successfully").result(response)
 				.statusCode(HttpStatus.OK.value()).build());
@@ -890,18 +893,18 @@ public class PostGroupServiceImpl implements PostGroupService {
 	}
 
 	public ResponseEntity<GenericResponse> leaveGroup(String userId, Integer groupId) {
-		// Sử dụng phương thức countPostGroupMemberAssociations để kiểm tra mối quan hệ
-		// tồn tại
+
 		int hasAssociations = postGroupMemberRepository.hasPostGroupMemberAssociations(groupId, userId);
 		if (hasAssociations == 1) {
 			// Sử dụng phương thức deletePostGroupMemberAssociations để xóa mối quan hệ
 			postGroupMemberRepository.deletePostGroupMemberAssociations(groupId, userId);
 
-			return ResponseEntity.ok()
-					.body(new GenericResponse(true, "Leave Group Successful!", null, HttpStatus.OK.value()));
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("get list group join successfully!")
+							.result("None").statusCode(HttpStatus.OK.value()).build());
 		} else {
-			return ResponseEntity.ok().body(
-					new GenericResponse(true, "User does not belong to the post group!", null, HttpStatus.OK.value()));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 	}
 
@@ -1144,7 +1147,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		List<Post> posts = postRepository.findByContentContaining(search, pageable);
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : posts) {
-			PostsResponse postsResponse = new PostsResponse(post,userIdToken);
+			PostsResponse postsResponse = new PostsResponse(post, userIdToken);
 			if (post.getComments() != null && !post.getComments().isEmpty()) {
 				postsResponse.setComments(getIdComment(post.getComments()));
 			} else {
@@ -1384,6 +1387,25 @@ public class PostGroupServiceImpl implements PostGroupService {
 		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
 		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
 		return postGroupRepository.countByCreateDateBetween(startDateAsDate, endDateAsDate);
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> cancelRequestPostGroup(Integer postGroupId, String currentUserId) {
+		Optional<PostGroup> entity = postGroupRepository.findById(postGroupId);
+		if (entity.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		Optional<PostGroupRequest> pOptional = postGroupRequestRepository.findRequestJoinGroup(currentUserId,
+				currentUserId, postGroupId);
+		if (pOptional.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group post of this user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		postGroupRequestRepository.delete(pOptional.get());
+
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Delete successfully").result("None")
+				.statusCode(HttpStatus.OK.value()).build());
 	}
 
 }
