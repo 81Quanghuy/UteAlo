@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import vn.iostar.contants.PrivacyLevel;
 import vn.iostar.contants.RoleName;
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.FilesOfGroupDTO;
@@ -32,6 +33,7 @@ import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.dto.PostResponse;
+import vn.iostar.dto.PhoToResponse;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Comment;
@@ -107,13 +109,18 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public ResponseEntity<GenericResponse> getPost(Integer postId) {
+	public ResponseEntity<GenericResponse> getPost(String currentId, Integer postId) {
 		Optional<Post> post = postRepository.findById(postId);
 		if (post.isEmpty())
-			throw new RuntimeException("Post not found");
+			return ResponseEntity.ok(GenericResponse.builder().success(null).message("not found post").result(null)
+					.statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		PostsResponse postsResponse = new PostsResponse(post.get(), currentId);
+		postsResponse.setComments(getIdComment(post.get().getComments()));
+		postsResponse.setLikes(getIdLikes(post.get().getLikes()));
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieving user profile successfully")
-				.result(new PostResponse(post.get())).statusCode(HttpStatus.OK.value()).build());
+				.result(postsResponse).statusCode(HttpStatus.OK.value()).build());
 	}
 
 	@Override
@@ -128,26 +135,26 @@ public class PostServiceImpl implements PostService {
 		List<String> allowedFileExtensions = Arrays.asList("docx", "txt", "pdf");
 
 		Optional<Post> postOp = findById(postId);
-		if (postOp.isEmpty())
+		if (postOp.isEmpty()) {
 			throw new Exception("Post doesn't exist");
+		}
 		Post post = postOp.get();
-		if (!currentUserId.equals(postOp.get().getUser().getUserId()))
+		if (!currentUserId.equals(postOp.get().getUser().getUserId())) {
 			throw new Exception("Update denied");
+		}
 		post.setContent(request.getContent());
 		post.setLocation(request.getLocation());
 		post.setPrivacyLevel(request.getPrivacyLevel());
 		post.setUpdateAt(new Date());
 		try {
 			if (request.getPhotos() == null || request.getPhotos().getContentType() == null) {
-				post.setPhotos("");
-			} else if (request.getPhotos().equals(postOp.get().getPhotos())) {
-				post.setPhotos(postOp.get().getPhotos());
+				post.setPhotos(request.getPhotoUrl());
 			} else {
 				post.setPhotos(cloudinaryService.uploadImage(request.getPhotos()));
 			}
 
 			if (request.getFiles() == null || request.getFiles().getContentType() == null) {
-				post.setFiles("");
+				post.setFiles(request.getFileUrl());
 			} else {
 				String fileExtension = StringUtils.getFilenameExtension(request.getFiles().getOriginalFilename());
 				if (fileExtension != null && allowedFileExtensions.contains(fileExtension.toLowerCase())) {
@@ -161,8 +168,9 @@ public class PostServiceImpl implements PostService {
 			e.printStackTrace();
 		}
 		save(post);
-		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
-				.statusCode(200).build());
+		PostsResponse postResponse = new PostsResponse(post);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful")
+				.result(postResponse).statusCode(200).build());
 	}
 
 	// Xóa bài post của mình
@@ -221,14 +229,16 @@ public class PostServiceImpl implements PostService {
 		}
 	}
 
+	/**
+	 * @param token
+	 * @param requestDTO
+	 * @return
+	 */
 	@Override
 	public ResponseEntity<Object> createUserPost(String token, CreatePostRequestDTO requestDTO) {
 
 		List<String> allowedFileExtensions = Arrays.asList("docx", "txt", "pdf");
 
-		if (String.valueOf(requestDTO.getPostGroupId()) == null) {
-			return ResponseEntity.badRequest().body("Please select post group");
-		}
 		if (requestDTO.getLocation() == null && requestDTO.getContent() == null) {
 			return ResponseEntity.badRequest().body("Please provide all required fields.");
 		}
@@ -293,14 +303,21 @@ public class PostServiceImpl implements PostService {
 		return ResponseEntity.ok(response);
 	}
 
-	// Lấy những bài post của cá nhân
-	public List<PostsResponse> findUserPosts(String userId) {
-		List<Post> userPosts = postRepository.findByUserUserIdOrderByPostTimeDesc(userId);
+	// lấy những bài post của user theo UserId có privacyLevel là PUBLIC Or FRIENDS
+	// OrderBy PostTime Desc
+	@Override
+	public List<PostsResponse> findUserPosts(String currentUserId, String userId, Pageable pageable) {
+		List<PrivacyLevel> privacyLevels = Arrays.asList(PrivacyLevel.PUBLIC, PrivacyLevel.FRIENDS);
+		if (currentUserId.equals(userId))
+			privacyLevels = Arrays.asList(PrivacyLevel.PUBLIC, PrivacyLevel.FRIENDS, PrivacyLevel.PRIVATE);
+
+		List<Post> userPosts = postRepository.findByUserUserIdAndPrivacyLevelInOrderByPostTimeDesc(userId,
+				privacyLevels, pageable);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
 		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : userPosts) {
-			PostsResponse postsResponse = new PostsResponse(post);
+			PostsResponse postsResponse = new PostsResponse(post, currentUserId);
 			postsResponse.setComments(getIdComment(post.getComments()));
 			postsResponse.setLikes(getIdLikes(post.getLikes()));
 			simplifiedUserPosts.add(postsResponse);
@@ -308,20 +325,34 @@ public class PostServiceImpl implements PostService {
 		return simplifiedUserPosts;
 	}
 
+	// Lấy những bài post của cá nhân
+
+//	public List<PostsResponse> findUserPostsByUserIdToken(String currentUserId, Pageable pageable) {
+//		List<PostsResponse> userPosts = postReposi(currentUserId, pageable);
+//		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+//		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+//		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+//		for (Post post : userPosts) {
+//			PostsResponse postsResponse = new PostsResponse(post);
+//			postsResponse.setComments(getIdComment(post.getComments()));
+//			postsResponse.setLikes(getIdLikes(post.getLikes()));
+//			simplifiedUserPosts.add(postsResponse);
+//		}
+//		return simplifiedUserPosts;
+//	}
+
 	// Lấy tất cả bài post trong hệ thống
 	@Override
 	public Page<PostsResponse> findAllPosts(int page, int itemsPerPage) {
 		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
 		Page<Post> userPostsPage = postRepository.findAllByOrderByPostTimeDesc(pageable);
 
-		Page<PostsResponse> simplifiedUserPostsPage = userPostsPage.map(post -> {
+		return userPostsPage.map(post -> {
 			PostsResponse postsResponse = new PostsResponse(post);
 			postsResponse.setComments(getIdComment(post.getComments()));
 			postsResponse.setLikes(getIdLikes(post.getLikes()));
 			return postsResponse;
 		});
-
-		return simplifiedUserPostsPage;
 	}
 
 	@Override
@@ -354,13 +385,13 @@ public class PostServiceImpl implements PostService {
 		}
 	}
 
-	// Lấy những bài post của nhóm
+	// // Lấy những bài post của nhóm
 	@Override
-	public List<PostsResponse> findPostGroupPosts(Integer postGroupId) {
-		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId);
+	public List<PostsResponse> findPostGroupPosts(String currentId, Integer postGroupId, Pageable pageable) {
+		List<Post> groupPosts = postRepository.findByPostGroupPostGroupIdOrderByPostTimeDesc(postGroupId, pageable);
 		List<PostsResponse> simplifiedGroupPosts = new ArrayList<>();
 		for (Post post : groupPosts) {
-			PostsResponse postsResponse = new PostsResponse(post);
+			PostsResponse postsResponse = new PostsResponse(post, currentId);
 			postsResponse.setComments(getIdComment(post.getComments()));
 			postsResponse.setLikes(getIdLikes(post.getLikes()));
 			simplifiedGroupPosts.add(postsResponse);
@@ -370,8 +401,10 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy những bài post của nhóm
 	@Override
-	public ResponseEntity<GenericResponse> getGroupPosts(Integer postGroupId) {
-		List<PostsResponse> groupPosts = findPostGroupPosts(postGroupId);
+	public ResponseEntity<GenericResponse> getGroupPosts(String currentId, Integer postGroupId, Integer page,
+			Integer size) {
+		Pageable pageable = PageRequest.of(page, size);
+		List<PostsResponse> groupPosts = findPostGroupPosts(currentId, postGroupId, pageable);
 		if (groupPosts.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
@@ -384,8 +417,8 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy tất cả các bài post của những nhóm mình tham gia
 	@Override
-	public List<PostsResponse> findGroupPosts(String currentUserId) {
-		List<Post> groupPosts = postRepository.findAllPostsInUserGroups(currentUserId);
+	public List<PostsResponse> findGroupPosts(String currentUserId, Pageable pageable) {
+		List<Post> groupPosts = postRepository.findAllPostsInUserGroups(currentUserId, pageable);
 		List<PostsResponse> simplifiedGroupPosts = new ArrayList<>();
 		for (Post post : groupPosts) {
 			PostsResponse postsResponse = new PostsResponse(post);
@@ -398,20 +431,19 @@ public class PostServiceImpl implements PostService {
 
 	// Lấy tất cả các bài post của những nhóm mình tham gia
 	@Override
-	public ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId, String userId) {
-		List<PostsResponse> groupPosts = findGroupPosts(currentUserId);
-		if (currentUserId.isEmpty()) {
+	public ResponseEntity<GenericResponse> getPostOfPostGroup(String currentUserId, Pageable pageable)
+			throws RuntimeException {
+		List<PostsResponse> groupPosts = findGroupPosts(currentUserId, pageable);
+		if (currentUserId.isEmpty())
 			throw new RuntimeException("User not found.");
-		} else if (groupPosts.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-					.message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		} else {
+		else {
 			return ResponseEntity
 					.ok(GenericResponse.builder().success(true).message("Retrieved group posts successfully")
 							.result(groupPosts).statusCode(HttpStatus.OK.value()).build());
 		}
 	}
 
+	// Lấy những bài post liên quan đến user như cá nhân, nhóm, bạn bè
 	@Override
 	public ResponseEntity<GenericResponse> getPostTimelineByUserId(String userId, int page, int size)
 			throws RuntimeException {
@@ -426,7 +458,7 @@ public class PostServiceImpl implements PostService {
 		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : listPost) {
-			PostsResponse postsResponse = new PostsResponse(post);
+			PostsResponse postsResponse = new PostsResponse(post, userId);
 			if (post.getComments() != null && !post.getComments().isEmpty()) {
 				postsResponse.setComments(getIdComment(post.getComments()));
 			} else {
@@ -461,14 +493,6 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public PostsResponse getPost(Post post) {
-		PostsResponse postsResponse = new PostsResponse(post);
-		postsResponse.setComments(getIdComment(post.getComments()));
-		postsResponse.setLikes(getIdLikes(post.getLikes()));
-		return postsResponse;
-	}
-
-	@Override
 	public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(String userId) {
 		return postRepository.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
 	}
@@ -493,7 +517,7 @@ public class PostServiceImpl implements PostService {
 		PageRequest pageable = PageRequest.of(page, size);
 		return postRepository.findPhotosOfPostByGroupId(groupId, pageable);
 	}
-
+  
 	// Thống kê bài post trong ngày hôm nay
 	@Override
 	public List<PostsResponse> getPostsToday() {
@@ -621,9 +645,8 @@ public class PostServiceImpl implements PostService {
 	public long countPostsInThreeMonthsFromNow() {
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime startDate = now.minusMonths(3);
-		LocalDateTime endDate = now;
 		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
-		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date endDateAsDate = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
 		return postRepository.countPostsBetweenDates(startDateAsDate, endDateAsDate);
 	}
 
@@ -677,6 +700,7 @@ public class PostServiceImpl implements PostService {
 			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
 			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
 
+
 			long postCount = postRepository.countPostsBetweenDates(startDateAsDate, endDateAsDate);
 			postCountsByMonth.put(month.toString(), postCount);
 		}
@@ -697,6 +721,23 @@ public class PostServiceImpl implements PostService {
 			simplifiedUserPosts.add(postsResponse);
 		}
 		return simplifiedUserPosts;
+
+	}
+
+	@Override
+	public ResponseEntity<Object> findLatestPhotosByUserId(String currentUserId, String userId, Pageable pageable) {
+		Optional<User> user = userService.findById(userId);
+		if (user.isEmpty())
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("User not found.").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		List<PrivacyLevel> privacyLevels = Arrays.asList(PrivacyLevel.GROUP_MEMBERS);
+		if (!currentUserId.equals(userId)) {
+			privacyLevels = Arrays.asList(PrivacyLevel.GROUP_MEMBERS, PrivacyLevel.PRIVATE);
+		}
+		List<PhoToResponse> list = postRepository.findLatestPhotosByUserIdAndNotNull(privacyLevels, userId, pageable);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved user posts successfully")
+				.result(list).statusCode(HttpStatus.OK.value()).build());
+
 	}
 	
 

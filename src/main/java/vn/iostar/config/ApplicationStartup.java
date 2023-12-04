@@ -66,6 +66,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         createRoleIfNotExist(RoleName.GiangVien);
         createRoleIfNotExist(RoleName.Admin);
         createRoleIfNotExist(RoleName.NhanVien);
+        createRoleIfNotExist(RoleName.PhuHuynh);
     }
 
     private void createRoleIfNotExist(RoleName roleName) {

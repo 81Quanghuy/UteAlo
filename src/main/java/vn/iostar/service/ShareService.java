@@ -10,7 +10,6 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.SharePostRequestDTO;
 import vn.iostar.dto.SharesResponse;
 import vn.iostar.entity.Share;
-import vn.iostar.entity.User;
 
 public interface ShareService {
 
@@ -30,19 +29,23 @@ public interface ShareService {
 
     ResponseEntity<Object> sharePost(String token, SharePostRequestDTO requestDTO);
 
-    ResponseEntity<Object> updateSharePost(Integer shareId, String content, String currentUserId);
+    ResponseEntity<Object> updateSharePost(SharePostRequestDTO requestDTO, String currentUserId);
 
     ResponseEntity<GenericResponse> deleteSharePost(Integer shareId, String token, String userId);
 
-    SharesResponse getSharePost(Share share);
+    ResponseEntity<GenericResponse> getShareOfPostGroup(String currentUserId, Pageable pageable);
 
-    public List<SharesResponse> findUserSharePosts(String userId);
-	
+    SharesResponse getSharePost(Share share, String currentUserId);
+
+    List<SharesResponse> findUserSharePosts(String currentUserId, String userId, Pageable pageable);
+
+    List<SharesResponse> findMySharePosts(String currentUserId, Pageable pageable);
+
     List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId, Pageable pageable);
 
-    List<SharesResponse> findPostGroupShares(Integer postGroupId);
+    List<SharesResponse> findPostGroupShares(String currentUserId, Integer postGroupId, Pageable pageable);
 
-    ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId);
+    ResponseEntity<GenericResponse> getGroupSharePosts(String currentUserId, Integer postGroupId, Integer page, Integer size);
 
 
     ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size);

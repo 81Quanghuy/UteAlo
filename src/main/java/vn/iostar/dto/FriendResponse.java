@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.iostar.entity.Friend;
-import vn.iostar.entity.FriendRequest;
 
 @Data
 @NoArgsConstructor

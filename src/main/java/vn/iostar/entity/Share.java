@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import vn.iostar.contants.PrivacyLevel;
 import jakarta.persistence.*;
 
 @Getter
@@ -33,10 +34,13 @@ public class Share implements Serializable {
     @JoinColumn(name = "postId")
     private Post post;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "postGroupId")
     private PostGroup postGroup;
-
+    
+    @Enumerated(EnumType.STRING)
+    private PrivacyLevel privacyLevel;
+    
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;

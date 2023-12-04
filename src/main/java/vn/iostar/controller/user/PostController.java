@@ -1,10 +1,10 @@
 package vn.iostar.controller.user;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -58,12 +58,12 @@ public class PostController {
 
 	// Xem chi tiết bài post
 	// Làm lại chuyển thanh cauquery trong repository
-
 	@GetMapping("/{postId}")
 	public ResponseEntity<GenericResponse> getPost(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("postId") Integer postId) {
 		String token = authorizationHeader.substring(7);
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+
 		Optional<Post> post = postService.findById(postId);
 
 		if (post.isEmpty()) {
@@ -98,6 +98,22 @@ public class PostController {
 					.message("Retrieved user posts successfully and access update").result(userPosts)
 					.statusCode(HttpStatus.OK.value()).build());
 		}
+		return postService.getPost(currentUserId, postId);
+	}
+
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<GenericResponse> getPostByUserId(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("userId") String userId, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Pageable pageable = PageRequest.of(page, size);
+		List<PostsResponse> userPosts = postService.findUserPosts(currentUserId, userId, pageable);
+
+		return ResponseEntity.ok(
+				GenericResponse.builder().success(true).message("Retrieved user posts successfully and access update")
+						.result(userPosts).statusCode(HttpStatus.OK.value()).build());
+
 	}
 
 	// Lấy những bài post liên quan đến mình như: nhóm, bạn bè, cá nhân
@@ -111,7 +127,8 @@ public class PostController {
 	}
 
 	@PutMapping("/update/{postId}")
-	public ResponseEntity<Object> updateUser(@ModelAttribute PostUpdateRequest request,
+	public ResponseEntity<Object> updatePost(@ModelAttribute PostUpdateRequest request,
+
 			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("postId") Integer postId,
 			BindingResult bindingResult) throws Exception {
 
@@ -121,9 +138,11 @@ public class PostController {
 
 	}
 
+
 	// Xóa bài viết
 	@PutMapping("/delete/{postId}")
-	public ResponseEntity<GenericResponse> deleteUser(@RequestHeader("Authorization") String token,
+	public ResponseEntity<GenericResponse> deletePost(@RequestHeader("Authorization") String token,
+
 			@PathVariable("postId") Integer postId, @RequestBody String userId) {
 		return postService.deletePost(postId, token, userId);
 
@@ -131,12 +150,12 @@ public class PostController {
 
 	// Tạo bài viết
 	@PostMapping("/create")
-	public ResponseEntity<Object> createPost(@ModelAttribute CreatePostRequestDTO requestDTO,
+	public ResponseEntity<Object> createUserPost(@ModelAttribute CreatePostRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
 		return postService.createUserPost(token, requestDTO);
 	}
 
-	// Lấy tất cả photo của 1 người dùng
+	// Lấy tất cả hình của user đó
 	@GetMapping("/user/{userId}/photos")
 	public List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@PathVariable String userId) {
 		return postService.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
@@ -181,4 +200,16 @@ public class PostController {
 							.result(groupPosts).statusCode(HttpStatus.OK.value()).build());
 		}
 	}
+
+	// Lấy 9 hình đầu tiên của user
+	@GetMapping("/getPhotos/{userId}")
+	public ResponseEntity<Object> getLatestPhotosByUserId(@RequestHeader("Authorization") String authorizationHeader,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "9") int size,
+			@PathVariable("userId") String userId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		Pageable pageable = PageRequest.of(page, size);
+		return postService.findLatestPhotosByUserId(currentUserId, userId, pageable);
+	}
+
 }

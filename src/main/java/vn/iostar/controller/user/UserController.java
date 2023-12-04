@@ -54,8 +54,8 @@ public class UserController {
 
 	@Autowired
 	CloudinaryService cloudinaryService;
-	
-	@Autowired 
+
+	@Autowired
 	PostGroupService groupService;
 
 	@Autowired
@@ -104,14 +104,9 @@ public class UserController {
 		UserProfileResponse profileResponse = userService.getFullProfile(user, pageable);
 		if (user.isEmpty()) {
 			throw new RuntimeException("User not found.");
-		} else if (currentUserId.equals(userId)) {
-			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieving user profile successfully and access update").result(profileResponse)
-					.statusCode(HttpStatus.OK.value()).build());
 		} else {
-			return ResponseEntity.ok(GenericResponse.builder().success(true)
-					.message("Retrieving user profile successfully and access update denied").result(profileResponse)
-					.statusCode(HttpStatus.OK.value()).build());
+			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Successfully")
+					.result(profileResponse).statusCode(HttpStatus.OK.value()).build());
 		}
 	}
 
@@ -242,13 +237,14 @@ public class UserController {
 		return userService.deleteUser(userIdFromToken);
 
 	}
-	
+
 	// Tìm kiếm bài viết, user, nhóm
 	@GetMapping("/search/key")
-	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,@RequestParam("search") String search) {
+	public ResponseEntity<GenericResponse> searchPostGroups(@RequestHeader("Authorization") String authorizationHeader,
+			@RequestParam("search") String search) {
 		String token = authorizationHeader.substring(7);
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-		return groupService.searchGroupAndUserContainingIgnoreCase(search,userIdToken);
+		return groupService.searchGroupAndUserContainingIgnoreCase(search, userIdToken);
 	}
 
 }

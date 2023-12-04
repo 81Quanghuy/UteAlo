@@ -1,7 +1,7 @@
 package vn.iostar.service.impl;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import vn.iostar.contants.PrivacyLevel;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.SharePostRequestDTO;
 import vn.iostar.dto.ShareResponse;
@@ -89,8 +90,9 @@ public class ShareServiceImpl implements ShareService {
     @Override
     public ResponseEntity<GenericResponse> getShare(Integer shareId) {
         Optional<Share> share = shareRepository.findById(shareId);
-        if (share.isEmpty())
+        if (share.isEmpty()) {
             throw new RuntimeException("Share not found");
+        }
         return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieving user profile successfully")
                 .result(new ShareResponse(share.get())).statusCode(HttpStatus.OK.value()).build());
     }
@@ -108,16 +110,18 @@ public class ShareServiceImpl implements ShareService {
 
         Share share = new Share();
         share.setContent(requestDTO.getContent());
-        share.setCreateAt(new Date());
-        share.setUpdateAt(new Date());
+        share.setCreateAt(requestDTO.getCreateAt());
+        share.setUpdateAt(requestDTO.getCreateAt());
         share.setPost(post.get());
         share.setUser(user.get());
-        Optional<PostGroup> postGroup = postGroupService.findById(requestDTO.getPostGroupId());
-        if (postGroup.isPresent()) {
-            share.setPostGroup(postGroup.get());
-        }
+        share.setPrivacyLevel(requestDTO.getPrivacyLevel());
+        if (requestDTO.getPostGroupId() != null)
+            if (requestDTO.getPostGroupId() != 0) {
+                Optional<PostGroup> postGroup = postGroupService.findById(requestDTO.getPostGroupId());
+                postGroup.ifPresent(share::setPostGroup);
+            }
         save(share);
-        SharesResponse sharesResponse = new SharesResponse(share);
+        SharesResponse sharesResponse = new SharesResponse(share, userId);
         List<Integer> count = new ArrayList<>();
         sharesResponse.setComments(count);
         sharesResponse.setLikes(count);
@@ -129,15 +133,23 @@ public class ShareServiceImpl implements ShareService {
     }
 
     @Override
-    public ResponseEntity<Object> updateSharePost(Integer shareId, String content, String currentUserId) {
-        Optional<Share> shareOp = findById(shareId);
+    public ResponseEntity<Object> updateSharePost(SharePostRequestDTO requestDTO, String currentUserId) {
+        Optional<Share> shareOp = findById(Integer.valueOf(requestDTO.getShareId()));
         if (shareOp.isEmpty())
             return ResponseEntity.badRequest().body("Share post doesn't exist");
         if (!currentUserId.equals(shareOp.get().getUser().getUserId()))
             return ResponseEntity.badRequest().body("Update denied");
         Share share = shareOp.get();
-        share.setContent(content);
-        share.setUpdateAt(new Date());
+        share.setContent(requestDTO.getContent());
+        share.setPrivacyLevel(requestDTO.getPrivacyLevel());
+        if (requestDTO.getPostGroupId() != null) {
+            if (requestDTO.getPostGroupId() != 0) {
+                Optional<PostGroup> poOptional = postGroupService.findById(requestDTO.getPostGroupId());
+                poOptional.ifPresent(share::setPostGroup);
+            }
+        }
+
+        share.setUpdateAt(requestDTO.getUpdateAt());
         save(share);
         return ResponseEntity.ok(GenericResponse.builder().success(true).message("Update successful").result(null)
                 .statusCode(200).build());
@@ -171,8 +183,25 @@ public class ShareServiceImpl implements ShareService {
     }
 
     @Override
-    public SharesResponse getSharePost(Share share) {
-        SharesResponse sharesResponse = new SharesResponse(share);
+    public ResponseEntity<GenericResponse> getShareOfPostGroup(String currentUserId, Pageable pageable) {
+        if (currentUserId == null)
+            return ResponseEntity.badRequest().body(new GenericResponse(false, "User not found", null, 400));
+        List<Share> shares = shareRepository.findAllSharesInUserGroups(currentUserId, pageable);
+        List<SharesResponse> sharesResponses = new ArrayList<>();
+        for (Share share : shares) {
+            SharesResponse sharesResponse = new SharesResponse(share, currentUserId);
+            sharesResponse.setComments(getIdComment(share.getComments()));
+            sharesResponse.setLikes(getIdLikes(share.getLikes()));
+            sharesResponses.add(sharesResponse);
+        }
+        return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved share post successfully")
+                .result(sharesResponses).statusCode(HttpStatus.OK.value()).build());
+
+    }
+
+    @Override
+    public SharesResponse getSharePost(Share share, String currentUserId) {
+        SharesResponse sharesResponse = new SharesResponse(share, currentUserId);
         sharesResponse.setComments(getIdComment(share.getComments()));
         sharesResponse.setLikes(getIdLikes(share.getLikes()));
         return sharesResponse;
@@ -195,8 +224,22 @@ public class ShareServiceImpl implements ShareService {
     }
 
     @Override
-    public List<SharesResponse> findUserSharePosts(String userId) {
-        List<Share> userSharePosts = shareRepository.findByUserUserId(userId);
+    public List<SharesResponse> findUserSharePosts(String currentUserId, String userId, Pageable pageable) {
+        List<PrivacyLevel> privacyLevels = Arrays.asList(PrivacyLevel.PUBLIC, PrivacyLevel.FRIENDS);
+        List<Share> userSharePosts = shareRepository.findByUserUserIdAndPrivacyLevelInOrderByCreateAtDesc(userId, privacyLevels, pageable);
+        List<SharesResponse> sharesResponses = new ArrayList<>();
+        for (Share share : userSharePosts) {
+            SharesResponse sharesResponse = new SharesResponse(share, currentUserId);
+            sharesResponse.setComments(getIdComment(share.getComments()));
+            sharesResponse.setLikes(getIdLikes(share.getLikes()));
+            sharesResponses.add(sharesResponse);
+        }
+        return sharesResponses;
+    }
+
+    @Override
+    public List<SharesResponse> findMySharePosts(String currentUserId, Pageable pageable) {
+        List<Share> userSharePosts = shareRepository.findByUserUserId(currentUserId, pageable);
         List<SharesResponse> sharesResponses = new ArrayList<>();
         for (Share share : userSharePosts) {
             SharesResponse sharesResponse = new SharesResponse(share);
@@ -208,11 +251,13 @@ public class ShareServiceImpl implements ShareService {
     }
 
     @Override
-    public List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId, Pageable pageable) {
-        List<Share> userSharePosts = shareRepository.findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(userId, pageable);
+    public List<SharesResponse> findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(String userId,
+                                                                                       Pageable pageable) {
+        List<Share> userSharePosts = shareRepository.findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(userId,
+                pageable);
         List<SharesResponse> sharesResponses = new ArrayList<>();
         for (Share share : userSharePosts) {
-            SharesResponse sharesResponse = new SharesResponse(share);
+            SharesResponse sharesResponse = new SharesResponse(share, userId);
             sharesResponse.setComments(getIdComment(share.getComments()));
             sharesResponse.setLikes(getIdLikes(share.getLikes()));
             sharesResponses.add(sharesResponse);
@@ -221,11 +266,11 @@ public class ShareServiceImpl implements ShareService {
     }
 
     @Override
-    public List<SharesResponse> findPostGroupShares(Integer postGroupId) {
-        List<Share> groupSharePosts = shareRepository.findByPostGroupPostGroupId(postGroupId);
+    public List<SharesResponse> findPostGroupShares(String currentUserId, Integer postGroupId, Pageable pageable) {
+        List<Share> groupSharePosts = shareRepository.findByPostGroupPostGroupId(postGroupId, pageable);
         List<SharesResponse> sharesResponses = new ArrayList<>();
         for (Share share : groupSharePosts) {
-            SharesResponse sharesResponse = new SharesResponse(share);
+            SharesResponse sharesResponse = new SharesResponse(share, currentUserId);
             sharesResponse.setComments(getIdComment(share.getComments()));
             sharesResponse.setLikes(getIdLikes(share.getLikes()));
             sharesResponses.add(sharesResponse);
@@ -233,18 +278,18 @@ public class ShareServiceImpl implements ShareService {
         return sharesResponses;
     }
 
+    //
     @Override
-    public ResponseEntity<GenericResponse> getGroupSharePosts(Integer postGroupId) {
-        List<SharesResponse> groupSharePosts = findPostGroupShares(postGroupId);
+    public ResponseEntity<GenericResponse> getGroupSharePosts(String currentUserId, Integer postGroupId, Integer page,
+                                                              Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        List<SharesResponse> groupSharePosts = findPostGroupShares(currentUserId, postGroupId, pageable);
 
-        if (groupSharePosts.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-                    .message("No posts found for this group").statusCode(HttpStatus.NOT_FOUND.value()).build());
-        } else {
-            return ResponseEntity.ok(GenericResponse.builder().success(true)
-                    .message("Retrieved group posts successfully").result(groupSharePosts)
-                    .statusCode(HttpStatus.OK.value()).build());
-        }
+
+        return ResponseEntity
+                .ok(GenericResponse.builder().success(true).message("Retrieved group posts successfully")
+                        .result(groupSharePosts).statusCode(HttpStatus.OK.value()).build());
+
     }
 
     @Override
@@ -255,9 +300,10 @@ public class ShareServiceImpl implements ShareService {
             return ResponseEntity.ofNullable(GenericResponse.builder().success(false).message("User not found")
                     .result(null).statusCode(HttpStatus.NOT_FOUND.value()).build());
         Pageable pageable = PageRequest.of(page, size);
-        List<SharesResponse> userPosts = findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(currentUserId, pageable);
-        return ResponseEntity.ok(GenericResponse.builder().success(true)
-                .message("Retrieved user posts successfully and access update").result(userPosts)
-                .statusCode(HttpStatus.OK.value()).build());
+        List<SharesResponse> userPosts = findSharesByUserAndFriendsAndGroupsOrderByPostTimeDesc(currentUserId,
+                pageable);
+        return ResponseEntity.ok(
+                GenericResponse.builder().success(true).message("Retrieved user posts successfully and access update")
+                        .result(userPosts).statusCode(HttpStatus.OK.value()).build());
     }
 }
