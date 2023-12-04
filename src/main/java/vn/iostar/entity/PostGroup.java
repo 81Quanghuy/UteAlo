@@ -44,7 +44,7 @@ public class PostGroup implements Serializable {
 
 	private String avatarGroup;
 	private String backgroundGroup;
-	
+
 	@Column(columnDefinition = "nvarchar(255)")
 	private String bio;
 
@@ -57,14 +57,14 @@ public class PostGroup implements Serializable {
 
 	@OneToMany(mappedBy = "postGroup", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Post> posts;
-	
-	@OneToMany(mappedBy = "postGroup", orphanRemoval = true,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Share> shares;
 
-	@OneToMany(mappedBy = "postGroup", orphanRemoval = true,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true, cascade = CascadeType.ALL)
 	private List<PostGroupRequest> postGroupRequests;
 
-	@OneToMany(mappedBy = "group", orphanRemoval = true,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "group", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Message> messages;
 
 	private Date createDate;

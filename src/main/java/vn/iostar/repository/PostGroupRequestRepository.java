@@ -20,7 +20,12 @@ public interface PostGroupRequestRepository extends JpaRepository<PostGroupReque
 
 	@Query("SELECT pgr FROM PostGroupRequest pgr " + "WHERE pgr.invitingUser.userId = :invitingUserId "
 			+ "AND pgr.postGroupRequestId = :postGroupRequestId")
-	PostGroupRequest findInvitationSentByUserIdAndRequestId(@Param("invitingUserId") String userId,
+	Optional<PostGroupRequest> findInvitationSentByUserIdAndRequestId(@Param("invitingUserId") String userId,
 			@Param("postGroupRequestId") String postGroupRequestId);
 
+	@Query("SELECT pgr FROM PostGroupRequest pgr "
+			+ "WHERE pgr.invitingUser.userId = :invitingUserId AND pgr.invitedUser.userId = :invitedUserId "
+			+ "AND pgr.postGroup.postGroupId = :postGroupId")
+	Optional<PostGroupRequest> findRequestJoinGroup(@Param("invitingUserId") String invitingUserId,
+			@Param("invitedUserId") String invitedUserId, @Param("postGroupId") Integer postGroupId);
 }

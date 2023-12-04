@@ -119,4 +119,6 @@ public interface PostGroupService {
 	// Đếm số lượng user trong 3 tháng
 	long countGroupsInThreeMonthsFromNow();
 
+	ResponseEntity<GenericResponse> cancelRequestPostGroup(Integer postGroupId, String currentUserId);
+
 }

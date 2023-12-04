@@ -68,19 +68,14 @@ public class PostGroupRequestServiceImpl implements PostGroupRequestService {
 					.body(new GenericResponse(false, "Cannot found user!", null, HttpStatus.NOT_FOUND.value()));
 		}
 
-		PostGroupRequest postGroupRequestOptional = postGroupRequestRepository
+		Optional<PostGroupRequest> postGroupRequestOptional = postGroupRequestRepository
 				.findInvitationSentByUserIdAndRequestId(currentUserId, postGroupRequestId);
-		if (postGroupRequestOptional==null) {
-			return ResponseEntity.ok()
-					.body(new GenericResponse(true, "NOT FOUND JOIN GROUP REQUEST!", null, HttpStatus.OK.value()));
+		if (postGroupRequestOptional.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found user!", null, HttpStatus.NOT_FOUND.value()));
 		}
-		if (!postGroupRequestOptional.equals(null)) {
-			delete(postGroupRequestOptional);
-			return ResponseEntity.ok()
-					.body(new GenericResponse(true, "Delete Successful!", null, HttpStatus.OK.value()));
-		}
-		return ResponseEntity.ok()
-				.body(new GenericResponse(false, "NOT FOUND JOIN GROUP REQUEST!", null, HttpStatus.NOT_FOUND.value()));
+		delete(postGroupRequestOptional.get());
+		return ResponseEntity.ok().body(new GenericResponse(true, "Delete Successful!", "None", HttpStatus.OK.value()));
 
 	}
 
