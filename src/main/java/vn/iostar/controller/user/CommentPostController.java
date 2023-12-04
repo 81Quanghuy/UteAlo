@@ -35,11 +35,13 @@ public class CommentPostController {
 	@Autowired
 	CommentService commentService;
 
+	// Lấy danh sách bình luận của 1 bài viết
 	@GetMapping("/{postId}")
 	public ResponseEntity<GenericResponse> getCommentOfPost(@PathVariable("postId") int postId) {
 		return commentService.getCommentOfPost(postId);
 	}
 	
+	// Lấy danh sách phản hổi của 1 bình luận
 	@GetMapping("/{commentId}/commentReply")
 	public ResponseEntity<GenericResponse> getCommentReplyOfComment(@PathVariable("commentId") int commentId) {
 		return commentService.getCommentReplyOfComment(commentId);
@@ -51,18 +53,21 @@ public class CommentPostController {
 			return commentService.getCountCommentOfPost(postId);
 	}
 	
+	// Thêm bình luận
 	@PostMapping("/create")
 	public ResponseEntity<Object> createCommentPost(@ModelAttribute CreateCommentPostRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
 		return commentService.createCommentPost(token, requestDTO);
 	}
 	
+	// Phản hồi bình luận
 	@PostMapping("/reply")
 	public ResponseEntity<Object> replyCommentPost(@ModelAttribute ReplyCommentPostRequestDTO requestDTO,
 			@RequestHeader("Authorization") String token) {
 		return commentService.replyCommentPost(token, requestDTO);
 	}
 	
+	// Cập nhật bình luận
 	@PutMapping("/update/{commentId}")
 	public ResponseEntity<Object> updateUser(@ModelAttribute CommentUpdateRequest request,
 			@RequestHeader("Authorization") String authorizationHeader, @PathVariable("commentId") Integer commentId,
@@ -73,6 +78,7 @@ public class CommentPostController {
 
 	}
 	
+	// Xóa bình luận
 	@PutMapping("/delete/{commentId}")
 	public ResponseEntity<GenericResponse> deleteCommentOfPost(@RequestHeader("Authorization") String authorizationHeader,
 			@PathVariable("commentId") Integer commentId) {
