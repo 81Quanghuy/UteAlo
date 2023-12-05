@@ -143,7 +143,7 @@ public class MessageServiceImpl implements MessageService {
             receiver.ifPresent(entity::setReceiver);
         }
 
-        if (message.getGroupId() != null) {
+        if (message.getGroupId() != null ) {
             Optional<PostGroup> group = postGroupRepository.findById(Integer.valueOf(message.getGroupId()));
             group.ifPresent(entity::setGroup);
         }

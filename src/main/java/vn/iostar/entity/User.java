@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -98,4 +99,7 @@ public class User implements Serializable {
 
 	@OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY)
 	private List<Message> messages1;
+
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+	private Set<ReactMessage> react;
 }
