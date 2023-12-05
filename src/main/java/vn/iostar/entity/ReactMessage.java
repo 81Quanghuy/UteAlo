@@ -1,9 +1,11 @@
 package vn.iostar.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,29 +17,31 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import vn.iostar.contants.React;
 
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "FRIEND_REQUESTS", uniqueConstraints = { @UniqueConstraint(columnNames = { "userTo", "userFrom" }) })
-public class FriendRequest implements Serializable {
+@Table(name = "REACTMESSAGE", uniqueConstraints = { @UniqueConstraint(columnNames = { "messageId", "userId" }) })
+public class ReactMessage extends DateEntity implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int friendRequestId;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private String reactId;
 
 	@ManyToOne
-	@JoinColumn(name = "userFrom")
-	private User userFrom;
+	@JoinColumn(name = "messageId")
+	private Message message;
 
 	@ManyToOne
-	@JoinColumn(name = "userTo")
-	private User userTo;
+	@JoinColumn(name = "userId")
+	private User user;
 
-	private boolean isActive;
-	private Date createdAt;
+	@Enumerated(EnumType.STRING)
+	private React react;
 }

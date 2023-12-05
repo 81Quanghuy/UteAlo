@@ -2,10 +2,17 @@ package vn.iostar.entity;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,34 +24,33 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "MESSAGES")
-public class Message implements Serializable {
+public class Message extends DateEntity implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String messageId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private String messageId;
 
-    @Column(columnDefinition = "nvarchar(255)")
-    private String content;
+	@Column(columnDefinition = "nvarchar(255)")
+	private String content;
 
-    @ManyToOne
-    @JoinColumn(name = "senderId")
-    private User sender;
+	@ManyToOne
+	@JoinColumn(name = "senderId")
+	private User sender;
 
-    @ManyToOne
-    @JoinColumn(name = "receiverId")
-    private User receiver;
+	@ManyToOne
+	@JoinColumn(name = "receiverId")
+	private User receiver;
 
-    @ManyToOne
-    @JoinColumn(name = "groupId")
-    private PostGroup group;
+	@ManyToOne
+	@JoinColumn(name = "groupId")
+	private PostGroup group;
 
-    private String files;
-    private Boolean isDeleted = false;
-    private Date createAt;
-    private Date updateAt;
+	private String files;
+	private Boolean isDeleted = false;
 
-
+	@OneToMany(mappedBy = "message")
+	private Set<ReactMessage> react;
 }
