@@ -20,82 +20,88 @@ import vn.iostar.service.ReactMessageService;
 @Service
 public class ReactMessageServiceImpl implements ReactMessageService {
 
-    @Autowired
-    ReactMessageRepository reactMessageRepository;
+	@Autowired
+	ReactMessageRepository reactMessageRepository;
 
-    @Autowired
-    MessageRepository messageRepository;
+	@Override
+	public List<ReactMessage> findReactMessageByCreateAt(Date createAt) {
+		return reactMessageRepository.findReactMessageByCreateAt(createAt);
+	}
 
-    @Autowired
-    UserRepository userRepository;
+	@Autowired
+	MessageRepository messageRepository;
 
-    @Override
-    public <S extends ReactMessage> S save(S entity) {
-        return reactMessageRepository.save(entity);
-    }
+	@Autowired
+	UserRepository userRepository;
+	
 
-    @Override
-    public List<ReactMessage> findAll() {
-        return reactMessageRepository.findAll();
-    }
+	@Override
+	public <S extends ReactMessage> S save(S entity) {
+		return reactMessageRepository.save(entity);
+	}
 
-    @Override
-    public Optional<ReactMessage> findById(String id) {
-        return reactMessageRepository.findById(id);
-    }
+	@Override
+	public List<ReactMessage> findAll() {
+		return reactMessageRepository.findAll();
+	}
 
-    @Override
-    public long count() {
-        return reactMessageRepository.count();
-    }
+	@Override
+	public Optional<ReactMessage> findById(String id) {
+		return reactMessageRepository.findById(id);
+	}
 
-    @Override
-    public void deleteById(String id) {
-        reactMessageRepository.deleteById(id);
-    }
+	@Override
+	public long count() {
+		return reactMessageRepository.count();
+	}
 
-    @Override
-    public void deleteAll() {
-        reactMessageRepository.deleteAll();
-    }
+	@Override
+	public void deleteById(String id) {
+		reactMessageRepository.deleteById(id);
+	}
 
-    @Override
-    @Transactional
-    public ReactMessage saveReactDTO(ReactDTO react) {
-        Optional<Message> message;
-        if (react.getMessageId() == null) {
-            message = messageRepository.findByCreateAtAndSenderUserIdAndReceiverUserIdAndContent(react.getCreateAt(),
-                    react.getSenderId(), react.getReceiverId(), react.getContent());
-        } else {
-            message = messageRepository.findById(react.getMessageId());
-        }
-        if (message.isEmpty()) {
-            return null;
-        }
-        Optional<User> user = userRepository.findById(react.getSenderId());
-        if (user.isEmpty()) {
-            return null;
-        }
-        ReactMessage entity = new ReactMessage();
-        Optional<ReactMessage> reactMessage = reactMessageRepository
-                .findReactMessageByMessageMessageIdAndUserUserId(message.get().getMessageId(), user.get().getUserId());
-        if (reactMessage.isPresent()) {
-            entity = reactMessage.get();
-            if (entity.getReact().equals(react.getReact())) {
-                deleteById(entity.getReactId());
-                return null;
-            }
-        } else {
-            entity.setMessage(message.get());
-            entity.setUser(user.get());
-            entity.setCreateAt(new Date());
-        }
-        entity.setReact(react.getReact());
-        entity.setUpdateAt(new Date());
+	@Override
+	public void deleteAll() {
+		reactMessageRepository.deleteAll();
+	}
 
-        reactMessageRepository.save(entity);
-        return entity;
+	@Override
+	@Transactional
+	public ReactMessage saveReactDTO(ReactDTO react) {
+		Optional<Message> message;
+		if (react.getMessageId() == null) {
+			message = messageRepository.findByCreateAtAndSenderUserIdAndReceiverUserIdAndContent(react.getCreatedAt(),
+					react.getSenderId(), react.getReceiverId(), react.getContent());
+		} else {
+			message = messageRepository.findById(react.getMessageId());
+		}
+		if (message.isEmpty()) {
+			return null;
+		}
+		Optional<User> user = userRepository.findById(react.getReactUser());
+		if (user.isEmpty()) {
+			return null;
+		}
+		ReactMessage entity = new ReactMessage();
+		Optional<ReactMessage> reactMessage = reactMessageRepository
+				.findReactMessageByMessageMessageIdAndUserUserId(message.get().getMessageId(), react.getReactUser());
+		if (reactMessage.isPresent()) {
+			entity = reactMessage.get();
+			if (entity.getReact().equals(react.getReact())) {
+				deleteById(entity.getReactId());
+				return null;
+			}
+		} else {
+			entity.setMessage(message.get());
+			entity.setUser(user.get());
+			entity.setCreateAt(message.get().getCreateAt());
+		}
+		entity.setReact(react.getReact());
+		entity.setUpdateAt(new Date());
 
-    }
+		reactMessageRepository.save(entity);
+		return entity;
+
+	}
 
 }

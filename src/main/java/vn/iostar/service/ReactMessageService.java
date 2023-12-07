@@ -1,5 +1,6 @@
 package vn.iostar.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,5 +22,7 @@ public interface ReactMessageService {
 	<S extends ReactMessage> S save(S entity);
 
 	ReactMessage saveReactDTO(ReactDTO react);
+
+	List<ReactMessage> findReactMessageByCreateAt(Date createAt);
 
 }
