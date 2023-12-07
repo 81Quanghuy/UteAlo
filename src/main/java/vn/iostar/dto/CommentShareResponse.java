@@ -18,7 +18,7 @@ public class CommentShareResponse {
 	private String userId;
     private List<Integer> likes;
     private List<Integer> comments;
-	
+    private String userOwner;
 	
 	public CommentShareResponse(Comment comment) {
 		super();

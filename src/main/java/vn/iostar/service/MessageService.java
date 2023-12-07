@@ -1,6 +1,7 @@
 package vn.iostar.service;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,4 +38,6 @@ public interface MessageService {
     ResponseEntity<GenericResponse> deleteMessage(String userIdToken, MessageRequest messageRequest);
 
     Message saveMessageByDTO(MessageDTO message) throws IOException;
+
+	ResponseEntity<GenericResponse> getListReactInMessage(Date createAt, PageRequest pageable);
 }

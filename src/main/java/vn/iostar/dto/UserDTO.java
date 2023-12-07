@@ -14,12 +14,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 public class UserDTO {
-	private int userId;
-	private String userName;
-	private String address;
-	private String phone;
-	private String gender;
-	private Date dayOfBirth;
-	private boolean status;
-	private RoleDTO role;
+    private String userId;
+    private String userName;
+    private String address;
+    private String phone;
+    private String gender;
+    private Date dayOfBirth;
+    private boolean status;
+    private RoleDTO role;
+    private Boolean isOnline;
 }
