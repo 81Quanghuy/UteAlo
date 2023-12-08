@@ -204,12 +204,15 @@ public class CommentServiceImpl implements CommentService {
 
 		// Tìm các comment reply trực tiếp cho commentId
 		List<Comment> directReplies = commentRepository.findCommentRepliesByCommentIdOrderByCreateTimeDesc(commentId);
+		Optional<Comment> comment = findById(commentId);
 
 		// Lấy comment reply của commentId
 		for (Comment directReply : directReplies) {
 			CommentPostResponse directReplyResponse = new CommentPostResponse(directReply);
 			directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
+			directReplyResponse.setUserOwner(comment.get().getUser().getUserName());
 			commentPostResponses.add(directReplyResponse);
+			
 
 			// Tìm các comment reply cho directReply
 			List<CommentPostResponse> subReplies = getCommentsOfComment(directReply.getCommentId());

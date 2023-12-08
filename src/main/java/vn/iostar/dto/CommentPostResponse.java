@@ -18,6 +18,7 @@ public class CommentPostResponse {
 	private String userId;
     private List<Integer> likes;
     private List<Integer> comments;
+    private String userOwner;
 	
 	
 	public CommentPostResponse(Comment comment) {

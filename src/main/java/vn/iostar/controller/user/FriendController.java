@@ -38,6 +38,7 @@ public class FriendController {
 	@Autowired
 	UserService userService;
 
+	//Danh sách bạn bè theo userId
 	@GetMapping("/list/{userId}")
 	public ResponseEntity<GenericResponse> getListFriendByUserId(@Valid @PathVariable("userId") String userId) {
 		List<FriendResponse> friend = friendService.findFriendUserIdsByUserId(userId);
@@ -45,6 +46,7 @@ public class FriendController {
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}
 
+	//Lấy trạng thái người dùng dựa theo userId và userToken: Bạn bè, đang chờ kết bạn,chấp nhận lời mời kết bạn
 	@GetMapping("/status/{userId}")
 	public ResponseEntity<GenericResponse> getStatusByUserId(@RequestHeader("Authorization") String authorizationHeader,
 			@Valid @PathVariable("userId") String userId) {
@@ -52,6 +54,8 @@ public class FriendController {
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return friendService.getStatusByUserId(userId,userIdToken);
 	}
+	
+	//Lấy danh sách bạn bè có phân trang
 	@GetMapping("/list/pageable/{userId}")
 	public ResponseEntity<GenericResponse> getListFriendTop10ByUserId(@Valid @PathVariable("userId") String userId) {
 		PageRequest pageable = PageRequest.of(0, 10);
@@ -60,6 +64,7 @@ public class FriendController {
 				.result(friend).statusCode(HttpStatus.OK.value()).build());
 	}
 
+	//Xóa bạn bè
 	@PutMapping("/delete/{userId}")
 	public ResponseEntity<GenericResponse> deleteFriend(@RequestHeader("Authorization") String authorizationHeader,
 			@Valid @PathVariable("userId") String userId) {
@@ -86,7 +91,7 @@ public class FriendController {
 	}
 
 	/**
-	 * GET list FriendRequest by Authorization
+	 * GET list FriendRequest by Authorization Using pageable
 	 *
 	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
@@ -122,7 +127,7 @@ public class FriendController {
 	}
 
 	/**
-	 * GET list FriendRequest by Authorization
+	 * Lấy danh sách người dùng đã gửi lời mời kết bạn
 	 *
 	 * @param authorizationHeader The JWT (JSON Web Token) provided in the "Authorization"
 	 *                      header for authentication.
