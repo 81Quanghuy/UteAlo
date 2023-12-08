@@ -2,6 +2,8 @@ package vn.iostar.service.impl;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,11 +23,13 @@ import vn.iostar.dto.MessageDTO;
 import vn.iostar.dto.MessageRequest;
 import vn.iostar.entity.Message;
 import vn.iostar.entity.PostGroup;
+import vn.iostar.entity.ReactMessage;
 import vn.iostar.entity.User;
 import vn.iostar.repository.MessageRepository;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.service.MessageService;
+import vn.iostar.service.ReactMessageService;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -41,6 +45,9 @@ public class MessageServiceImpl implements MessageService {
 
 	@Autowired
 	private Cloudinary cloudinary;
+
+	@Autowired
+	private ReactMessageService reactMessageService;
 
 	@Override
 	public <S extends Message> S save(S entity) {
@@ -85,10 +92,15 @@ public class MessageServiceImpl implements MessageService {
 		if (user.isEmpty() || userToken.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		List<MessageDTO> messages = messageRepository.findMessagesBetweenUsers(userId, userIdToken, pageable);
+		List<Message> messages = messageRepository.findMessagesBetweenUsers(userId, userIdToken, pageable);
+
+		List<MessageDTO> messageDTO = new ArrayList<>();
+		for (Message entity : messages) {
+			messageDTO.add(new MessageDTO(entity));
+		}
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get MessageDTO successfully")
-				.result(messages).statusCode(HttpStatus.OK.value()).build());
+				.result(messageDTO).statusCode(HttpStatus.OK.value()).build());
 	}
 
 	@Override
@@ -97,14 +109,19 @@ public class MessageServiceImpl implements MessageService {
 		if (group.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
-		List<MessageDTO> messages = messageRepository.findByGroupPostGroupIdOrderByCreateAt(Integer.parseInt(groupId),
+		List<Message> messages = messageRepository.findByGroupPostGroupIdOrderByCreateAt(Integer.parseInt(groupId),
 				pageable);
+		List<MessageDTO> messageDTO = new ArrayList<>();
+		for (Message entity : messages) {
+			messageDTO.add(new MessageDTO(entity));
+		}
+
 		if (messages.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found message").statusCode(HttpStatus.NOT_FOUND.value()).build());
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get list Message successfully")
-				.result(messages).statusCode(HttpStatus.OK.value()).build());
+				.result(messageDTO).statusCode(HttpStatus.OK.value()).build());
 	}
 
 	@Override
@@ -128,7 +145,7 @@ public class MessageServiceImpl implements MessageService {
 	@Override
 	@Transactional
 	public Message saveMessageByDTO(MessageDTO message) throws IOException {
-		
+
 		Optional<Message> message1 = messageRepository.findByCreateAtAndSenderUserIdAndReceiverUserIdAndContent(
 				message.getCreatedAt(), message.getSenderId(), message.getReceiverId(), message.getContent());
 		Message entity;
@@ -160,5 +177,13 @@ public class MessageServiceImpl implements MessageService {
 		}
 		save(entity);
 		return entity;
+	}
+
+	@Override
+	public ResponseEntity<GenericResponse> getListReactInMessage(Date createAt, PageRequest pageable) {
+		List<ReactMessage> list = reactMessageService.findReactMessageByCreateAt(createAt);
+
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("get list successfully").result(list)
+				.statusCode(HttpStatus.OK.value()).build());
 	}
 }

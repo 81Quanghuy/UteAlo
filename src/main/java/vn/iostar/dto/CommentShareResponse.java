@@ -20,7 +20,6 @@ public class CommentShareResponse {
     private List<Integer> comments;
     private String userOwner;
 	
-	
 	public CommentShareResponse(Comment comment) {
 		super();
 		this.commentId = comment.getCommentId();
