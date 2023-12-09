@@ -16,6 +16,7 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.LikeCommentResponse;
 import vn.iostar.dto.LikePostResponse;
 import vn.iostar.dto.LikeShareResponse;
+import vn.iostar.dto.ListUserLikePost;
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
@@ -366,6 +367,33 @@ public class LikeServiceImpl implements LikeService {
 					.statusCode(200).build();
 			return ResponseEntity.ok(response);
 		}
+	}
+
+	// Lấy danh sách những người đã like bài post
+	@Override
+	public ResponseEntity<Object> listUserLikePost(Integer postId) {
+		List<ListUserLikePost> listUser = likeRepository.findUsersLikedPost(postId);
+		GenericResponse response = GenericResponse.builder().success(true).message("List User Like Post").result(listUser)
+				.statusCode(200).build();
+		return ResponseEntity.ok(response);
+	}
+	
+	// Lấy danh sách những người đã like bài share
+	@Override
+	public ResponseEntity<Object> listUserLikeShare(Integer shareId) {
+		List<ListUserLikePost> listUser = likeRepository.findUsersLikedShare(shareId);
+		GenericResponse response = GenericResponse.builder().success(true).message("List User Like Share").result(listUser)
+				.statusCode(200).build();
+		return ResponseEntity.ok(response);
+	}
+	
+	// Lấy danh sách những người đã like comment
+	@Override
+	public ResponseEntity<Object> listUserLikeComment(Integer commentId) {
+		List<ListUserLikePost> listUser = likeRepository.findUsersLikedComment(commentId);
+		GenericResponse response = GenericResponse.builder().success(true).message("List User Like Comment").result(listUser)
+				.statusCode(200).build();
+		return ResponseEntity.ok(response);
 	}
 
 }

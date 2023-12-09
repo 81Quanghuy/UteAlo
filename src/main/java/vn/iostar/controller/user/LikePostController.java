@@ -53,4 +53,10 @@ public class LikePostController {
 		return likeService.checkUserLikePost(token, postId);
 	}
 	
+	// Lấy danh sách những người đã like bài post
+	@GetMapping("/listUser/{postId}")
+	public ResponseEntity<Object> listUserLikePost(@PathVariable("postId") int postId) {
+		return likeService.listUserLikePost(postId);
+	}
+	
 }
