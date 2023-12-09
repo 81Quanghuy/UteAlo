@@ -20,30 +20,34 @@ public class LikeShareController {
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
-	
+
 	@Autowired
 	LikeService likeService;
-	
+
 	@Autowired
 	LikeRepository likeRepository;
-	
-	
-	@GetMapping("/{shareId}") 
-	public ResponseEntity<GenericResponse> getLikeOfShare(
-			@PathVariable("shareId") int shareId) {
-			return likeService.getLikeOfShare(shareId);
+
+	@GetMapping("/{shareId}")
+	public ResponseEntity<GenericResponse> getLikeOfShare(@PathVariable("shareId") int shareId) {
+		return likeService.getLikeOfShare(shareId);
 	}
-	
+
 	@PostMapping("/toggleLike/{shareId}")
 	public ResponseEntity<Object> toggleLikeShare(@PathVariable("shareId") int shareId,
 			@RequestHeader("Authorization") String token) {
 		return likeService.toggleLikeShare(token, shareId);
 	}
-	
+
 	@GetMapping("/checkUser/{shareId}")
 	public ResponseEntity<Object> checkUserLikePost(@PathVariable("shareId") int shareId,
 			@RequestHeader("Authorization") String token) {
 		return likeService.checkUserLikeShare(token, shareId);
 	}
-	
+
+	// Lấy danh sách những người đã like comment
+	@GetMapping("/listUser/{shareId}")
+	public ResponseEntity<Object> listUserLikeShare(@PathVariable("shareId") int shareId) {
+		return likeService.listUserLikeShare(shareId);
+	}
+
 }

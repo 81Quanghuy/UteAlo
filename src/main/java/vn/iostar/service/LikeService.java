@@ -58,4 +58,13 @@ public interface LikeService {
 	ResponseEntity<Object> checkUserLikeShare(String token,Integer shareId );
 	
 	ResponseEntity<Object> checkUserLikeComment(String token,Integer commentId );
+	
+	// Lấy danh sách những người đã like bài post
+	ResponseEntity<Object> listUserLikePost(Integer postId );
+	
+	// Lấy danh sách những người đã like bài share
+	ResponseEntity<Object> listUserLikeShare(Integer shareId );
+	
+	// Lấy danh sách những người đã like comment
+	ResponseEntity<Object> listUserLikeComment(Integer commentId );
 }

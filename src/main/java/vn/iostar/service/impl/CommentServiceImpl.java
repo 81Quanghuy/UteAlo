@@ -212,6 +212,7 @@ public class CommentServiceImpl implements CommentService {
 			directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
 			directReplyResponse.setUserOwner(comment.get().getUser().getUserName());
 			commentPostResponses.add(directReplyResponse);
+			
 
 			// Tìm các comment reply cho directReply
 			List<CommentPostResponse> subReplies = getCommentsOfComment(directReply.getCommentId());

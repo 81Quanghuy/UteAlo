@@ -19,34 +19,38 @@ import vn.iostar.service.LikeService;
 public class LikeCommentController {
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
-	
+
 	@Autowired
 	LikeService likeService;
-	
+
 	@Autowired
 	LikeRepository likeRepository;
-	
-	@GetMapping("/{commentId}") 
-	public ResponseEntity<GenericResponse> getLikeOfComment(
-			@PathVariable("commentId") int commentId) {
-			return likeService.getLikeOfComment(commentId);
+
+	@GetMapping("/{commentId}")
+	public ResponseEntity<GenericResponse> getLikeOfComment(@PathVariable("commentId") int commentId) {
+		return likeService.getLikeOfComment(commentId);
 	}
-	
-	@GetMapping("/number/{commentId}") 
-	public ResponseEntity<GenericResponse> getNumberLikeOfComment(
-			@PathVariable("commentId") int commentId) {
-			return likeService.getCountLikeOfComment(commentId);
+
+	@GetMapping("/number/{commentId}")
+	public ResponseEntity<GenericResponse> getNumberLikeOfComment(@PathVariable("commentId") int commentId) {
+		return likeService.getCountLikeOfComment(commentId);
 	}
-	
+
 	@PostMapping("/toggleLike/{commentId}")
 	public ResponseEntity<Object> toggleLikeComment(@PathVariable("commentId") int commentId,
 			@RequestHeader("Authorization") String token) {
 		return likeService.toggleLikeComment(token, commentId);
 	}
-	
+
 	@GetMapping("/checkUser/{commentId}")
 	public ResponseEntity<Object> checkUserLikePost(@PathVariable("commentId") int commentId,
 			@RequestHeader("Authorization") String token) {
 		return likeService.checkUserLikeComment(token, commentId);
+	}
+
+	// Lấy danh sách những người đã like comment
+	@GetMapping("/listUser/{commentId}")
+	public ResponseEntity<Object> listUserLikeComment(@PathVariable("commentId") int commentId) {
+		return likeService.listUserLikeComment(commentId);
 	}
 }

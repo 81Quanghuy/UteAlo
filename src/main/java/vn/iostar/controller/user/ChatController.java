@@ -11,6 +11,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import vn.iostar.dto.MessageDTO;
+import vn.iostar.dto.NotificationDTO;
 import vn.iostar.dto.ReactDTO;
 import vn.iostar.dto.UserDTO;
 import vn.iostar.entity.Message;
@@ -23,84 +24,77 @@ import vn.iostar.service.UserService;
 
 @Controller
 public class ChatController {
-	@Autowired
-	private SimpMessagingTemplate simpMessagingTemplate;
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
 
-	@Autowired
-	private MessageService messageService;
+    @Autowired
+    private MessageService messageService;
 
-	@Autowired
-	private NotificationService notificationService;
+    @Autowired
+    private ReactMessageService reactMessageService;
 
-	@Autowired
-	private ReactMessageService reactMessageService;
+    @Autowired
+    private UserService userService;
 
-	@Autowired
-	private UserService userService;
+    @Autowired
+    private NotificationService notificationService;
 
-	String privateUserMessage = "/private";
+    String privateUserMessage = "/private";
+    String pathNotification = "/notification";
 
-	// Nhắn tin giữa các nhóm với nhau
-	@MessageMapping("/sendMessage/{roomId}")
-	public Message sendMessage(@Payload MessageDTO chatMessage, @DestinationVariable String roomId) throws IOException {
-		// Xử lý tin nhắn trong phòng
-		Message entity = messageService.saveMessageByDTO(chatMessage);
+    // Thông báo của user đến các user khác
+    @MessageMapping("/userNotify/{userId}")
+    public void sendNotifyUser(@Payload NotificationDTO notification, @DestinationVariable String userId) {
+        notificationService.saveNotificationDTO(notification);
+        simpMessagingTemplate.convertAndSendToUser(notification.getUserId(), pathNotification, notification);
+    }
 
-		// Gửi tin nhắn đến tất cả người dùng trong phòng
-		simpMessagingTemplate.convertAndSend("/chatroom/room/" + roomId, chatMessage);
-		return entity;
-	}
+    // Nhắn tin giữa các nhóm với nhau
+    @MessageMapping("/sendMessage/{roomId}")
+    public Message sendMessage(@Payload MessageDTO chatMessage, @DestinationVariable String roomId) throws IOException {
+        // Xử lý tin nhắn trong phòng
+        Message entity = messageService.saveMessageByDTO(chatMessage);
 
-	// Khi kết nối với trang web thì sẽ thay đổi trạng thái của user
-	@MessageMapping("/isOnline")
-	public void addUser(@Payload UserDTO user) {
-		userService.changeOnlineStatus(user);
-	}
+        // Gửi tin nhắn đến tất cả người dùng trong phòng
+        simpMessagingTemplate.convertAndSend("/chatroom/room/" + roomId, chatMessage);
+        return entity;
+    }
 
-	// Nhắn tin với giữa các user với nhau
-	@MessageMapping("/private-message")
-	public Message recMessage(@Payload MessageDTO message) throws IOException {
+    // Khi kết nối với trang web thì sẽ thay đổi trạng thái của user
+    @MessageMapping("/isOnline")
+    public void addUser(@Payload UserDTO user) {
+        userService.changeOnlineStatus(user);
+    }
 
-		Message entity = messageService.saveMessageByDTO(message);
-		simpMessagingTemplate.convertAndSendToUser(message.getReceiverId(), privateUserMessage, message);
-		return entity;
-	}
+    // Nhắn tin với giữa các user với nhau
+    @MessageMapping("/private-message")
+    public Message recMessage(@Payload MessageDTO message) throws IOException {
 
-	@MessageMapping("/react-message")
-	public ReactMessage reactMessage(@Payload ReactDTO react) throws IOException {
-		ReactMessage entity = reactMessageService.saveReactDTO(react);
-		if (react.getReactUser().equals(react.getReceiverId())) {
-			simpMessagingTemplate.convertAndSendToUser(react.getSenderId(), privateUserMessage, react);
-		} else if (react.getSenderId() != null && !"null".equals(react.getSenderId())
-				&& react.getReactUser().equals(react.getSenderId()) && react.getReceiverId() != null
-				&& react.getReceiverId() != "null") {
-			simpMessagingTemplate.convertAndSendToUser(react.getReceiverId(), privateUserMessage, react);
-		} else if (react.getGroupId() != null && !"null".equals(react.getGroupId()))
-			simpMessagingTemplate.convertAndSend("/chatroom/room/" + react.getGroupId(), react);
-		return entity;
-	}
+        Message entity = messageService.saveMessageByDTO(message);
+        simpMessagingTemplate.convertAndSendToUser(message.getReceiverId(), privateUserMessage, message);
+        return entity;
+    }
 
-	// Tạo thông báo đến người dùng
-//	@MessageMapping("/private-notification")
-//	public void notification(@Payload Notification notification) {
-//		// Lưu tin nhắn vào cơ sở dữ liệu
-//		notification.setCreateAt(new Date());
-//		notificationService.save(notification);
-//		simpMessagingTemplate.convertAndSendToUser(notification.getUser().getUserId(), "/notify", notification);
-//	}
+    @MessageMapping("/react-message")
+    public ReactMessage reactMessage(@Payload ReactDTO react) throws IOException {
+        ReactMessage entity = reactMessageService.saveReactDTO(react);
+        if (react.getReactUser().equals(react.getReceiverId())) {
+            simpMessagingTemplate.convertAndSendToUser(react.getSenderId(), privateUserMessage, react);
+        } else if (react.getSenderId() != null && !"null".equals(react.getSenderId())
+                && react.getReactUser().equals(react.getSenderId()) && react.getReceiverId() != null
+                && react.getReceiverId() != "null") {
+            simpMessagingTemplate.convertAndSendToUser(react.getReceiverId(), privateUserMessage, react);
+        } else if (react.getGroupId() != null && !"null".equals(react.getGroupId()))
+            simpMessagingTemplate.convertAndSend("/chatroom/room/" + react.getGroupId(), react);
+        return entity;
+    }
 
-	// Xóa thông báo khi nguời dùng xóa thông báo
-	@MessageMapping("/delete-notification")
-	public void deleteNotification(@Payload Notification notification) {
-		notificationService.delete(notification);
-	}
-
-	// Gư thông báo đến tất cả người dùng
-	@MessageMapping("/notification-all")
-	public void notificationAll(@Payload Notification notification) {
-		// Lưu tin nhắn vào cơ sở dữ liệu
-		notification.setCreateAt(new Date());
-		notificationService.save(notification);
-		simpMessagingTemplate.convertAndSend("/notification", notification);
-	}
+    // Gưỉ thông báo đến tất cả người dùng
+    @MessageMapping("/notification-all")
+    public void notificationAll(@Payload Notification notification) {
+        // Lưu tin nhắn vào cơ sở dữ liệu
+        notification.setCreateAt(new Date());
+        notificationService.save(notification);
+        simpMessagingTemplate.convertAndSend("/notification", notification);
+    }
 }
