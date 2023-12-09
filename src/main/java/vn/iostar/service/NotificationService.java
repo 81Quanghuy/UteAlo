@@ -4,6 +4,10 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+
+import org.springframework.http.ResponseEntity;
+import vn.iostar.dto.GenericResponse;
+import vn.iostar.dto.NotificationDTO;
 import vn.iostar.entity.Notification;
 
 import java.util.List;
@@ -53,4 +57,16 @@ public interface NotificationService {
     <S extends Notification> Page<S> findAll(Example<S> example, Pageable pageable);
 
     <S extends Notification> long count(Example<S> example);
+
+    Notification saveNotificationDTO(NotificationDTO notification);
+
+    ResponseEntity<GenericResponse> getListNotificationByUserId(String userIdToken, Pageable pageable);
+
+    ResponseEntity<GenericResponse> readNotification(String userIdToken, String notificationId);
+
+    ResponseEntity<GenericResponse> deleteNotification(String userIdToken, String notificationId);
+
+    ResponseEntity<GenericResponse> deleteAllNotification(String userIdToken);
+
+    ResponseEntity<GenericResponse> createNotification(String userIdToken, NotificationDTO notificationDTO);
 }
