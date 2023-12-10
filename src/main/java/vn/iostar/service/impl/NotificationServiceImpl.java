@@ -37,6 +37,12 @@ public class NotificationServiceImpl implements NotificationService {
 	@Autowired
 	private FriendRequestService friendRequestService;
 
+	@Autowired
+	private ShareService shareService;
+
+	@Autowired
+	private CommentService commentService;
+
 	@Override
 	public void flush() {
 		notificationRepository.flush();
@@ -149,7 +155,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Override
 	@Transactional
-	public Notification saveNotificationDTO(NotificationDTO notification) {
+	public NotificationDTO saveNotificationDTO(NotificationDTO notification) {
 		Notification entity = new Notification();
 		entity.setContent(notification.getContent());
 		entity.setCreateAt(notification.getCreateAt());
@@ -164,6 +170,14 @@ public class NotificationServiceImpl implements NotificationService {
 			Optional<Post> post = postService.findById(notification.getPostId());
 			post.ifPresent(entity::setPost);
 		}
+		if (notification.getShareId() != null) {
+			Optional<Share> share = shareService.findById(notification.getShareId());
+			share.ifPresent(entity::setShare);
+		}
+		if (notification.getCommentId() != null) {
+			Optional<Comment> comment = commentService.findById(notification.getCommentId());
+			comment.ifPresent(entity::setComment);
+		}
 		if (notification.getGroupId() != null) {
 			Optional<PostGroup> postGroup = postGroupService.findById(notification.getGroupId());
 			postGroup.ifPresent(entity::setPostGroup);
@@ -173,7 +187,8 @@ public class NotificationServiceImpl implements NotificationService {
 			friendRequest.ifPresent(entity::setFriendRequest);
 		}
 		notificationRepository.save(entity);
-		return entity;
+
+		return new NotificationDTO(entity);
 	}
 
 	@Override
@@ -260,10 +275,10 @@ public class NotificationServiceImpl implements NotificationService {
 	public ResponseEntity<GenericResponse> createNotification(String userIdToken, NotificationDTO notificationDTO) {
 		Optional<User> user = userService.findById(userIdToken);
 		if (user.isPresent()) {
-			Notification entity = saveNotificationDTO(notificationDTO);
+			NotificationDTO entity = saveNotificationDTO(notificationDTO);
 			return ResponseEntity
 					.ok(GenericResponse.builder().success(true).message("Retrieving user profile successfully")
-							.result(new NotificationDTO(entity)).statusCode(HttpStatus.OK.value()).build());
+							.result(entity).statusCode(HttpStatus.OK.value()).build());
 		} else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));

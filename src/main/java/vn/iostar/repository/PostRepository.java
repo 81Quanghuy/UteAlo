@@ -12,7 +12,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vn.iostar.contants.PrivacyLevel;
+import vn.iostar.dto.FilesOfGroupDTO;
 import vn.iostar.dto.PhoToResponse;
+import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.entity.Post;
 
 @Repository
@@ -70,4 +72,22 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	@Query("SELECT COUNT(p) FROM Post p WHERE p.postTime BETWEEN :startDate AND :endDate")
 	long countPostsBetweenDates(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
+	// Lấy danh sách file của 1 nhóm
+	@Query("SELECT NEW vn.iostar.dto.FilesOfGroupDTO(p.user.userId, p.user.userName, p.files, p.postGroup.postGroupId, p.postGroup.postGroupName, p.postId) "
+			+ "FROM Post p " + "WHERE p.postGroup.postGroupId = :groupId AND p.files IS NOT NULL")
+	Page<FilesOfGroupDTO> findFilesOfPostByGroupId(int groupId, Pageable pageable);
+
+	// Lấy danh sách photo của 1 nhóm
+	@Query("SELECT NEW vn.iostar.dto.PhotosOfGroupDTO(p.user.userId, p.user.userName, p.photos, p.postGroup.postGroupId, p.postGroup.postGroupName, p.postId) "
+			+ "FROM Post p " + "WHERE p.postGroup.postGroupId = :groupId AND p.photos IS NOT NULL")
+	Page<PhotosOfGroupDTO> findPhotosOfPostByGroupId(int groupId, Pageable pageable);
+
+	// Lấy những bài viết trong nhóm do Admin đăng
+//		@Query("SELECT p, pgm.roleUserGroup " + "FROM Post p " + "JOIN p.postGroup pg " + "JOIN pg.postGroupMembers pgm "
+//				+ "WHERE pgm.roleUserGroup = vn.iostar.contants.RoleUserGroup.Admin " + "AND pg.postGroupId = :groupId "
+//				+ "AND p.user.userId = pgm.user.userId") // So sánh userId trong Post với userId trong PostGroupMember
+	@Query("SELECT p " + "FROM Post p " + "JOIN p.postGroup pg " + "JOIN pg.postGroupMembers pgm "
+			+ "WHERE pgm.roleUserGroup = vn.iostar.contants.RoleUserGroup.Admin " + "AND pg.postGroupId = :groupId "
+			+ "AND p.user.userId = pgm.user.userId") // So sánh userId trong Post với userId trong PostGroupMember
+	List<Post> findPostsByAdminRoleInGroup(int groupId);
 }

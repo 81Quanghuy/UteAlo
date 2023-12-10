@@ -66,6 +66,9 @@ public class PostGroup implements Serializable {
 
 	@OneToMany(mappedBy = "group", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Message> messages;
+	
+	@OneToMany(mappedBy = "postGroup", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Notification> notifications;
 
 	private Date createDate;
 	private Date updateDate;

@@ -10,8 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import vn.iostar.dto.CreatePostRequestDTO;
+import vn.iostar.dto.FilesOfGroupDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Post;
@@ -104,4 +106,10 @@ public interface PostService {
 
 	// Đếm số lượng bài post từng tháng trong năm
 	Map<String, Long> countPostsByMonthInYear();
+
+	List<PostsResponse> findPostsByAdminRoleInGroup(Integer groupId);
+
+	Page<PhotosOfGroupDTO> findLatestPhotosByGroupId(Integer groupId, int page, int size);
+
+	Page<FilesOfGroupDTO> findLatestFilesByGroupId(Integer groupId, int page, int size);
 }

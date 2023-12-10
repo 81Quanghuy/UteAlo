@@ -21,10 +21,10 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, In
 	@Query("SELECT NEW vn.iostar.dto.FriendResponse(u.userId,u.profile.background, u.profile.avatar, u.userName,u.isOnline)   FROM FriendRequest fr JOIN User u ON fr.userFrom.userId = u.userId WHERE fr.userTo.userId = :userId")
 	List<FriendResponse> findUserFromUserIdByUserToUserIdPageable(@Param("userId") String userId, Pageable pageable);
 
-	@Query("SELECT NEW vn.iostar.dto.FriendResponse(u.userId,u.profile.background, u.profile.avatar, u.userName)  FROM FriendRequest fr JOIN User u ON fr.userTo.userId = u.userId WHERE fr.userFrom.userId = :userId")
+	@Query("SELECT NEW vn.iostar.dto.FriendResponse(u.userId,u.profile.background, u.profile.avatar, u.userName,u.isOnline)  FROM FriendRequest fr JOIN User u ON fr.userTo.userId = u.userId WHERE fr.userFrom.userId = :userId")
 	List<FriendResponse> findUserToUserIdByUserFromUserIdPageable(@Param("userId") String userId);
 
-	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendResponse(u.userId, u.profile.background, u.profile.avatar, u.userName) FROM User u "
+	@Query("SELECT DISTINCT NEW vn.iostar.dto.FriendResponse(u.userId, u.profile.background, u.profile.avatar, u.userName,u.isOnline) FROM User u "
 			+ "JOIN u.postGroupMembers pgm " + "JOIN pgm.postGroup pg " + "JOIN pg.postGroupMembers sharedPgm "
 			+ "WHERE sharedPgm.user.userId = :userId " + "AND u.userId != :userId " + "AND ("
 			+ "   (SELECT COUNT(f.friendId) " + "    FROM Friend f "
