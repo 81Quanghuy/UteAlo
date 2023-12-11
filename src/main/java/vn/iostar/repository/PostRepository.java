@@ -23,6 +23,8 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	// Tìm tất cả hình ảnh từ tất cả bài post liên quan đến người dùng như bạn bè,
 	// nhóm
 	@Query("SELECT p FROM Post p "
+			+ "WHERE ((p.user.userId = :userId OR p.user.userId IN (SELECT f.user2.userId FROM Friend f WHERE f.user1.userId = :userId) "
+			+ " OR p.user.userId  IN (SELECT f.user1.userId  FROM Friend f WHERE f.user2.userId = :userId) "
 			+ "WHERE ((p.user.userId = :userId OR (p.user.userId IN (SELECT f.user2.userId FROM Friend f WHERE f.user1.userId = :userId) AND p.privacyLevel!='GROUP_MEMBERS') "
 			+ " OR (p.user.userId  IN (SELECT f.user1.userId  FROM Friend f WHERE f.user2.userId = :userId)AND p.privacyLevel!='GROUP_MEMBERS') "
 			+ "OR p.postGroup IN (SELECT pgm.postGroup FROM PostGroupMember pgm WHERE pgm.user.userId = :userId)) "
@@ -46,11 +48,15 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	List<String> findAllPhotosByUserIdOrderByPostTimeDesc(@Param("userId") String userId);
 
 	// Lấy 9 hình ảnh mới nhất
+	@Query("SELECT p.photos FROM Post p WHERE p.user.userId = :userId AND p.privacyLevel <> 'GROUP_MEMBERS' AND p.photos IS NOT NULL AND p.photos <> '' ORDER BY p.postTime DESC")
+	Page<String> findLatestPhotosByUserIdAndNotNull(String userId, Pageable pageable);
+
 	@Query("SELECT NEW vn.iostar.dto.PhoToResponse(p.postId, p.photos) " + "FROM Post p "
 			+ "WHERE p.user.userId = :userId " + "AND p.photos IS NOT NULL " + "AND p.photos <> '' "
 			+ "AND p.privacyLevel NOT IN :privacyLevels " + "ORDER BY p.postTime DESC")
 	List<PhoToResponse> findLatestPhotosByUserIdAndNotNull(@Param("privacyLevels") List<PrivacyLevel> privacyLevels,
 			@Param("userId") String userId, Pageable pageable);
+
 
 	// Lấy những bài post của nhóm
 	List<Post> findByPostGroupPostGroupIdOrderByPostTimeDesc(Integer postGroupId, Pageable pageable);
@@ -83,9 +89,6 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	Page<PhotosOfGroupDTO> findPhotosOfPostByGroupId(int groupId, Pageable pageable);
 
 	// Lấy những bài viết trong nhóm do Admin đăng
-//		@Query("SELECT p, pgm.roleUserGroup " + "FROM Post p " + "JOIN p.postGroup pg " + "JOIN pg.postGroupMembers pgm "
-//				+ "WHERE pgm.roleUserGroup = vn.iostar.contants.RoleUserGroup.Admin " + "AND pg.postGroupId = :groupId "
-//				+ "AND p.user.userId = pgm.user.userId") // So sánh userId trong Post với userId trong PostGroupMember
 	@Query("SELECT p " + "FROM Post p " + "JOIN p.postGroup pg " + "JOIN pg.postGroupMembers pgm "
 			+ "WHERE pgm.roleUserGroup = vn.iostar.contants.RoleUserGroup.Admin " + "AND pg.postGroupId = :groupId "
 			+ "AND p.user.userId = pgm.user.userId") // So sánh userId trong Post với userId trong PostGroupMember

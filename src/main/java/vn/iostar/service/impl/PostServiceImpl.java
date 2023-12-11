@@ -454,7 +454,7 @@ public class PostServiceImpl implements PostService {
 		PageRequest pageable = PageRequest.of(page, size);
 		List<Post> listPost = postRepository.findPostsByUserIdAndFriendsAndGroupsOrderByPostTimeDesc(userId, pageable);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
-//		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : listPost) {
 			PostsResponse postsResponse = new PostsResponse(post, userId);
@@ -685,6 +685,22 @@ public class PostServiceImpl implements PostService {
 		return postCountsByMonth;
 	}
 
+	// Lấy những bài viết trong nhóm do Admin đăng
+	public List<PostsResponse> findPostsByAdminRoleInGroup(int groupId, Pageable pageable) {
+		List<Post> userPosts = postRepository.findPostsByAdminRoleInGroup(groupId, pageable);
+		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+		for (Post post : userPosts) {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedUserPosts.add(postsResponse);
+		}
+		return simplifiedUserPosts;
+
+	}
+
 	@Override
 	public ResponseEntity<Object> findLatestPhotosByUserId(String currentUserId, String userId, Pageable pageable) {
 		Optional<User> user = userService.findById(userId);
@@ -698,6 +714,7 @@ public class PostServiceImpl implements PostService {
 		List<PhoToResponse> list = postRepository.findLatestPhotosByUserIdAndNotNull(privacyLevels, userId, pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved user posts successfully")
 				.result(list).statusCode(HttpStatus.OK.value()).build());
+
 	}
 
 	@Override

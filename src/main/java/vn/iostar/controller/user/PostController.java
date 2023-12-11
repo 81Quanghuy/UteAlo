@@ -45,12 +45,12 @@ public class PostController {
 
 	@Autowired
 	CloudinaryService cloudinaryService;
-	
-	@Autowired
-	ShareService shareService;
 
 	@Autowired
 	PostRepository postRepository;
+
+	@Autowired
+	ShareService shareService;
 
 	// Xem chi tiết bài post
 	@GetMapping("/{postId}")
@@ -125,14 +125,14 @@ public class PostController {
 		Pageable pageable = PageRequest.of(page, size);
 		return postService.findLatestPhotosByUserId(currentUserId, userId, pageable);
 	}
-	
+
 	// Xem chi tiết bài share
-		@GetMapping("/share/{shareId}")
-		public ResponseEntity<GenericResponse> getShare(@RequestHeader("Authorization") String authorizationHeader,
-				@PathVariable("shareId") Integer shareId) {
-			String token = authorizationHeader.substring(7);
-			String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-			return shareService.getShare(currentUserId, shareId);
-		}
+	@GetMapping("/share/{shareId}")
+	public ResponseEntity<GenericResponse> getShare(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("shareId") Integer shareId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return shareService.getShare(currentUserId, shareId);
+	}
 
 }
