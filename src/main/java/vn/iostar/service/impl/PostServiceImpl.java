@@ -31,6 +31,8 @@ import vn.iostar.dto.FilesOfGroupDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.PaginationInfo;
+import vn.iostar.dto.PhotosOfGroupDTO;
+import vn.iostar.dto.PostResponse;
 import vn.iostar.dto.PhoToResponse;
 import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.dto.PostUpdateRequest;
@@ -454,7 +456,7 @@ public class PostServiceImpl implements PostService {
 		PageRequest pageable = PageRequest.of(page, size);
 		List<Post> listPost = postRepository.findPostsByUserIdAndFriendsAndGroupsOrderByPostTimeDesc(userId, pageable);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
-//		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
 		for (Post post : listPost) {
 			PostsResponse postsResponse = new PostsResponse(post, userId);
@@ -496,6 +498,27 @@ public class PostServiceImpl implements PostService {
 		return postRepository.findAllPhotosByUserIdOrderByPostTimeDesc(userId);
 	}
 
+	// Lấy ảnh mới nhất của 1 người trong bài Post
+	@Override
+	public Page<String> findLatestPhotosByUserId(String userId, int page, int size) {
+		PageRequest pageable = PageRequest.of(page, size);
+		return postRepository.findLatestPhotosByUserIdAndNotNull(userId, pageable);
+	}
+
+	// Lấy danh sách file của 1 nhóm
+	@Override
+	public Page<FilesOfGroupDTO> findLatestFilesByGroupId(int groupId, int page, int size) {
+		PageRequest pageable = PageRequest.of(page, size);
+		return postRepository.findFilesOfPostByGroupId(groupId, pageable);
+	}
+
+	// Lấy danh sách photo của 1 nhóm
+	@Override
+	public Page<PhotosOfGroupDTO> findLatestPhotosByGroupId(int groupId, int page, int size) {
+		PageRequest pageable = PageRequest.of(page, size);
+		return postRepository.findPhotosOfPostByGroupId(groupId, pageable);
+	}
+  
 	// Thống kê bài post trong ngày hôm nay
 	@Override
 	public List<PostsResponse> getPostsToday() {
@@ -678,11 +701,28 @@ public class PostServiceImpl implements PostService {
 			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
 			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
 
+
 			long postCount = postRepository.countPostsBetweenDates(startDateAsDate, endDateAsDate);
 			postCountsByMonth.put(month.toString(), postCount);
 		}
 
 		return postCountsByMonth;
+	}
+	
+	// Lấy những bài viết trong nhóm do Admin đăng
+	public List<PostsResponse> findPostsByAdminRoleInGroup(int groupId) {
+		List<Post> userPosts = postRepository.findPostsByAdminRoleInGroup(groupId);
+		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+		for (Post post : userPosts) {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedUserPosts.add(postsResponse);
+		}
+		return simplifiedUserPosts;
+
 	}
 
 	@Override
@@ -698,7 +738,9 @@ public class PostServiceImpl implements PostService {
 		List<PhoToResponse> list = postRepository.findLatestPhotosByUserIdAndNotNull(privacyLevels, userId, pageable);
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieved user posts successfully")
 				.result(list).statusCode(HttpStatus.OK.value()).build());
+
 	}
+	
 
 	@Override
 	public List<PostsResponse> findPostsByAdminRoleInGroup(Integer groupId) {

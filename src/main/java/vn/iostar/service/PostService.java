@@ -106,10 +106,13 @@ public interface PostService {
 
 	// Đếm số lượng bài post từng tháng trong năm
 	Map<String, Long> countPostsByMonthInYear();
+  
+	// Lấy danh sách file của 1 nhóm
+	Page<FilesOfGroupDTO> findLatestFilesByGroupId(int groupId, int page, int size);
 
-	List<PostsResponse> findPostsByAdminRoleInGroup(Integer groupId);
-
-	Page<PhotosOfGroupDTO> findLatestPhotosByGroupId(Integer groupId, int page, int size);
-
-	Page<FilesOfGroupDTO> findLatestFilesByGroupId(Integer groupId, int page, int size);
+	// Lấy danh sách photo của 1 nhóm
+	Page<PhotosOfGroupDTO> findLatestPhotosByGroupId(int groupId, int page, int size);
+	
+	// Lấy những bài viết trong nhóm do Admin đăng
+	public List<PostsResponse> findPostsByAdminRoleInGroup(int groupId);
 }
