@@ -323,37 +323,38 @@ public class PostGroupController {
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.findByPostGroupNameContainingIgnoreCase(search, userIdToken);
 	}
-	
+
 	// Lấy danh sách file của 1 nhóm
-		@GetMapping("/files/{groupId}")
-		public Page<FilesOfGroupDTO> getLatestFilesOfGroup(@RequestParam(defaultValue = "0") int page,
-				@RequestParam(defaultValue = "5") int size, @PathVariable("groupId") Integer groupId) {
-			return postService.findLatestFilesByGroupId(groupId, page, size);
-		}
+	@GetMapping("/files/{groupId}")
+	public List<FilesOfGroupDTO> getLatestFilesOfGroup(@PathVariable("groupId") Integer groupId) {
+		return postService.findLatestFilesByGroupId(groupId);
+	}
 
-		// Lấy danh sách photo của 1 nhóm
-		@GetMapping("/photos/{groupId}")
-		public Page<PhotosOfGroupDTO> getLatestPhotoOfGroup(@RequestParam(defaultValue = "0") int page,
-				@RequestParam(defaultValue = "5") int size, @PathVariable("groupId") Integer groupId) {
-			return postService.findLatestPhotosByGroupId(groupId, page, size);
-		}
+	// Lấy danh sách photo của 1 nhóm
+	@GetMapping("/photos/{groupId}")
+	public Page<PhotosOfGroupDTO> getLatestPhotoOfGroup(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "5") int size, @PathVariable("groupId") Integer groupId) {
+		return postService.findLatestPhotosByGroupId(groupId, page, size);
+	}
 
-		// Lấy những bài viết trong nhóm do Admin đăng
-		@GetMapping("/roleAdmin/{groupId}")
-		public ResponseEntity<GenericResponse> getPostsByAdminRoleInGroup(@PathVariable("groupId") Integer groupId) {
-			List<PostsResponse> groupPosts = postService.findPostsByAdminRoleInGroup(groupId);
-			Optional<PostGroup> postGroup = groupService.findById(groupId);
-			if (postGroup.isEmpty()) {
-				throw new RuntimeException("Group not found.");
-			} else if (groupPosts.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(GenericResponse.builder().success(false).message("No posts found for admin of this group")
-								.statusCode(HttpStatus.NOT_FOUND.value()).build());
-			} else {
-				return ResponseEntity
-						.ok(GenericResponse.builder().success(true).message("Retrieved posts of admin successfully")
-								.result(groupPosts).statusCode(HttpStatus.OK.value()).build());
-			}
+	// Lấy những bài viết trong nhóm do Admin đăng
+	@GetMapping("/roleAdmin/{groupId}")
+	public ResponseEntity<GenericResponse> getPostsByAdminRoleInGroup(@PathVariable("groupId") Integer groupId,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		List<PostsResponse> groupPosts = postService.findPostsByAdminRoleInGroup(groupId, pageable);
+		Optional<PostGroup> postGroup = groupService.findById(groupId);
+		if (postGroup.isEmpty()) {
+			throw new RuntimeException("Group not found.");
+		} else if (groupPosts.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(GenericResponse.builder().success(false).message("No posts found for admin of this group")
+							.statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("Retrieved posts of admin successfully")
+							.result(groupPosts).statusCode(HttpStatus.OK.value()).build());
 		}
+	}
 
 }

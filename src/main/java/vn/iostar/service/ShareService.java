@@ -49,4 +49,6 @@ public interface ShareService {
 
 
     ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size);
+
+	ResponseEntity<GenericResponse> getShare(String currentUserId, Integer shareId);
 }
