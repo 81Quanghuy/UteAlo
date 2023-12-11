@@ -15,6 +15,7 @@ public class InvitedPostGroupResponse {
 	private String bio;
 	private String postGroupName;
 	private String userName;
-	private String avatarUser;
+	private String avatarUser1;
+	private String userId;
 
 }

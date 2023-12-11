@@ -701,8 +701,8 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public List<PostsResponse> findPostsByAdminRoleInGroup(Integer groupId) {
-		List<Post> userPosts = postRepository.findPostsByAdminRoleInGroup(groupId);
+	public List<PostsResponse> findPostsByAdminRoleInGroup(Integer groupId, Pageable pageable) {
+		List<Post> userPosts = postRepository.findPostsByAdminRoleInGroup(groupId, pageable);
 		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
 		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
 		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
@@ -722,9 +722,8 @@ public class PostServiceImpl implements PostService {
 	}
 
 	@Override
-	public Page<FilesOfGroupDTO> findLatestFilesByGroupId(Integer groupId, int page, int size) {
-		PageRequest pageable = PageRequest.of(page, size);
-		return postRepository.findFilesOfPostByGroupId(groupId, pageable);
+	public List<FilesOfGroupDTO> findLatestFilesByGroupId(Integer groupId) {
+		return postRepository.findFilesOfPostByGroupId(groupId);
 	}
 
 }

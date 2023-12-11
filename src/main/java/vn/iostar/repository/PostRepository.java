@@ -73,13 +73,13 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	long countPostsBetweenDates(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
 	// Lấy danh sách file của 1 nhóm
-	@Query("SELECT NEW vn.iostar.dto.FilesOfGroupDTO(p.user.userId, p.user.userName, p.files, p.postGroup.postGroupId, p.postGroup.postGroupName, p.postId) "
-			+ "FROM Post p " + "WHERE p.postGroup.postGroupId = :groupId AND p.files IS NOT NULL")
-	Page<FilesOfGroupDTO> findFilesOfPostByGroupId(int groupId, Pageable pageable);
+	@Query("SELECT NEW vn.iostar.dto.FilesOfGroupDTO(p.user.userId, p.user.userName, p.files, p.postId,p.postTime,p.updateAt) "
+			+ "FROM Post p " + "WHERE p.postGroup.postGroupId = :groupId AND p.files IS NOT NULL AND p.files != '' ")
+	List<FilesOfGroupDTO> findFilesOfPostByGroupId(int groupId);
 
 	// Lấy danh sách photo của 1 nhóm
 	@Query("SELECT NEW vn.iostar.dto.PhotosOfGroupDTO(p.user.userId, p.user.userName, p.photos, p.postGroup.postGroupId, p.postGroup.postGroupName, p.postId) "
-			+ "FROM Post p " + "WHERE p.postGroup.postGroupId = :groupId AND p.photos IS NOT NULL")
+			+ "FROM Post p " + "WHERE p.postGroup.postGroupId = :groupId AND p.photos IS NOT NULL AND p.photos != '' ")
 	Page<PhotosOfGroupDTO> findPhotosOfPostByGroupId(int groupId, Pageable pageable);
 
 	// Lấy những bài viết trong nhóm do Admin đăng
@@ -89,5 +89,5 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	@Query("SELECT p " + "FROM Post p " + "JOIN p.postGroup pg " + "JOIN pg.postGroupMembers pgm "
 			+ "WHERE pgm.roleUserGroup = vn.iostar.contants.RoleUserGroup.Admin " + "AND pg.postGroupId = :groupId "
 			+ "AND p.user.userId = pgm.user.userId") // So sánh userId trong Post với userId trong PostGroupMember
-	List<Post> findPostsByAdminRoleInGroup(int groupId);
+	List<Post> findPostsByAdminRoleInGroup(int groupId, Pageable pageable);
 }
