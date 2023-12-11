@@ -14,6 +14,8 @@ import vn.iostar.entity.Notification;
 public class NotificationDTO extends DateEntity {
 	private String notificationId;
 	private Integer postId;
+	private Integer shareId;
+	private Integer commentId;
 	private Integer friendRequestId;
 	private Integer groupId;
 	private String userId;
@@ -25,11 +27,17 @@ public class NotificationDTO extends DateEntity {
 
 	public NotificationDTO(Notification entity) {
 		this.notificationId = entity.getNotificationId();
+		if (entity.getShare() != null) {
+			this.shareId = entity.getShare().getShareId();
+		}
 		if (entity.getPost() != null) {
 			this.postId = entity.getPost().getPostId();
 		}
 		if (entity.getFriendRequest() != null) {
 			this.friendRequestId = entity.getFriendRequest().getFriendRequestId();
+		}
+		if (entity.getComment() != null) {
+			this.commentId = entity.getComment().getCommentId();
 		}
 		if (entity.getPostGroup() != null) {
 			this.groupId = entity.getPostGroup().getPostGroupId();

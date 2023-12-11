@@ -31,6 +31,7 @@ import vn.iostar.dto.PostGroupResponse;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.dto.SearchPostGroup;
 import vn.iostar.dto.SearchUser;
+import vn.iostar.dto.UserInviteGroup;
 import vn.iostar.entity.Comment;
 import vn.iostar.entity.Like;
 import vn.iostar.entity.Post;
@@ -457,7 +458,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 	@Override
 	public ResponseEntity<GenericResponse> invitePostGroup(PostGroupDTO postGroup, String currentUserId) {
-		List<String> nameUser = new ArrayList<>();
+		List<UserInviteGroup> nameUser = new ArrayList<>();
 		Optional<User> user = userRepository.findById(currentUserId);
 		if (user.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -500,7 +501,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 						postGroupRequest.setIsAccept(false);
 						postGroupRequestRepository.save(postGroupRequest);
 					} else {
-						nameUser.add(userMember.get().getUserName());
+						nameUser.add(new UserInviteGroup(userMember.get().getUserId(), userMember.get().getUserName()));
 					}
 				}
 			}
@@ -523,8 +524,11 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 		Optional<PostGroupMember> groupMember = groupMemberRepository.findByUserUserIdAndRoleUserGroup(currentUserId,
 				RoleUserGroup.Admin);
+		Optional<PostGroupMember> deputyMember = groupMemberRepository.findByUserUserIdAndRoleUserGroup(currentUserId,
+				RoleUserGroup.Deputy);
 		// Kiểm tra quyền của currentUser
-		if (groupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(groupMember.get())) {
+		if (groupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(groupMember.get())
+				|| (deputyMember.isPresent() && groupPost.get().getPostGroupMembers().contains(deputyMember.get()))) {
 
 			for (String userId : postGroup.getUserId()) {
 				Optional<User> userMember = userRepository.findById(userId);

@@ -1,9 +1,14 @@
 
 package vn.iostar.controller.user;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +23,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import vn.iostar.dto.FilesOfGroupDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PostGroupDTO;
+import vn.iostar.dto.PostsResponse;
+import vn.iostar.entity.PostGroup;
+import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.PostGroupRequestService;
@@ -314,5 +323,37 @@ public class PostGroupController {
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.findByPostGroupNameContainingIgnoreCase(search, userIdToken);
 	}
+	
+	// Lấy danh sách file của 1 nhóm
+		@GetMapping("/files/{groupId}")
+		public Page<FilesOfGroupDTO> getLatestFilesOfGroup(@RequestParam(defaultValue = "0") int page,
+				@RequestParam(defaultValue = "5") int size, @PathVariable("groupId") Integer groupId) {
+			return postService.findLatestFilesByGroupId(groupId, page, size);
+		}
+
+		// Lấy danh sách photo của 1 nhóm
+		@GetMapping("/photos/{groupId}")
+		public Page<PhotosOfGroupDTO> getLatestPhotoOfGroup(@RequestParam(defaultValue = "0") int page,
+				@RequestParam(defaultValue = "5") int size, @PathVariable("groupId") Integer groupId) {
+			return postService.findLatestPhotosByGroupId(groupId, page, size);
+		}
+
+		// Lấy những bài viết trong nhóm do Admin đăng
+		@GetMapping("/roleAdmin/{groupId}")
+		public ResponseEntity<GenericResponse> getPostsByAdminRoleInGroup(@PathVariable("groupId") Integer groupId) {
+			List<PostsResponse> groupPosts = postService.findPostsByAdminRoleInGroup(groupId);
+			Optional<PostGroup> postGroup = groupService.findById(groupId);
+			if (postGroup.isEmpty()) {
+				throw new RuntimeException("Group not found.");
+			} else if (groupPosts.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(GenericResponse.builder().success(false).message("No posts found for admin of this group")
+								.statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity
+						.ok(GenericResponse.builder().success(true).message("Retrieved posts of admin successfully")
+								.result(groupPosts).statusCode(HttpStatus.OK.value()).build());
+			}
+		}
 
 }

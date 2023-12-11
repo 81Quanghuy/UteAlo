@@ -34,6 +34,7 @@ import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.dto.PostResponse;
 import vn.iostar.dto.PhoToResponse;
+import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.dto.PostUpdateRequest;
 import vn.iostar.dto.PostsResponse;
 import vn.iostar.entity.Comment;
@@ -740,5 +741,32 @@ public class PostServiceImpl implements PostService {
 
 	}
 	
+
+	@Override
+	public List<PostsResponse> findPostsByAdminRoleInGroup(Integer groupId) {
+		List<Post> userPosts = postRepository.findPostsByAdminRoleInGroup(groupId);
+		// Loại bỏ các thông tin không cần thiết ở đây, chẳng hạn như user và role.
+		// Có thể tạo một danh sách mới chứa chỉ các thông tin cần thiết.
+		List<PostsResponse> simplifiedUserPosts = new ArrayList<>();
+		for (Post post : userPosts) {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			simplifiedUserPosts.add(postsResponse);
+		}
+		return simplifiedUserPosts;
+	}
+
+	@Override
+	public Page<PhotosOfGroupDTO> findLatestPhotosByGroupId(Integer groupId, int page, int size) {
+		PageRequest pageable = PageRequest.of(page, size);
+		return postRepository.findPhotosOfPostByGroupId(groupId, pageable);
+	}
+
+	@Override
+	public Page<FilesOfGroupDTO> findLatestFilesByGroupId(Integer groupId, int page, int size) {
+		PageRequest pageable = PageRequest.of(page, size);
+		return postRepository.findFilesOfPostByGroupId(groupId, pageable);
+	}
 
 }
