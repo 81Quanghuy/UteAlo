@@ -524,8 +524,11 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 		Optional<PostGroupMember> groupMember = groupMemberRepository.findByUserUserIdAndRoleUserGroup(currentUserId,
 				RoleUserGroup.Admin);
+		Optional<PostGroupMember> deputyMember = groupMemberRepository.findByUserUserIdAndRoleUserGroup(currentUserId,
+				RoleUserGroup.Deputy);
 		// Kiểm tra quyền của currentUser
-		if (groupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(groupMember.get())) {
+		if (groupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(groupMember.get())
+				|| (deputyMember.isPresent() && groupPost.get().getPostGroupMembers().contains(deputyMember.get()))) {
 
 			for (String userId : postGroup.getUserId()) {
 				Optional<User> userMember = userRepository.findById(userId);
