@@ -61,5 +61,5 @@ public class Notification extends DateEntity implements Serializable {
     @ManyToOne
     @JoinColumn(name = "commentId")
     private Comment comment;
-    
+        
 }

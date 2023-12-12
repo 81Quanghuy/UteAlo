@@ -186,6 +186,7 @@ public class NotificationServiceImpl implements NotificationService {
 			Optional<FriendRequest> friendRequest = friendRequestService.findById(notification.getFriendRequestId());
 			friendRequest.ifPresent(entity::setFriendRequest);
 		}
+
 		notificationRepository.save(entity);
 
 		return new NotificationDTO(entity);
