@@ -18,6 +18,7 @@ public class UserResponse {
 	private String isActive;
 	private RoleName roleName;
 	private String email;
+	private Boolean status;
 
 	public UserResponse(String userId, String userName, String address, String phone, Gender gender, Date dayOfBirth) {
 		super();
@@ -27,6 +28,17 @@ public class UserResponse {
 		this.phone = phone;
 		this.gender = gender;
 		this.dayOfBirth = dayOfBirth;
+	}
+	
+	public UserResponse(String userId, String userName, String address, String phone, Gender gender, Date dayOfBirth,Boolean status ) {
+		super();
+		this.userId = userId;
+		this.userName = userName;
+		this.address = address;
+		this.phone = phone;
+		this.gender = gender;
+		this.dayOfBirth = dayOfBirth;
+		this.status = status;
 	}
 
 }

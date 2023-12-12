@@ -73,10 +73,7 @@ public class UserManagerController {
 		case "7days":
 			return userService.getUsersIn7Days();
 		case "month":
-			if (date != null) {
-				return userService.getUsersInMonth(date);
-			}
-			break;
+			return userService.getUsersIn1Month();
 		default:
 			// Nếu không có action hoặc action không hợp lệ, có thể trả về thông báo lỗi
 			// hoặc một giá trị mặc định
@@ -108,9 +105,10 @@ public class UserManagerController {
 			long userCountIn6Month = userService.countUsersInSixMonthsFromNow();
 			long userCountIn9Month = userService.countUsersInNineMonthsFromNow();
 			long userCountIn1Year = userService.countUsersInOneYearFromNow();
+			double percentNewUser = userService.calculatePercentageNewUsersThisMonth();
 
 			CountDTO userCountDTO = new CountDTO(userCountToDay, userCountInWeek, userCountIn1Month, userCountIn3Month,
-					userCountIn6Month, userCountIn9Month, userCountIn1Year);
+					userCountIn6Month, userCountIn9Month, userCountIn1Year,percentNewUser);
 			return ResponseEntity.ok(userCountDTO);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

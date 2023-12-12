@@ -7,10 +7,11 @@ import java.util.Optional;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Streamable;
 import org.springframework.http.ResponseEntity;
 
-import vn.iostar.dto.CommentPostResponse;
 import vn.iostar.dto.CommentUpdateRequest;
+import vn.iostar.dto.CommentsResponse;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.CreateCommentShareRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -65,7 +66,7 @@ public interface CommentService {
 	ResponseEntity<GenericResponse> deleteCommentByAdmin(Integer commentId, String authorizationHeader);
 
 	// Lấy tất cả bài post trong hệ thống
-	Page<CommentPostResponse> findAllComments(int page, int itemsPerPage);
+	Streamable<Object> findAllComments(int page, int itemsPerPage);
 
 	ResponseEntity<GenericResponseAdmin> getAllComments(String authorizationHeader, int page, int itemsPerPage);
 
@@ -75,4 +76,12 @@ public interface CommentService {
 	// Đếm số lượng comment trong 1 năm
 	long countCommentsInOneYearFromNow();
 
+	// Thống kê bình luận trong ngày hôm nay
+	List<CommentsResponse> getCommentsToday();
+
+	// Thống kê bình luận trong 7 ngày
+	List<CommentsResponse> getCommentsIn7Days();
+
+	// Thống kê bình luận trong 1 tháng
+	List<CommentsResponse> getCommentsIn1Month();
 }

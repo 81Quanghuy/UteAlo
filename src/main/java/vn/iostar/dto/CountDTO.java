@@ -19,4 +19,19 @@ public class CountDTO {
 	private long countIn6Month;
 	private long countIn9Month;
 	private long countIn1Year;
+	private double percentNewUser;
+	
+	public CountDTO(long countToday, long countInWeek, long countIn1Month, long countIn3Month, long countIn6Month,
+			long countIn9Month, long countIn1Year) {
+		super();
+		this.countToday = countToday;
+		this.countInWeek = countInWeek;
+		this.countIn1Month = countIn1Month;
+		this.countIn3Month = countIn3Month;
+		this.countIn6Month = countIn6Month;
+		this.countIn9Month = countIn9Month;
+		this.countIn1Year = countIn1Year;
+	}
+	
+	
 }

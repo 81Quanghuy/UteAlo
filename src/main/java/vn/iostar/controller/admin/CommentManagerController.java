@@ -1,8 +1,11 @@
 package vn.iostar.controller.admin;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import vn.iostar.dto.CommentsResponse;
 import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -76,5 +80,28 @@ public class CommentManagerController {
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
+	}
+
+	// Thống kê bài post trong ngày hôm nay
+	// Thống kê bài post trong 1 ngày
+	// Thống kê bài post trong 7 ngày
+	// Thống kê bài post trong 1 tháng
+	@GetMapping("/filterByDate")
+	public List<CommentsResponse> getPosts(@RequestParam(required = false) String action,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date date) {
+		switch (action != null ? action.toLowerCase() : "") {
+		case "today":
+			return commentService.getCommentsToday();
+		case "7days":
+			return commentService.getCommentsIn7Days();
+		case "month":
+			return commentService.getCommentsIn1Month();
+		default:
+			// Nếu không có action hoặc action không hợp lệ, có thể trả về thông báo lỗi
+			// hoặc một giá trị mặc định
+			break;
+		}
+		// Trả về null hoặc danh sách rỗng tùy theo logic của bạn
+		return null;
 	}
 }
