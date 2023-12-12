@@ -743,4 +743,12 @@ public class PostServiceImpl implements PostService {
 		return postRepository.findFilesOfPostByGroupId(groupId);
 	}
 
+	@Override
+	public List<PostsResponse> getPostsIn1Month() {
+		Date startDate = getStartOfDay(getNDaysAgo(30));
+		Date endDate = getEndOfDay(new Date());
+		List<Post> posts = postRepository.findByPostTimeBetween(startDate, endDate);
+		return mapToPostsResponseList(posts);
+	}
+
 }

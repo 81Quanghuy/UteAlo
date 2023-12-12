@@ -106,6 +106,9 @@ public interface PostService {
 
 	// Đếm số lượng bài post từng tháng trong năm
 	Map<String, Long> countPostsByMonthInYear();
+	
+	// Thống kê bài post trong 1 tháng
+	List<PostsResponse> getPostsIn1Month();
 
 	// Lấy những bài viết trong nhóm do Admin đăng
 	List<PostsResponse> findPostsByAdminRoleInGroup(Integer groupId, Pageable pageable);
