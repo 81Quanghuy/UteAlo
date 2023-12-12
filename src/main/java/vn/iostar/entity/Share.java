@@ -50,6 +50,9 @@ public class Share implements Serializable {
 
     @OneToMany(mappedBy = "share", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
+    
+    @OneToMany(mappedBy = "share", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Notification> notifications;
 
     private Date createAt;
 

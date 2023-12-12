@@ -58,7 +58,7 @@ public interface NotificationService {
 
     <S extends Notification> long count(Example<S> example);
 
-    Notification saveNotificationDTO(NotificationDTO notification);
+    NotificationDTO saveNotificationDTO(NotificationDTO notification);
 
     ResponseEntity<GenericResponse> getListNotificationByUserId(String userIdToken, Pageable pageable);
 

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import vn.iostar.dto.FriendRequestDTO;
 import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.entity.Friend;
@@ -151,7 +152,9 @@ public class FriendRequestServiceImpl implements FriendRequestService {
 		friendRequest.setUserFrom(user1.get());
 		friendRequest.setUserTo(user2.get());
 		friendRequestRepository.save(friendRequest);
-		return ResponseEntity.ok().body(new GenericResponse(true, "Create Successful!", null, HttpStatus.OK.value()));
+
+		return ResponseEntity.ok().body(new GenericResponse(true, "Create Successful!",
+				new FriendRequestDTO(friendRequest), HttpStatus.OK.value()));
 
 	}
 

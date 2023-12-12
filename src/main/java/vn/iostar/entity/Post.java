@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import vn.iostar.contants.PrivacyLevel;
 
-
 @Getter
 @Setter
 @Entity
@@ -21,45 +20,45 @@ import vn.iostar.contants.PrivacyLevel;
 @Table(name = "POSTS")
 public class Post implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int postId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int postId;
 
-    private String photos;
-    private String files;
+	private String photos;
+	private String files;
+
+	@Column(columnDefinition = "nvarchar(255)")
+	private String location;
+
+	@Column(columnDefinition = "nvarchar(255)")
+	private String content;
+
+	@Enumerated(EnumType.STRING)
+	private PrivacyLevel privacyLevel;
+
+	@ManyToOne
+	@JoinColumn(name = "userId")
+	private User user;
+
+	@ManyToOne
+	@JoinColumn(name = "postGroupId")
+	private PostGroup postGroup;
+
+	@OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Share> share;
     
-    @Column(columnDefinition = "nvarchar(255)")
-    private String location;
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Like> likes;
 
-    @Column(columnDefinition = "nvarchar(255)")
-    private String content;
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Comment> comments;
 
-    @Enumerated(EnumType.STRING)
-    private PrivacyLevel privacyLevel;
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Notification> notifications;
 
-    @ManyToOne
-    @JoinColumn(name = "userId")
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "postGroupId")
-    private PostGroup postGroup;
-
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Share> share;
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Like> likes;
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notification;
-
-    private Date postTime;
-    private Date updateAt;
+	private Date postTime;
+	private Date updateAt;
 }

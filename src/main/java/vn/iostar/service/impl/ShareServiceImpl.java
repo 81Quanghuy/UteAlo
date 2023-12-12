@@ -571,4 +571,17 @@ public class ShareServiceImpl implements ShareService {
 		List<Share> shares = shareRepository.findByCreateAtBetween(startDate, endDate);
 		return mapToSharesResponseList(shares);
 	}
+
+	public ResponseEntity<GenericResponse> getShare(String currentUserId, Integer shareId) {
+		Optional<Share> share = shareRepository.findById(shareId);
+		if (share.isEmpty())
+			return ResponseEntity.ok(GenericResponse.builder().success(null).message("not found share").result(null)
+					.statusCode(HttpStatus.NOT_FOUND.value()).build());
+
+		SharesResponse sharePost = getSharePost(share.get(), currentUserId);
+
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Retrieving user profile successfully")
+				.result(sharePost).statusCode(HttpStatus.OK.value()).build());
+
+	}
 }

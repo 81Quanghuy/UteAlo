@@ -27,6 +27,7 @@ import vn.iostar.repository.PostRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CloudinaryService;
 import vn.iostar.service.PostService;
+import vn.iostar.service.ShareService;
 import vn.iostar.service.UserService;
 
 @RestController
@@ -47,6 +48,9 @@ public class PostController {
 
 	@Autowired
 	PostRepository postRepository;
+
+	@Autowired
+	ShareService shareService;
 
 	// Xem chi tiết bài post
 	@GetMapping("/{postId}")
@@ -120,6 +124,15 @@ public class PostController {
 		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
 		Pageable pageable = PageRequest.of(page, size);
 		return postService.findLatestPhotosByUserId(currentUserId, userId, pageable);
+	}
+
+	// Xem chi tiết bài share
+	@GetMapping("/share/{shareId}")
+	public ResponseEntity<GenericResponse> getShare(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable("shareId") Integer shareId) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return shareService.getShare(currentUserId, shareId);
 	}
 
 }

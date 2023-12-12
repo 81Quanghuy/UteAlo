@@ -8,10 +8,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
+import vn.iostar.dto.FilesOfGroupDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
+import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.dto.PostGroupDTO;
+import vn.iostar.dto.PostsResponse;
 import vn.iostar.dto.SearchPostGroup;
 import vn.iostar.entity.PostGroup;
 
@@ -120,5 +123,6 @@ public interface PostGroupService {
 	long countGroupsInThreeMonthsFromNow();
 
 	ResponseEntity<GenericResponse> cancelRequestPostGroup(Integer postGroupId, String currentUserId);
+
 
 }

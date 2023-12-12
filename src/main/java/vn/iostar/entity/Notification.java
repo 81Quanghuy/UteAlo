@@ -53,4 +53,13 @@ public class Notification extends DateEntity implements Serializable {
     @JoinColumn(name = "postId")
     private Post post;
     
+    @ManyToOne
+    @JoinColumn(name = "shareId")
+    private Share share;
+    
+
+    @ManyToOne
+    @JoinColumn(name = "commentId")
+    private Comment comment;
+    
 }

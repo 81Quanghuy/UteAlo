@@ -53,6 +53,9 @@ public class Comment implements Serializable{
 	@JoinColumn(name = "comment_reply_id")
 	private Comment commentReply;
 
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Notification> notifications;
+    
     private Date createTime;
     private Date updateAt;
 }
