@@ -42,6 +42,7 @@ public class NotificationDTO extends DateEntity {
 		if (entity.getPostGroup() != null) {
 			this.groupId = entity.getPostGroup().getPostGroupId();
 		}
+		
 		this.userId = entity.getUser().getUserId();
 		this.photo = entity.getPhoto();
 		this.content = entity.getContent();

@@ -37,4 +37,8 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 
 	// Đếm số lượng comment trong khoảng thời gian
 	long countByCreateTimeBetween(Date startDateAsDate, Date endDateAsDate);
+
+	// Lấy những bình luận trong khoảng thời gian
+	List<Comment> findByCreateTimeBetween(Date startDate, Date endDate);
+
 }

@@ -30,7 +30,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 	List<ListUsers> findAllUsersIdAndName();
 
 	// Lấy những bài user đăng ký tài khoản trong khoảng thời gian
-	@Query("SELECT NEW vn.iostar.dto.UserResponse(u.userId, u.userName, u.address,u.phone, u.gender, u.dayOfBirth) FROM User u JOIN u.account a WHERE a.createdAt BETWEEN :startDate AND :endDate")
+	@Query("SELECT NEW vn.iostar.dto.UserResponse(u.userId, u.userName, u.address,u.phone, u.gender, u.dayOfBirth,a.isActive) FROM User u JOIN u.account a WHERE a.createdAt BETWEEN :startDate AND :endDate")
     List<UserResponse> findUsersByAccountCreatedAtBetween(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
 	// Đếm số lượng user trong khoảng thời gian

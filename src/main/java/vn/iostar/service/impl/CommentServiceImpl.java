@@ -6,6 +6,7 @@ import java.time.Month;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Streamable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ import vn.iostar.contants.RoleName;
 import vn.iostar.dto.CommentPostResponse;
 import vn.iostar.dto.CommentShareResponse;
 import vn.iostar.dto.CommentUpdateRequest;
+import vn.iostar.dto.CommentsResponse;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.CreateCommentShareRequestDTO;
 import vn.iostar.dto.GenericResponse;
@@ -212,7 +215,6 @@ public class CommentServiceImpl implements CommentService {
 			directReplyResponse.setLikes(getIdLikes(directReply.getLikes()));
 			directReplyResponse.setUserOwner(comment.get().getUser().getUserName());
 			commentPostResponses.add(directReplyResponse);
-			
 
 			// Tìm các comment reply cho directReply
 			List<CommentPostResponse> subReplies = getCommentsOfComment(directReply.getCommentId());
@@ -505,7 +507,7 @@ public class CommentServiceImpl implements CommentService {
 					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 		Optional<Comment> optionalComment = findById(commentId);
-		Page<CommentPostResponse> commentsPage = findAllComments(1, 10);
+		Streamable<Object> commentsPage = findAllComments(1, 10);
 		// Tìm thấy bài comment với commentId
 		if (optionalComment.isPresent()) {
 			Comment comment = optionalComment.get();
@@ -521,15 +523,22 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	@Override
-	public Page<CommentPostResponse> findAllComments(int page, int itemsPerPage) {
+	public Streamable<Object> findAllComments(int page, int itemsPerPage) {
 		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
 		Page<Comment> commentsPage = commentRepository.findAllByOrderByCreateTimeDesc(pageable);
 
-		Page<CommentPostResponse> commentResponsesPage = commentsPage.map(comment -> {
-			CommentPostResponse cPostResponse = new CommentPostResponse(comment);
-			cPostResponse.setLikes(getIdLikes(comment.getLikes()));
-			return cPostResponse;
-		});
+		Streamable<Object> commentResponsesPage = commentsPage.map(comment -> {
+			if (comment.getPost() != null && comment.getPost().getPostId() != 0) {
+				CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+				cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+				return cPostResponse;
+			} else if (comment.getShare() != null && comment.getShare().getShareId() != 0) {
+				CommentShareResponse cShareResponse = new CommentShareResponse(comment);
+				cShareResponse.setLikes(getIdLikes(comment.getLikes()));
+				return cShareResponse;
+			}
+			return null;
+		}); // Lọc bất kỳ giá trị null nào nếu có
 
 		return commentResponsesPage;
 	}
@@ -545,7 +554,7 @@ public class CommentServiceImpl implements CommentService {
 					.message("No have access").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 
-		Page<CommentPostResponse> commentsPage = findAllComments(page, itemsPerPage);
+		Streamable<Object> commentsPage = findAllComments(page, itemsPerPage);
 		long totalComments = commentRepository.count();
 
 		PaginationInfo pagination = new PaginationInfo();
@@ -597,6 +606,69 @@ public class CommentServiceImpl implements CommentService {
 		Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
 		Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
 		return commentRepository.countByCreateTimeBetween(startDateAsDate, endDateAsDate);
+	}
+
+	// Chuyển sang giờ bắt đầu của 1 ngày là 00:00:00
+	private Date getStartOfDay(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime();
+	}
+
+	// Chuyển sang giờ kết thức của 1 ngày là 23:59:59
+	private Date getEndOfDay(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return calendar.getTime();
+	}
+
+	private Date getNDaysAgo(int days) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.DAY_OF_MONTH, -days);
+		return calendar.getTime();
+	}
+
+	// Chuyển từ kiểu Comment sang CommentsResponse
+	private List<CommentsResponse> mapToCommentsResponseList(List<Comment> comments) {
+		List<CommentsResponse> responses = new ArrayList<>();
+		for (Comment comment : comments) {
+			CommentsResponse postsResponse = new CommentsResponse(comment);
+			postsResponse.setLikes(getIdLikes(comment.getLikes()));
+			responses.add(postsResponse);
+		}
+		return responses;
+	}
+
+	@Override
+	public List<CommentsResponse> getCommentsToday() {
+		Date startDate = getStartOfDay(new Date());
+		Date endDate = getEndOfDay(new Date());
+		List<Comment> comments = commentRepository.findByCreateTimeBetween(startDate, endDate);
+		return mapToCommentsResponseList(comments);
+	}
+
+	@Override
+	public List<CommentsResponse> getCommentsIn7Days() {
+		Date startDate = getStartOfDay(getNDaysAgo(6));
+		Date endDate = getEndOfDay(new Date());
+		List<Comment> comments = commentRepository.findByCreateTimeBetween(startDate, endDate);
+		return mapToCommentsResponseList(comments);
+	}
+
+	@Override
+	public List<CommentsResponse> getCommentsIn1Month() {
+		Date startDate = getStartOfDay(getNDaysAgo(30));
+		Date endDate = getEndOfDay(new Date());
+		List<Comment> comments = commentRepository.findByCreateTimeBetween(startDate, endDate);
+		return mapToCommentsResponseList(comments);
 	}
 
 }

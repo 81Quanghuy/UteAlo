@@ -68,6 +68,7 @@ public class MessageDTO {
 		this.createdAt = message.getCreateAt();
 		this.updatedAt = message.getUpdateAt();
 		this.messageId = message.getMessageId();
+		this.isDeleted = message.getIsDeleted();
 		List<ReactDTO> dto = new ArrayList<>();
 		if (!message.getReact().isEmpty()) {
 
