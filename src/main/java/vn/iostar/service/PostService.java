@@ -118,4 +118,7 @@ public interface PostService {
 
 	// Lấy danh sách file của 1 nhóm
 	List<FilesOfGroupDTO> findLatestFilesByGroupId(Integer groupId);
+	
+	// Lấy tất cả bài post của 1 user có phân trang 
+	Page<PostsResponse> findAllPostsByUserId(int page, int itemsPerPage, String userId);
 }

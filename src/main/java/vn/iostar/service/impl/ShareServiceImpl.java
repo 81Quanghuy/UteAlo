@@ -584,4 +584,17 @@ public class ShareServiceImpl implements ShareService {
 				.result(sharePost).statusCode(HttpStatus.OK.value()).build());
 
 	}
+
+	@Override
+	public Page<SharesResponse> findAllSharesByUserId(int page, int itemsPerPage, String userId) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Page<Share> userSharesPage = shareRepository.findAllByUser_UserIdOrderByCreateAtDesc(userId, pageable);
+
+		return userSharesPage.map(share -> {
+			SharesResponse sharesResponse = new SharesResponse(share);
+			sharesResponse.setComments(getIdComment(share.getComments()));
+			sharesResponse.setLikes(getIdLikes(share.getLikes()));
+			return sharesResponse;
+		});
+	}
 }

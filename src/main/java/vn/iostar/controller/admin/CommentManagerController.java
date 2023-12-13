@@ -3,8 +3,10 @@ package vn.iostar.controller.admin;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Streamable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +25,12 @@ import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.CreateCommentPostRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.PaginationInfo;
+import vn.iostar.entity.User;
+import vn.iostar.repository.CommentRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CommentService;
+import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin/commentManager")
@@ -32,6 +38,12 @@ public class CommentManagerController {
 
 	@Autowired
 	CommentService commentService;
+	
+	@Autowired
+	UserService userService;
+	
+	@Autowired
+	CommentRepository commentRepository;
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
@@ -104,4 +116,39 @@ public class CommentManagerController {
 		// Trả về null hoặc danh sách rỗng tùy theo logic của bạn
 		return null;
 	}
+	
+	// Cập nhật controller để lấy danh sách tất cả bình luận của một userId cụ thể
+	@GetMapping("/listComment/{userId}")
+	public ResponseEntity<GenericResponseAdmin> getAllCommentsByUserId(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int items, @PathVariable("userId") String userId) {
+
+		// Sử dụng postService để lấy danh sách tất cả bài post của một userId
+		Streamable<Object> userCommentsPage = commentService.findAllCommentsByUserId(page, items, userId);
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			long totalComments = commentRepository.countCommentsByUser(user);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage(items);
+			pagination.setCount(totalComments);
+			pagination.setPages((int) Math.ceil((double) totalComments / items));
+
+			if (userCommentsPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Comments Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Comments Successfully").result(userCommentsPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+	}
+
 }

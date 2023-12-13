@@ -4,9 +4,11 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
+import vn.iostar.dto.ListUserLikePost;
 import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.UserDTO;
@@ -39,12 +42,16 @@ import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserResponse;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
+import vn.iostar.entity.Profile;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
 import vn.iostar.repository.AccountRepository;
+import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.FriendRepository;
 import vn.iostar.repository.PasswordResetOtpRepository;
 import vn.iostar.repository.PostGroupRepository;
+import vn.iostar.repository.PostRepository;
+import vn.iostar.repository.ShareRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.repository.VerificationTokenRepository;
 import vn.iostar.security.JwtTokenProvider;
@@ -78,6 +85,15 @@ public class UserServiceImpl implements UserService {
 	JwtTokenProvider jwtTokenProvider;
 
 	DateFilter dateFilter;
+	
+	@Autowired
+	PostRepository postRepository;
+	
+	@Autowired
+	ShareRepository shareRepository;
+	
+	@Autowired
+	CommentRepository commentRepository;
 
 	@Override
 	public <S extends User> S save(S entity) {
@@ -345,6 +361,7 @@ public class UserServiceImpl implements UserService {
 		Page<UserResponse> processedUsersPage = usersPage.map(userItem -> {
 			Optional<User> userOptional = findById(userItem.getUserId());
 			if (userOptional.isPresent()) {
+
 				boolean isActive = userOptional.get().getAccount().isActive();
 				// Kiểm tra isActive và thiết lập trạng thái tương ứng
 				if (isActive) {
@@ -354,6 +371,18 @@ public class UserServiceImpl implements UserService {
 				}
 				userItem.setRoleName(userOptional.get().getRole().getRoleName());
 				userItem.setEmail(userOptional.get().getAccount().getEmail());
+
+				// Đếm số lượng bài post của người dùng
+				Long countPosts = postRepository.countPostsByUser(userOptional.get());
+				userItem.setCountPost(countPosts);
+
+				// Đếm số lượng shares của người dùng
+				Long countShares = shareRepository.countSharesByUser(userOptional.get());
+				userItem.setCountShare(countShares);
+
+				// Đếm số lượng comments của người dùng
+				Long countComments = commentRepository.countCommentsByUser(userOptional.get());
+				userItem.setCountComment(countComments);
 			}
 			return userItem;
 		});
@@ -621,10 +650,62 @@ public class UserServiceImpl implements UserService {
 		// Tính phần trăm người dùng mới
 		double percentageNewUsers = 0.0;
 		if (totalUsersThisMonth > 0) {
-			percentageNewUsers = (double) (newUsersCount) / totalUsersThisMonth * 100.0;
+			percentageNewUsers = (double) (countUsersToday()) / totalUsersThisMonth * 100.0;
 		}
 
 		return percentageNewUsers;
 	}
+	
+	@Override
+	public List<ListUserLikePost> getTop3UsersWithMostActivityInMonth() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = now.minusMonths(1);
+
+        Date start = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+        Date end = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
+
+        List<User> allUsers = userRepository.findAll(); // Lấy tất cả người dùng
+
+        // Tạo một Map để lưu userId và tổng số hoạt động của từng người dùng
+        Map<String, Long> userActivityMap = new HashMap<>();
+
+        for (User user : allUsers) {
+            long postCount = postRepository.countByUserAndPostTimeBetween(user, start, end);
+            long shareCount = shareRepository.countByUserAndCreateAtBetween(user, start, end);
+            long commentCount = commentRepository.countByUserAndCreateTimeBetween(user, start, end);
+
+            // Tổng số hoạt động của người dùng = bài post + bài share + bình luận
+            long totalActivity = postCount + shareCount + commentCount;
+
+            userActivityMap.put(user.getUserId(), totalActivity);
+        }
+
+        // Sắp xếp Map theo giá trị (tổng số hoạt động) giảm dần
+        List<Map.Entry<String, Long>> sortedList = new ArrayList<>(userActivityMap.entrySet());
+        sortedList.sort(Map.Entry.<String, Long>comparingByValue().reversed());
+
+        // Lấy ra 3 người dùng có tổng số hoạt động lớn nhất
+        List<ListUserLikePost> top3UsersWithProfile = new ArrayList<>();
+        int count = 0;
+        for (Map.Entry<String, Long> entry : sortedList) {
+            if (count >= 3) {
+                break;
+            }
+            User user = userRepository.findById(entry.getKey()).orElse(null);
+            if (user != null) {
+                Profile profile = user.getProfile(); // Lấy profile của user
+
+                ListUserLikePost userLikePost = new ListUserLikePost();
+                userLikePost.setUserName(user.getUserName());
+                userLikePost.setUserId(user.getUserId());
+                userLikePost.setAvatar(profile != null ? profile.getAvatar() : null); // Lấy avatar từ profile
+
+                top3UsersWithProfile.add(userLikePost);
+                count++;
+            }
+        }
+
+        return top3UsersWithProfile;
+    }
 
 }

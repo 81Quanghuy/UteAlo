@@ -3,8 +3,10 @@ package vn.iostar.controller.admin;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.SharesResponse;
+import vn.iostar.entity.User;
+import vn.iostar.repository.ShareRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.ShareService;
+import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin/shareManager")
@@ -32,6 +38,12 @@ public class ShareManagerController {
 
 	@Autowired
 	ShareService shareService;
+
+	@Autowired
+	UserService userService;
+
+	@Autowired
+	ShareRepository shareRepository;
 
 	// Lấy tất cả bài share post trong hệ thống
 	@GetMapping("/list")
@@ -103,6 +115,40 @@ public class ShareManagerController {
 			return ResponseEntity.ok(shareCountsByMonth);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	// Cập nhật controller để lấy danh sách tất cả bài share của một userId cụ thể
+	@GetMapping("/listShare/{userId}")
+	public ResponseEntity<GenericResponseAdmin> getAllSharesByUserId(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int items, @PathVariable("userId") String userId) {
+
+		// Sử dụng shareService để lấy danh sách tất cả bài share của một userId
+		Page<SharesResponse> userSharesPage = shareService.findAllSharesByUserId(page, items, userId);
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			long totalShares = shareRepository.countSharesByUser(user);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage(items);
+			pagination.setCount(totalShares);
+			pagination.setPages((int) Math.ceil((double) totalShares / items));
+
+			if (userSharesPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Shares Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Shares Successfully").result(userSharesPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 	}
 

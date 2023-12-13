@@ -110,4 +110,7 @@ public interface UserService {
 	
 	// Tính % người dùng mới trong tháng
 	double calculatePercentageNewUsersThisMonth();
+	
+	// Top 3 người dùng đóng góp nhiều nhất trong tháng
+	List<ListUserLikePost> getTop3UsersWithMostActivityInMonth();
 }

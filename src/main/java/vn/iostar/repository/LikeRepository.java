@@ -44,14 +44,14 @@ public interface LikeRepository extends JpaRepository<Like, Integer>{
 	void deleteByCommentShareShareId(Integer shareId);
 	
 	// Lấy danh sách người dùng thích bài viết
-	@Query("SELECT NEW vn.iostar.dto.ListUserLikePost(l.user.userName, l.user.userId) FROM Like l WHERE l.post.postId = :postId")
+	@Query("SELECT NEW vn.iostar.dto.ListUserLikePost(l.user.userName, l.user.userId, l.user.profile.avatar) FROM Like l WHERE l.post.postId = :postId")
     List<ListUserLikePost> findUsersLikedPost(@Param("postId") Integer postId);
 	
 	// Lấy danh sách người dùng thích bài viết
-	@Query("SELECT NEW vn.iostar.dto.ListUserLikePost(l.user.userName, l.user.userId) FROM Like l WHERE l.share.shareId = :shareId")
+	@Query("SELECT NEW vn.iostar.dto.ListUserLikePost(l.user.userName, l.user.userId, l.user.profile.avatar) FROM Like l WHERE l.share.shareId = :shareId")
     List<ListUserLikePost> findUsersLikedShare(@Param("shareId") Integer shareId);
 	
 	// Lấy danh sách người dùng thích bài viết
-	@Query("SELECT NEW vn.iostar.dto.ListUserLikePost(l.user.userName, l.user.userId) FROM Like l WHERE l.comment.commentId = :commentId")
+	@Query("SELECT NEW vn.iostar.dto.ListUserLikePost(l.user.userName, l.user.userId, l.user.profile.avatar) FROM Like l WHERE l.comment.commentId = :commentId")
     List<ListUserLikePost> findUsersLikedComment(@Param("commentId") Integer commentId);
 }
