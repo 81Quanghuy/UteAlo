@@ -5,7 +5,16 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -1410,6 +1419,58 @@ public class PostGroupServiceImpl implements PostGroupService {
 
 		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Delete successfully").result("None")
 				.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	public ResponseEntity<GenericResponseAdmin> getPostGroupJoinByUserId(String userId, int page, int itemsPerPage) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage); // Tính toán trang và số lượng phần tử trên trang
+
+		Page<GroupPostResponse> groupPostPage = postGroupRepository.findPostGroupByUserId(userId, pageable);
+
+		PaginationInfo pagination = new PaginationInfo();
+		pagination.setPage(page);
+		pagination.setItemsPerPage(itemsPerPage);
+		pagination.setCount(groupPostPage.getTotalElements());
+		pagination.setPages(groupPostPage.getTotalPages());
+
+		if (groupPostPage.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("No Groups Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+					.message("Retrieved List of Joined Groups Successfully").result(groupPostPage.getContent())
+					.pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+		}
+	}
+
+
+	@Override
+	public List<SearchPostGroup> getGroupsToday() {
+		Date startDate = getStartOfDay(new Date());
+		Date endDate = getEndOfDay(new Date());
+		List<SearchPostGroup> groups = postGroupRepository.findPostGroupByCreateDateBetween(startDate, endDate);
+		return groups;
+	}
+
+	@Override
+	public List<SearchPostGroup> getGroupsIn7Days() {
+		Date startDate = getStartOfDay(getNDaysAgo(6));
+		Date endDate = getEndOfDay(new Date());
+		List<SearchPostGroup> groups = postGroupRepository.findPostGroupByCreateDateBetween(startDate, endDate);
+		return groups;
+	}
+
+	@Override
+	public List<SearchPostGroup> getGroupsInMonth() {
+		Date startDate = getStartOfDay(getNDaysAgo(30));
+		Date endDate = getEndOfDay(new Date());
+		List<SearchPostGroup> groups = postGroupRepository.findPostGroupByCreateDateBetween(startDate, endDate);
+		return groups;
+	}
+	
+	public Date getNDaysAgo(int days) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.DAY_OF_MONTH, -days);
+		return calendar.getTime();
 	}
 
 }

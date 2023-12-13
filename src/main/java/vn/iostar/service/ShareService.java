@@ -52,7 +52,6 @@ public interface ShareService {
 	ResponseEntity<GenericResponse> getGroupSharePosts(String currentUserId, Integer postGroupId, Integer page,
 			Integer size);
 
-	
 	// Tìm tất cả bài Shares trong hệ thống
 	Page<SharesResponse> findAllShares(int page, int itemsPerPage);
 
@@ -97,12 +96,14 @@ public interface ShareService {
 
 	// Đếm số lượng bài Shares từng tháng trong năm
 	Map<String, Long> countSharesByMonthInYear();
-	
+
 	// Thống kê bài Shares trong 1 tháng
 	List<SharesResponse> getSharesIn1Month();
 
-
-    ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size);
+	ResponseEntity<GenericResponse> getTimeLineSharePosts(String currentUserId, Integer page, Integer size);
 
 	ResponseEntity<GenericResponse> getShare(String currentUserId, Integer shareId);
+
+	// Lấy tất cả bài share của 1 user có phân trang
+	Page<SharesResponse> findAllSharesByUserId(int page, int itemsPerPage, String userId);
 }

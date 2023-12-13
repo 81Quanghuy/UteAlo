@@ -1,8 +1,11 @@
 package vn.iostar.controller.admin;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,7 @@ import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.PostGroupDTO;
+import vn.iostar.dto.SearchPostGroup;
 import vn.iostar.service.PostGroupService;
 
 @RestController
@@ -80,4 +84,38 @@ public class GroupManagerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
+	
+	// Lấy danh sách nhóm mà 1 user tham gia có phân trang
+	@GetMapping("/listGroup/{userId}")
+	public ResponseEntity<GenericResponseAdmin> getPostGroupJoinByUserId(
+	        @PathVariable("userId") String userId,
+	        @RequestParam(defaultValue = "1") int page,
+	        @RequestParam(defaultValue = "10") int itemsPerPage) {
+
+	    return postGroupService.getPostGroupJoinByUserId(userId, page, itemsPerPage);
+	}
+	
+	// Thống kê bài post trong ngày hôm nay
+	// Thống kê bài post trong 1 ngày
+	// Thống kê bài post trong 7 ngày
+	// Thống kê bài post trong 1 tháng
+	@GetMapping("/filterByDate")
+	public List<SearchPostGroup> getGroups(@RequestParam(required = false) String action,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date date) {
+		switch (action != null ? action.toLowerCase() : "") {
+		case "today":
+			return postGroupService.getGroupsToday();
+		case "7days":
+			return postGroupService.getGroupsIn7Days();
+		case "month":
+			return postGroupService.getGroupsInMonth();
+		default:
+			// Nếu không có action hoặc action không hợp lệ, có thể trả về thông báo lỗi
+			// hoặc một giá trị mặc định
+			break;
+		}
+		// Trả về null hoặc danh sách rỗng tùy theo logic của bạn
+		return null;
+	}
+
 }

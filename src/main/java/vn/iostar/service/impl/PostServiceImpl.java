@@ -339,7 +339,6 @@ public class PostServiceImpl implements PostService {
 //		}
 //		return simplifiedUserPosts;
 //	}
-
 	// Lấy tất cả bài post trong hệ thống
 	@Override
 	public Page<PostsResponse> findAllPosts(int page, int itemsPerPage) {
@@ -353,6 +352,7 @@ public class PostServiceImpl implements PostService {
 			return postsResponse;
 		});
 	}
+
 
 	@Override
 	public ResponseEntity<GenericResponseAdmin> getAllPosts(String authorizationHeader, int page, int itemsPerPage) {
@@ -750,5 +750,21 @@ public class PostServiceImpl implements PostService {
 		List<Post> posts = postRepository.findByPostTimeBetween(startDate, endDate);
 		return mapToPostsResponseList(posts);
 	}
+
+	// Thay đổi phương thức findAllPosts để lấy tất cả bài post của một userId
+	@Override
+	public Page<PostsResponse> findAllPostsByUserId(int page, int itemsPerPage, String userId) {
+	    Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+	    // Sử dụng postRepository để tìm tất cả bài post của một userId cụ thể
+	    Page<Post> userPostsPage = postRepository.findAllByUser_UserIdOrderByPostTimeDesc(userId, pageable);
+
+	    return userPostsPage.map(post -> {
+	        PostsResponse postsResponse = new PostsResponse(post);
+	        postsResponse.setComments(getIdComment(post.getComments()));
+	        postsResponse.setLikes(getIdLikes(post.getLikes()));
+	        return postsResponse;
+	    });
+	}
+
 
 }

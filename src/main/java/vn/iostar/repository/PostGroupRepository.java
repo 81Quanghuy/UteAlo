@@ -68,5 +68,11 @@ public interface PostGroupRepository extends JpaRepository<PostGroup, Integer> {
 
 	// Đếm số lượng nhóm trong khoảng thời gian
 	long countByCreateDateBetween(Date startDateAsDate, Date endDateAsDate);
+	
+	@Query("SELECT NEW vn.iostar.dto.GroupPostResponse(pg.postGroupId, pg.postGroupName,pg.avatarGroup, pg.backgroundGroup, pgm.roleUserGroup) FROM PostGroup pg JOIN pg.postGroupMembers pgm WHERE pgm.user.userId = :userId ")
+	Page<GroupPostResponse> findPostGroupByUserId(@Param("userId") String userId, Pageable pageable);
+	
+	@Query("SELECT NEW vn.iostar.dto.SearchPostGroup(pg.postGroupId, pg.postGroupName, pg.avatarGroup, pg.bio, pg.isPublic) FROM PostGroup pg WHERE pg.createDate BETWEEN :startDate AND :endDate")
+	List<SearchPostGroup> findPostGroupByCreateDateBetween(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
 }

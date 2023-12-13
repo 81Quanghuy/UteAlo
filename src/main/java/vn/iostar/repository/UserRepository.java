@@ -35,4 +35,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
 	// Đếm số lượng user trong khoảng thời gian
 	long countUsersByAccountCreatedAtBetween(Date startDateAsDate, Date endDateAsDate);
+	
+	// Đếm lượng người dùng online
+	long countByIsOnlineTrue();
 }

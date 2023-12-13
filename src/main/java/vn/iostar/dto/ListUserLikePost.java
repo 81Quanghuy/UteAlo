@@ -12,6 +12,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 public class ListUserLikePost {
-	String userName;
-	String userId;
+	
+	private String userName;
+	private String userId;
+	private String avatar;
+
 }

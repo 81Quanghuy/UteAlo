@@ -20,6 +20,7 @@ public class CountDTO {
 	private long countIn9Month;
 	private long countIn1Year;
 	private double percentNewUser;
+	private double percentUserOnline;
 	
 	public CountDTO(long countToday, long countInWeek, long countIn1Month, long countIn3Month, long countIn6Month,
 			long countIn9Month, long countIn1Year) {

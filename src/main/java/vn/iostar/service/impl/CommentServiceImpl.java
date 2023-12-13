@@ -671,4 +671,25 @@ public class CommentServiceImpl implements CommentService {
 		return mapToCommentsResponseList(comments);
 	}
 
+	@Override
+	public Streamable<Object> findAllCommentsByUserId(int page, int itemsPerPage, String userId) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Page<Comment> commentsPage = commentRepository.findAllByUser_UserIdOrderByCreateTimeDesc(userId,pageable);
+
+		Streamable<Object> commentResponsesPage = commentsPage.map(comment -> {
+			if (comment.getPost() != null && comment.getPost().getPostId() != 0) {
+				CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+				cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+				return cPostResponse;
+			} else if (comment.getShare() != null && comment.getShare().getShareId() != 0) {
+				CommentShareResponse cShareResponse = new CommentShareResponse(comment);
+				cShareResponse.setLikes(getIdLikes(comment.getLikes()));
+				return cShareResponse;
+			}
+			return null;
+		}); // Lọc bất kỳ giá trị null nào nếu có
+
+		return commentResponsesPage;
+	}
+
 }

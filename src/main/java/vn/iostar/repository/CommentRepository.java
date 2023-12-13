@@ -41,4 +41,14 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 	// Lấy những bình luận trong khoảng thời gian
 	List<Comment> findByCreateTimeBetween(Date startDate, Date endDate);
 
+	// Đếm số lượng bình luận của một người dùng cụ thể
+	Long countCommentsByUser(User user);
+
+	// Định nghĩa phương thức để tìm tất cả bình luận của một userId và sắp xếp theo
+	// thời gian đăng bài giảm dần
+	Page<Comment> findAllByUser_UserIdOrderByCreateTimeDesc(String userId, Pageable pageable);
+	
+	// Đếm số lượng bình luận của người dùng trong 1 tháng
+	long countByUserAndCreateTimeBetween(User user, Date start, Date end);
+
 }

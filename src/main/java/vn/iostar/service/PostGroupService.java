@@ -8,13 +8,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
-import vn.iostar.dto.FilesOfGroupDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
-import vn.iostar.dto.PhotosOfGroupDTO;
 import vn.iostar.dto.PostGroupDTO;
-import vn.iostar.dto.PostsResponse;
 import vn.iostar.dto.SearchPostGroup;
 import vn.iostar.entity.PostGroup;
 
@@ -124,5 +121,16 @@ public interface PostGroupService {
 
 	ResponseEntity<GenericResponse> cancelRequestPostGroup(Integer postGroupId, String currentUserId);
 
+	// Lấy danh sách nhóm mà 1 user tham gia có phân trang
+	ResponseEntity<GenericResponseAdmin> getPostGroupJoinByUserId(String userId, int page, int itemsPerPage);
+
+	// Thống kê bài post trong ngày hôm nay
+	List<SearchPostGroup> getGroupsToday();
+
+	// Thống kê bài post trong 7 ngày
+	List<SearchPostGroup> getGroupsIn7Days();
+
+	// Thống kê bài post trong 1 tháng
+	List<SearchPostGroup> getGroupsInMonth();
 
 }

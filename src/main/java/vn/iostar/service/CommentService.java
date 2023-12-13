@@ -84,4 +84,7 @@ public interface CommentService {
 
 	// Thống kê bình luận trong 1 tháng
 	List<CommentsResponse> getCommentsIn1Month();
+
+	// Lấy tất cả bình luận của 1 user có phân trang
+	Streamable<Object> findAllCommentsByUserId(int page, int itemsPerPage, String userId);
 }

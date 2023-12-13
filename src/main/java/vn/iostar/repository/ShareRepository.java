@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import vn.iostar.contants.PrivacyLevel;
 import vn.iostar.entity.Share;
+import vn.iostar.entity.User;
 
 @Repository
 public interface ShareRepository extends JpaRepository<Share, Integer> {
@@ -51,5 +52,15 @@ public interface ShareRepository extends JpaRepository<Share, Integer> {
 	// Đếm số lượng bài share post trong khoảng thời gian 1 tháng
 	@Query("SELECT COUNT(p) FROM Share p WHERE p.createAt BETWEEN :startDate AND :endDate")
 	long countSharesBetweenDates(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
+
+	// Đếm số lượng bài share của một người dùng cụ thể
+	Long countSharesByUser(User user);
+
+	// Định nghĩa phương thức để tìm tất cả bài share của một userId và sắp xếp theo
+	// thời gian đăng bài giảm dần
+	Page<Share> findAllByUser_UserIdOrderByCreateAtDesc(String userId, Pageable pageable);
+	
+	// Đếm số lượng bài share của người dùng trong 1 tháng
+	 long countByUserAndCreateAtBetween(User user, Date start, Date end);
 
 }

@@ -3,8 +3,10 @@ package vn.iostar.controller.admin;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +24,13 @@ import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.CreatePostRequestDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.PostsResponse;
+import vn.iostar.entity.User;
+import vn.iostar.repository.PostRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.PostService;
+import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin/postManager")
@@ -34,7 +40,13 @@ public class PostManagerController {
 	JwtTokenProvider jwtTokenProvider;
 
 	@Autowired
+	PostRepository postRepository;
+
+	@Autowired
 	PostService postService;
+
+	@Autowired
+	UserService userService;
 
 	// Lấy tất cả bài post trong hệ thống
 	@GetMapping("/list")
@@ -113,6 +125,40 @@ public class PostManagerController {
 			return ResponseEntity.ok(postCountsByMonth);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	// Cập nhật controller để lấy danh sách tất cả bài post của một userId cụ thể
+	@GetMapping("/listPost/{userId}")
+	public ResponseEntity<GenericResponseAdmin> getAllPostsByUserId(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int items, @PathVariable("userId") String userId) {
+
+		// Sử dụng postService để lấy danh sách tất cả bài post của một userId
+		Page<PostsResponse> userPostsPage = postService.findAllPostsByUserId(page, items, userId);
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			long totalPosts = postRepository.countPostsByUser(user);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage(items);
+			pagination.setCount(totalPosts);
+			pagination.setPages((int) Math.ceil((double) totalPosts / items));
+
+			if (userPostsPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Posts Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Posts Successfully").result(userPostsPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
 		}
 	}
 

@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.ListUserLikePost;
 import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserResponse;
+import vn.iostar.repository.UserRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.UserService;
 
@@ -33,6 +35,11 @@ public class UserManagerController {
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
+	
+	@Autowired
+	UserRepository userRepository;
+	
+
 
 	// Lấy danh sách tất cả user trong hệ thống
 	@GetMapping("/list")
@@ -40,6 +47,7 @@ public class UserManagerController {
 			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int items) {
 		return userService.getAllUsers(authorizationHeader, page, items);
 	}
+	
 
 	// Lấy tất cả người dùng không phân trang
 	@GetMapping("/listUsers")
@@ -106,13 +114,23 @@ public class UserManagerController {
 			long userCountIn9Month = userService.countUsersInNineMonthsFromNow();
 			long userCountIn1Year = userService.countUsersInOneYearFromNow();
 			double percentNewUser = userService.calculatePercentageNewUsersThisMonth();
+			double percentUserOnline = 0.0;
+			percentUserOnline = (double) (userRepository.countByIsOnlineTrue()) / userService.count() * 100.0;
+	
 
 			CountDTO userCountDTO = new CountDTO(userCountToDay, userCountInWeek, userCountIn1Month, userCountIn3Month,
-					userCountIn6Month, userCountIn9Month, userCountIn1Year,percentNewUser);
+					userCountIn6Month, userCountIn9Month, userCountIn1Year,percentNewUser,percentUserOnline);
 			return ResponseEntity.ok(userCountDTO);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
+	
+	@GetMapping("/top3UserAwards")
+    public ResponseEntity<List<ListUserLikePost>> getTop3MostActiveUsers() {
+        List<ListUserLikePost> top3Users = userService.getTop3UsersWithMostActivityInMonth();
+        return ResponseEntity.ok(top3Users);
+    }
+	
 
 }

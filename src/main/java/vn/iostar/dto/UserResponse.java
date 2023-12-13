@@ -19,6 +19,9 @@ public class UserResponse {
 	private RoleName roleName;
 	private String email;
 	private Boolean status;
+	private Long countPost;
+	private Long countShare;
+	private Long countComment;
 
 	public UserResponse(String userId, String userName, String address, String phone, Gender gender, Date dayOfBirth) {
 		super();
