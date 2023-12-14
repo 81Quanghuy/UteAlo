@@ -285,4 +285,22 @@ public class NotificationServiceImpl implements NotificationService {
 					.body(new GenericResponse(false, "Delete denied!", null, HttpStatus.NOT_FOUND.value()));
 		}
 	}
+
+	@Override
+	public ResponseEntity<GenericResponse> unReadNotification(String userIdToken) {
+		Optional<User> user = userService.findById(userIdToken);
+		if (user.isPresent()) {
+			List<Notification> list = notificationRepository.findAll();
+			for (Notification notification2 : list) {
+				notification2.setIsRead(true);
+				notificationRepository.save(notification2);
+			}
+			return ResponseEntity.ok(GenericResponse.builder().success(true)
+					.message("Readed Notification Successfully!").statusCode(HttpStatus.OK.value()).build());
+
+		} else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new GenericResponse(false, "Cannot found user!", null, HttpStatus.NOT_FOUND.value()));
+		}
+	}
 }

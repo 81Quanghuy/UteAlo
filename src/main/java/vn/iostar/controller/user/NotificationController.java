@@ -14,55 +14,65 @@ import vn.iostar.service.NotificationService;
 @RequestMapping("/api/v1/notification")
 public class NotificationController {
 
-    @Autowired
-    private NotificationService notificationService;
+	@Autowired
+	private NotificationService notificationService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+	@Autowired
+	private JwtTokenProvider jwtTokenProvider;
 
-    //Lấy danh sách thông báo của user theo authenticaion header
-    @GetMapping("/get")
-    public ResponseEntity<GenericResponse> getListNotificationByUserId(@RequestHeader("Authorization") String authorizationHeader,
-                                                                       @RequestParam(defaultValue = "0") Integer page,
-                                                                       @RequestParam(defaultValue = "20") Integer size) {
-        String token = authorizationHeader.substring(7);
-        String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-        Pageable pageable = PageRequest.of(page, size);
-        return notificationService.getListNotificationByUserId(userIdToken, pageable);
-    }
+	// Lấy danh sách thông báo của user theo authenticaion header
+	@GetMapping("/get")
+	public ResponseEntity<GenericResponse> getListNotificationByUserId(
+			@RequestHeader("Authorization") String authorizationHeader, @RequestParam(defaultValue = "0") Integer page,
+			@RequestParam(defaultValue = "20") Integer size) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		Pageable pageable = PageRequest.of(page, size);
+		return notificationService.getListNotificationByUserId(userIdToken, pageable);
+	}
 
-    //Đánh dấu đã đọc thông báo
-    @PutMapping("/read/{notificationId}")
-    public ResponseEntity<GenericResponse> readNotification(@RequestHeader("Authorization") String authorizationHeader,
-                                                            @PathVariable String notificationId) {
-        String token = authorizationHeader.substring(7);
-        String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-        return notificationService.readNotification(userIdToken, notificationId);
-    }
+	// Đánh dấu đã đọc thông báo
+	@PutMapping("/read/{notificationId}")
+	public ResponseEntity<GenericResponse> readNotification(@RequestHeader("Authorization") String authorizationHeader,
+			@PathVariable String notificationId) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return notificationService.readNotification(userIdToken, notificationId);
+	}
 
-    // Xóa thông báo
-    @DeleteMapping("/delete/{notificationId}")
-    public ResponseEntity<GenericResponse> deleteNotification(@RequestHeader("Authorization") String authorizationHeader,
-                                                              @PathVariable String notificationId) {
-        String token = authorizationHeader.substring(7);
-        String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-        return notificationService.deleteNotification(userIdToken, notificationId);
-    }
+	// Xóa thông báo
+	@DeleteMapping("/delete/{notificationId}")
+	public ResponseEntity<GenericResponse> deleteNotification(
+			@RequestHeader("Authorization") String authorizationHeader, @PathVariable String notificationId) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return notificationService.deleteNotification(userIdToken, notificationId);
+	}
 
-    // Xóa tất cả thông báo cuar user
-    @DeleteMapping("/deleteAll")
-    public ResponseEntity<GenericResponse> deleteAllNotification(@RequestHeader("Authorization") String authorizationHeader) {
-        String token = authorizationHeader.substring(7);
-        String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-        return notificationService.deleteAllNotification(userIdToken);
-    }
+	// Xóa tất cả thông báo cuar user
+	@DeleteMapping("/deleteAll")
+	public ResponseEntity<GenericResponse> deleteAllNotification(
+			@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return notificationService.deleteAllNotification(userIdToken);
+	}
 
-    //Tao thong bao cho user qua NotificationDTO
-    @PostMapping("/create")
-    public ResponseEntity<GenericResponse> createNotification(@RequestHeader("Authorization") String authorizationHeader,
-                                                              @RequestBody NotificationDTO notificationDTO) {
-        String token = authorizationHeader.substring(7);
-        String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
-        return notificationService.createNotification(userIdToken, notificationDTO);
-    }
+	// Tao thong bao cho user qua NotificationDTO
+	@PostMapping("/create")
+	public ResponseEntity<GenericResponse> createNotification(
+			@RequestHeader("Authorization") String authorizationHeader, @RequestBody NotificationDTO notificationDTO) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return notificationService.createNotification(userIdToken, notificationDTO);
+	}
+
+	// Đánh đấu thông báo đã đọc
+	@PutMapping("/unread-all")
+	public ResponseEntity<GenericResponse> unReadNotification(
+			@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return notificationService.unReadNotification(userIdToken);
+	}
 }

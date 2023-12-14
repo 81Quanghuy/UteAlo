@@ -69,4 +69,6 @@ public interface NotificationService {
     ResponseEntity<GenericResponse> deleteAllNotification(String userIdToken);
 
     ResponseEntity<GenericResponse> createNotification(String userIdToken, NotificationDTO notificationDTO);
+
+	ResponseEntity<GenericResponse> unReadNotification(String userIdToken);
 }
