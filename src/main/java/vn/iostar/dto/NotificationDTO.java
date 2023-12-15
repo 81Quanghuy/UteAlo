@@ -24,6 +24,7 @@ public class NotificationDTO extends DateEntity {
 	private String content;
 	private String link;
 	private Boolean isRead;
+	
 
 	public NotificationDTO(Notification entity) {
 		this.notificationId = entity.getNotificationId();

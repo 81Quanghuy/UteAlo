@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.GenericResponseAdmin;
-import vn.iostar.dto.ListUserLikePost;
 import vn.iostar.dto.ListUsers;
+import vn.iostar.dto.Top3UserOfMonth;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserResponse;
 import vn.iostar.repository.UserRepository;
@@ -127,8 +127,8 @@ public class UserManagerController {
 	}
 	
 	@GetMapping("/top3UserAwards")
-    public ResponseEntity<List<ListUserLikePost>> getTop3MostActiveUsers() {
-        List<ListUserLikePost> top3Users = userService.getTop3UsersWithMostActivityInMonth();
+    public ResponseEntity<List<Top3UserOfMonth>> getTop3MostActiveUsers() {
+        List<Top3UserOfMonth> top3Users = userService.getTop3UsersWithMostActivityInMonth();
         return ResponseEntity.ok(top3Users);
     }
 	
