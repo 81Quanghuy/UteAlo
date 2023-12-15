@@ -32,9 +32,9 @@ import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.GroupPostResponse;
-import vn.iostar.dto.ListUserLikePost;
 import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.PaginationInfo;
+import vn.iostar.dto.Top3UserOfMonth;
 import vn.iostar.dto.UserDTO;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserMessage;
@@ -85,13 +85,13 @@ public class UserServiceImpl implements UserService {
 	JwtTokenProvider jwtTokenProvider;
 
 	DateFilter dateFilter;
-	
+
 	@Autowired
 	PostRepository postRepository;
-	
+
 	@Autowired
 	ShareRepository shareRepository;
-	
+
 	@Autowired
 	CommentRepository commentRepository;
 
@@ -655,57 +655,67 @@ public class UserServiceImpl implements UserService {
 
 		return percentageNewUsers;
 	}
-	
+
 	@Override
-	public List<ListUserLikePost> getTop3UsersWithMostActivityInMonth() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = now.minusMonths(1);
+	public List<Top3UserOfMonth> getTop3UsersWithMostActivityInMonth() {
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(1);
 
-        Date start = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
-        Date end = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
+		Date start = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date end = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
 
-        List<User> allUsers = userRepository.findAll(); // Lấy tất cả người dùng
+		List<User> allUsers = userRepository.findAll(); // Lấy tất cả người dùng
 
-        // Tạo một Map để lưu userId và tổng số hoạt động của từng người dùng
-        Map<String, Long> userActivityMap = new HashMap<>();
+		// Tạo một Map để lưu userId và tổng số hoạt động của từng người dùng
+		Map<String, Long> userActivityMap = new HashMap<>();
 
-        for (User user : allUsers) {
-            long postCount = postRepository.countByUserAndPostTimeBetween(user, start, end);
-            long shareCount = shareRepository.countByUserAndCreateAtBetween(user, start, end);
-            long commentCount = commentRepository.countByUserAndCreateTimeBetween(user, start, end);
+		for (User user : allUsers) {
+			long postCount = postRepository.countByUserAndPostTimeBetween(user, start, end);
+			long shareCount = shareRepository.countByUserAndCreateAtBetween(user, start, end);
+			long commentCount = commentRepository.countByUserAndCreateTimeBetween(user, start, end);
 
-            // Tổng số hoạt động của người dùng = bài post + bài share + bình luận
-            long totalActivity = postCount + shareCount + commentCount;
+			// Tổng số hoạt động của người dùng = bài post + bài share + bình luận
+			long totalActivity = postCount + shareCount + commentCount;
 
-            userActivityMap.put(user.getUserId(), totalActivity);
-        }
+			userActivityMap.put(user.getUserId(), totalActivity);
+		}
 
-        // Sắp xếp Map theo giá trị (tổng số hoạt động) giảm dần
-        List<Map.Entry<String, Long>> sortedList = new ArrayList<>(userActivityMap.entrySet());
-        sortedList.sort(Map.Entry.<String, Long>comparingByValue().reversed());
+		// Sắp xếp Map theo giá trị (tổng số hoạt động) giảm dần
+		List<Map.Entry<String, Long>> sortedList = new ArrayList<>(userActivityMap.entrySet());
+		sortedList.sort(Map.Entry.<String, Long>comparingByValue().reversed());
 
-        // Lấy ra 3 người dùng có tổng số hoạt động lớn nhất
-        List<ListUserLikePost> top3UsersWithProfile = new ArrayList<>();
-        int count = 0;
-        for (Map.Entry<String, Long> entry : sortedList) {
-            if (count >= 3) {
-                break;
-            }
-            User user = userRepository.findById(entry.getKey()).orElse(null);
-            if (user != null) {
-                Profile profile = user.getProfile(); // Lấy profile của user
+		// Lấy ra 3 người dùng có tổng số hoạt động lớn nhất
+		List<Top3UserOfMonth> top3UsersWithProfile = new ArrayList<>();
+		int count = 0;
+		for (Map.Entry<String, Long> entry : sortedList) {
+			if (count >= 3) {
+				break;
+			}
+			User user = userRepository.findById(entry.getKey()).orElse(null);
+			if (user != null) {
+				Profile profile = user.getProfile(); // Lấy profile của user
 
-                ListUserLikePost userLikePost = new ListUserLikePost();
-                userLikePost.setUserName(user.getUserName());
-                userLikePost.setUserId(user.getUserId());
-                userLikePost.setAvatar(profile != null ? profile.getAvatar() : null); // Lấy avatar từ profile
+				long postCount = postRepository.countByUserAndPostTimeBetween(user, start, end);
+				long shareCount = shareRepository.countByUserAndCreateAtBetween(user, start, end);
+				long commentCount = commentRepository.countByUserAndCreateTimeBetween(user, start, end);
+				long total = postCount + shareCount + commentCount;
+				
 
-                top3UsersWithProfile.add(userLikePost);
-                count++;
-            }
-        }
+				Top3UserOfMonth top3UserOfMonth = new Top3UserOfMonth();
+				top3UserOfMonth.setUserName(user.getUserName());
+				top3UserOfMonth.setUserId(user.getUserId());
+				top3UserOfMonth.setCountPostOfMonth(postCount);
+				top3UserOfMonth.setCountCommentOfMonth(commentCount);
+				top3UserOfMonth.setCountShareOfMonth(shareCount);
+				top3UserOfMonth.setTotal(total);
+				top3UserOfMonth.setAvatar(profile != null ? profile.getAvatar() : null); // Lấy avatar từ profile
 
-        return top3UsersWithProfile;
-    }
+				top3UsersWithProfile.add(top3UserOfMonth);
+				count++;
+			}
+		}
+
+		return top3UsersWithProfile;
+	}
 
 }

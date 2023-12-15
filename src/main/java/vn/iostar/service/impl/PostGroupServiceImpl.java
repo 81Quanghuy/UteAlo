@@ -490,8 +490,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 		if (postGroup.getUserId() != null) {
 			for (String idRequest : postGroup.getUserId()) {
 
-				Optional<PostGroupRequest> requestGroup = postGroupRequestRepository.findRequestJoinGroup(currentUserId,
-						idRequest, postGroup.getPostGroupId());
+				Optional<PostGroupRequest> requestGroup = postGroupRequestRepository
+						.findByInvitedUserUserIdAndPostGroupPostGroupId(idRequest, postGroup.getPostGroupId());
 				Optional<User> userMember = userRepository.findById(idRequest);
 
 				// Kiểm tra người được mời có tồn tại không
@@ -1442,7 +1442,6 @@ public class PostGroupServiceImpl implements PostGroupService {
 		}
 	}
 
-
 	@Override
 	public List<SearchPostGroup> getGroupsToday() {
 		Date startDate = getStartOfDay(new Date());
@@ -1466,7 +1465,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		List<SearchPostGroup> groups = postGroupRepository.findPostGroupByCreateDateBetween(startDate, endDate);
 		return groups;
 	}
-	
+
 	public Date getNDaysAgo(int days) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.DAY_OF_MONTH, -days);

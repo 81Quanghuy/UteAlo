@@ -39,15 +39,15 @@ public class Message extends DateEntity implements Serializable {
 	@Column(columnDefinition = "nvarchar(255)")
 	private String content;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "senderId")
 	private User sender;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "receiverId")
 	private User receiver;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "groupId")
 	private PostGroup group;
 

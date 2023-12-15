@@ -216,13 +216,10 @@ public class NotificationServiceImpl implements NotificationService {
 	public ResponseEntity<GenericResponse> readNotification(String userIdToken, String notificationId) {
 		Optional<User> user = userService.findById(userIdToken);
 		if (user.isPresent()) {
-			Optional<Notification> notification = notificationRepository.findById(notificationId);
-			if (notification.isPresent()) {
-				notification.get().setIsRead(true);
-				Notification entity = notificationRepository.save(notification.get());
-				return ResponseEntity
-						.ok(GenericResponse.builder().success(true).message("Readed Notification Successfully!")
-								.result(new NotificationDTO(entity)).statusCode(HttpStatus.OK.value()).build());
+			int checkNotify = notificationRepository.markAsRead(notificationId);
+			if (checkNotify > 0) {
+				return ResponseEntity.ok(GenericResponse.builder().success(true)
+						.message("Readed Notification Successfully!").statusCode(HttpStatus.OK.value()).build());
 			} else {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
 						new GenericResponse(false, "Cannot found notification!", null, HttpStatus.NOT_FOUND.value()));

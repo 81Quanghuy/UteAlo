@@ -6,6 +6,7 @@ import java.io.Serializable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,11 +35,11 @@ public class ReactMessage extends DateEntity implements Serializable {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String reactId;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "messageId")
 	private Message message;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId")
 	private User user;
 
