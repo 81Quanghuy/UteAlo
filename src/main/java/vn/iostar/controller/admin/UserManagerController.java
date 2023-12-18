@@ -1,5 +1,7 @@
 package vn.iostar.controller.admin;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -10,12 +12,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import vn.iostar.dto.AccountManager;
 import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.GenericResponseAdmin;
 import vn.iostar.dto.ListUsers;
@@ -28,18 +32,23 @@ import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin/userManager")
-public class UserManagerController {
+public class
+UserManagerController {
 
 	@Autowired
 	UserService userService;
 
 	@Autowired
 	JwtTokenProvider jwtTokenProvider;
-	
+
 	@Autowired
 	UserRepository userRepository;
-	
 
+	@PostMapping("/uploadExcel")
+	public ResponseEntity<Object> updateAccount(@ModelAttribute AccountManager request,
+			@RequestHeader("Authorization") String authorizationHeader) throws IOException, ParseException {
+		return userService.createAccount(authorizationHeader, request);
+	}
 
 	// Lấy danh sách tất cả user trong hệ thống
 	@GetMapping("/list")
@@ -47,7 +56,6 @@ public class UserManagerController {
 			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int items) {
 		return userService.getAllUsers(authorizationHeader, page, items);
 	}
-	
 
 	// Lấy tất cả người dùng không phân trang
 	@GetMapping("/listUsers")
@@ -116,21 +124,19 @@ public class UserManagerController {
 			double percentNewUser = userService.calculatePercentageNewUsersThisMonth();
 			double percentUserOnline = 0.0;
 			percentUserOnline = (double) (userRepository.countByIsOnlineTrue()) / userService.count() * 100.0;
-	
 
 			CountDTO userCountDTO = new CountDTO(userCountToDay, userCountInWeek, userCountIn1Month, userCountIn3Month,
-					userCountIn6Month, userCountIn9Month, userCountIn1Year,percentNewUser,percentUserOnline);
+					userCountIn6Month, userCountIn9Month, userCountIn1Year, percentNewUser, percentUserOnline);
 			return ResponseEntity.ok(userCountDTO);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
-	
+
 	@GetMapping("/top3UserAwards")
-    public ResponseEntity<List<Top3UserOfMonth>> getTop3MostActiveUsers() {
-        List<Top3UserOfMonth> top3Users = userService.getTop3UsersWithMostActivityInMonth();
-        return ResponseEntity.ok(top3Users);
-    }
-	
+	public ResponseEntity<List<Top3UserOfMonth>> getTop3MostActiveUsers() {
+		List<Top3UserOfMonth> top3Users = userService.getTop3UsersWithMostActivityInMonth();
+		return ResponseEntity.ok(top3Users);
+	}
 
 }

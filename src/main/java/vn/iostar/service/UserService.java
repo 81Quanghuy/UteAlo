@@ -1,5 +1,7 @@
 package vn.iostar.service;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -113,4 +115,6 @@ public interface UserService {
 	
 	// Top 3 người dùng đóng góp nhiều nhất trong tháng
 	List<Top3UserOfMonth> getTop3UsersWithMostActivityInMonth();
+
+	ResponseEntity<Object> createAccount(String authorizationHeader, AccountManager request) throws IOException, ParseException;
 }

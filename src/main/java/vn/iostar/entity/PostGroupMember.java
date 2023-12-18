@@ -43,7 +43,7 @@ public class PostGroupMember implements Serializable {
 	@Cascade(value = { CascadeType.REMOVE })
 	private List<PostGroup> postGroup = new ArrayList<>();
 
-	@ManyToOne
+	@ManyToOne(cascade = jakarta.persistence.CascadeType.ALL)
 	@JoinColumn(name = "userId")
 	private User user;
 
