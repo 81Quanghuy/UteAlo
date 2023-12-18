@@ -24,4 +24,6 @@ public interface AccountService {
 	
 	<S extends Account> S save(S entity);
 
+	<S extends Account> List<S> saveAll(Iterable<S> entities);
+
 }
