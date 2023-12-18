@@ -113,4 +113,6 @@ public interface UserService {
 	
 	// Top 3 người dùng đóng góp nhiều nhất trong tháng
 	List<Top3UserOfMonth> getTop3UsersWithMostActivityInMonth();
+	
+	UserStatisticsDTO getUserStatistics(String userId);
 }

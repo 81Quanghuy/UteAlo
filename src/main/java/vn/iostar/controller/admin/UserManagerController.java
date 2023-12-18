@@ -3,6 +3,7 @@ package vn.iostar.controller.admin;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,8 @@ import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.Top3UserOfMonth;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserResponse;
+import vn.iostar.dto.UserStatisticsDTO;
+import vn.iostar.entity.User;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.UserService;
@@ -132,5 +136,17 @@ public class UserManagerController {
         return ResponseEntity.ok(top3Users);
     }
 	
+	@GetMapping("/getCountPostShareComment/{userId}")
+    public ResponseEntity<UserStatisticsDTO> getCountPostShareComment(@PathVariable("userId") String userId) {
+		UserStatisticsDTO userStatisticsDTO = userService.getUserStatistics(userId);
+        return ResponseEntity.ok(userStatisticsDTO);
+    }
+	
+	
+	@GetMapping("/getIsOnline/{userId}")
+    public Boolean getIsOnlineOfUser(@PathVariable("userId") String userId) {
+		Optional<User> user = userService.findById(userId);
+		return user.get().getIsOnline();
+    }
 
 }

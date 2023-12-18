@@ -40,6 +40,7 @@ import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserMessage;
 import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserResponse;
+import vn.iostar.dto.UserStatisticsDTO;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.Profile;
@@ -699,7 +700,6 @@ public class UserServiceImpl implements UserService {
 				long shareCount = shareRepository.countByUserAndCreateAtBetween(user, start, end);
 				long commentCount = commentRepository.countByUserAndCreateTimeBetween(user, start, end);
 				long total = postCount + shareCount + commentCount;
-				
 
 				Top3UserOfMonth top3UserOfMonth = new Top3UserOfMonth();
 				top3UserOfMonth.setUserName(user.getUserName());
@@ -716,6 +716,27 @@ public class UserServiceImpl implements UserService {
 		}
 
 		return top3UsersWithProfile;
+	}
+
+	@Override
+	public UserStatisticsDTO getUserStatistics(String userId) {
+		Optional<User> userOp = findById(userId);
+		User user = userOp.get();
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime startDate = now.minusMonths(1);
+
+		Date start = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+		Date end = Date.from(now.atZone(ZoneId.systemDefault()).toInstant());
+		long postCount = postRepository.countByUserAndPostTimeBetween(user, start, end);
+		long shareCount = shareRepository.countByUserAndCreateAtBetween(user, start, end);
+		long commentCount = commentRepository.countByUserAndCreateTimeBetween(user, start, end);
+
+		UserStatisticsDTO userStatisticsDTO = new UserStatisticsDTO();
+		userStatisticsDTO.setPostCount(postCount);
+		userStatisticsDTO.setShareCount(shareCount);
+		userStatisticsDTO.setCommentCount(commentCount);
+
+		return userStatisticsDTO;
 	}
 
 }

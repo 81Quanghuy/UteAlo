@@ -148,7 +148,7 @@ public class UserController {
 		String otp = UUID.randomUUID().toString();
 		userService.createPasswordResetOtpForUser(user.get(), otp);
 		String url = "http://localhost:3000/reset-password?token=" + otp;
-		String subject = "Change Password For JobPost";
+		String subject = "Thay đổi mật khẩu tài khoản UteAlo";
 		Context context = new Context();
 		context.setVariable("url", url);
 		String content = templateEngine.process("forgot-password", context);
@@ -158,7 +158,7 @@ public class UserController {
 		helper.setSubject(subject);
 		helper.setText(content, true);
 		helper.setTo(user.get().getAccount().getEmail());
-		helper.setFrom(env.getProperty("spring.mail.username"), "Recruiment Manager");
+		helper.setFrom(env.getProperty("spring.mail.username"), "Admin UteAlo");
 
 		javaMailSender.send(message);
 

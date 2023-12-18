@@ -103,4 +103,7 @@ public class User implements Serializable {
 
 	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 	private Set<ReactMessage> react;
+	
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+	private List<Report> reports;
 }
