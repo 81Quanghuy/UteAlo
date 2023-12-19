@@ -38,6 +38,11 @@ public class AccountServiceImpl implements AccountService {
 	@Autowired
 	AccountRepository accountRepository;
 
+	@Override
+	public <S extends Account> List<S> saveAll(Iterable<S> entities) {
+		return accountRepository.saveAll(entities);
+	}
+
 	@Autowired
 	RoleRepository roleRepository;
 
