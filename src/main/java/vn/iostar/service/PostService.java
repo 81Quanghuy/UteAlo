@@ -106,7 +106,10 @@ public interface PostService {
 
 	// Đếm số lượng bài post từng tháng trong năm
 	Map<String, Long> countPostsByMonthInYear();
-	
+
+	// Đếm số lượng bài post của user từng tháng trong năm
+	Map<String, Long> countPostsByUserMonthInYear(String userId);
+
 	// Thống kê bài post trong 1 tháng
 	List<PostsResponse> getPostsIn1Month();
 
@@ -118,7 +121,10 @@ public interface PostService {
 
 	// Lấy danh sách file của 1 nhóm
 	List<FilesOfGroupDTO> findLatestFilesByGroupId(Integer groupId);
-	
-	// Lấy tất cả bài post của 1 user có phân trang 
+
+	// Lấy tất cả bài post của 1 user có phân trang
 	Page<PostsResponse> findAllPostsByUserId(int page, int itemsPerPage, String userId);
+
+	// Lấy tất cả bài post của 1 user trong 1 tháng có phân trang
+	Page<PostsResponse> findAllPostsInMonthByUserId(int page, int itemsPerPage, String userId);
 }

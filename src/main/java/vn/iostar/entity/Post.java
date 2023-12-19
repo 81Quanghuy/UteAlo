@@ -58,6 +58,9 @@ public class Post implements Serializable {
 
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Notification> notifications;
+	
+	@OneToMany(mappedBy = "post", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Report> report;
 
 	private Date postTime;
 	private Date updateAt;

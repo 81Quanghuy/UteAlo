@@ -674,7 +674,58 @@ public class CommentServiceImpl implements CommentService {
 	@Override
 	public Streamable<Object> findAllCommentsByUserId(int page, int itemsPerPage, String userId) {
 		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
-		Page<Comment> commentsPage = commentRepository.findAllByUser_UserIdOrderByCreateTimeDesc(userId,pageable);
+		Page<Comment> commentsPage = commentRepository.findAllByUser_UserIdOrderByCreateTimeDesc(userId, pageable);
+
+		Streamable<Object> commentResponsesPage = commentsPage.map(comment -> {
+			if (comment.getPost() != null && comment.getPost().getPostId() != 0) {
+				CommentPostResponse cPostResponse = new CommentPostResponse(comment);
+				cPostResponse.setLikes(getIdLikes(comment.getLikes()));
+				return cPostResponse;
+			} else if (comment.getShare() != null && comment.getShare().getShareId() != 0) {
+				CommentShareResponse cShareResponse = new CommentShareResponse(comment);
+				cShareResponse.setLikes(getIdLikes(comment.getLikes()));
+				return cShareResponse;
+			}
+			return null;
+		}); // Lọc bất kỳ giá trị null nào nếu có
+
+		return commentResponsesPage;
+	}
+
+	// Đếm số lượng comment của 1 user từng tháng trong năm
+	@Override
+	public Map<String, Long> countCommentsByUserMonthInYear(String userId) {
+		LocalDateTime now = LocalDateTime.now();
+		int currentYear = now.getYear();
+		
+		Optional<User> userOp = userService.findById(userId);
+		User user = userOp.get();
+
+		// Tạo một danh sách các tháng
+		List<Month> months = Arrays.asList(Month.values());
+		Map<String, Long> commentCountsByMonth = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để duy trì thứ tự
+
+		for (Month month : months) {
+			LocalDateTime startDate = LocalDateTime.of(currentYear, month, 1, 0, 0);
+			LocalDateTime endDate = startDate.plusMonths(1).minusSeconds(1);
+
+			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+			long commentCount = commentRepository.countByUserAndCreateTimeBetween(user,startDateAsDate, endDateAsDate);
+			commentCountsByMonth.put(month.toString(), commentCount);
+		}
+
+		return commentCountsByMonth;
+	}
+
+	@Override
+	public Streamable<Object> findAllCommentsInMonthByUserId(int page, int itemsPerPage, String userId) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Optional<User> user = userService.findById(userId);
+		Date startDate = getStartOfDay(getNDaysAgo(30));
+		Date endDate = getEndOfDay(new Date());
+		Page<Comment> commentsPage = commentRepository.findByUserAndCreateTimeBetween(user.get(),startDate,endDate, pageable);
 
 		Streamable<Object> commentResponsesPage = commentsPage.map(comment -> {
 			if (comment.getPost() != null && comment.getPost().getPostId() != 0) {

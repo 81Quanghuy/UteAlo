@@ -99,6 +99,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 	 // Định nghĩa phương thức để tìm tất cả bài post của một userId và sắp xếp theo thời gian đăng bài giảm dần
     Page<Post> findAllByUser_UserIdOrderByPostTimeDesc(String userId, Pageable pageable);
     
+    // Định nghĩa hàm lấy những bài post của 1 user trong 1 tháng
+    Page<Post> findByUserAndPostTimeBetween(User user, Date start, Date end, Pageable pageable);
+    
     // Đếm số lượng bài post của người dùng trong 1 tháng
     long countByUserAndPostTimeBetween(User user, Date start, Date end);
 

@@ -117,6 +117,17 @@ public class PostManagerController {
 		}
 	}
 
+	// Đếm số lượng bài post của user từng tháng trong năm
+	@GetMapping("/countPostsByMonthInYear/{userId}")
+	public ResponseEntity<Map<String, Long>> countPostsByUserMonthInYear(@PathVariable("userId") String userId) {
+		try {
+			Map<String, Long> postCountsByMonth = postService.countPostsByUserMonthInYear(userId);
+			return ResponseEntity.ok(postCountsByMonth);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
 	// Đếm số lượng bài post từng tháng trong năm
 	@GetMapping("/countPostsByMonthInYear")
 	public ResponseEntity<Map<String, Long>> countPostsByMonthInYear() {
@@ -146,6 +157,90 @@ public class PostManagerController {
 			pagination.setItemsPerPage(items);
 			pagination.setCount(totalPosts);
 			pagination.setPages((int) Math.ceil((double) totalPosts / items));
+
+			if (userPostsPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Posts Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Posts Successfully").result(userPostsPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+	}
+
+	// Cập nhật controller để lấy danh sách tất cả bài post của một userId trong 1
+	// tháng
+	@GetMapping("/listPostInMonthPage/{userId}")
+	public ResponseEntity<GenericResponseAdmin> findAllPostsInMonthByUserId(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "5") int items, @PathVariable("userId") String userId) {
+
+		// Sử dụng postService để lấy danh sách tất cả bài post của một userId
+		Page<PostsResponse> userPostsPage = postService.findAllPostsInMonthByUserId(page, items, userId);
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			long totalPosts = postRepository.countPostsByUser(user);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage(items);
+			pagination.setCount(totalPosts);
+			pagination.setPages((int) Math.ceil((double) totalPosts / items));
+
+			if (userPostsPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Posts Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Posts Successfully").result(userPostsPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+	}
+
+	// Cập nhật controller để lấy danh sách tất cả bài post của một userId trong 1
+	// tháng không phân trang
+	@GetMapping("/listPostInMonth/{userId}")
+	public ResponseEntity<GenericResponseAdmin> findAllPostsInMonthByUserId(@RequestParam(defaultValue = "1") int page,
+			@PathVariable("userId") String userId) {
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+
+			// Tính toán số lượng bài đăng của người dùng trong tháng
+			long totalPosts = postRepository.countPostsByUser(user);
+
+			// Kiểm tra nếu totalShares là 0, trả về result rỗng
+			if (totalPosts == 0) {
+				PaginationInfo pagination = new PaginationInfo();
+				pagination.setPage(page);
+				pagination.setItemsPerPage(0); // Số lượng mục trên trang là 0 khi không có bài share
+				pagination.setCount(0);
+				pagination.setPages(0);
+
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true).message("No Posts Found for User")
+						.result("").pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+			}
+
+			// Sử dụng totalPosts cho items để lấy tất cả bài đăng trong một trang
+			Page<PostsResponse> userPostsPage = postService.findAllPostsInMonthByUserId(page, (int) totalPosts, userId);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage((int) totalPosts);
+			pagination.setCount(totalPosts);
+			pagination.setPages(1); // Chỉ có 1 trang
 
 			if (userPostsPage.isEmpty()) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)

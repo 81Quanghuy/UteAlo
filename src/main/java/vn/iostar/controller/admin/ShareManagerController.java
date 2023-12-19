@@ -1,5 +1,6 @@
 package vn.iostar.controller.admin;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -118,6 +120,17 @@ public class ShareManagerController {
 		}
 	}
 
+	// Đếm số lượng bài share post của user từng tháng trong năm
+	@GetMapping("/countSharesByMonthInYear/{userId}")
+	public ResponseEntity<Map<String, Long>> countSharesByUserMonthInYear(@PathVariable("userId") String userId) {
+		try {
+			Map<String, Long> shareCountsByMonth = shareService.countSharesByUserMonthInYear(userId);
+			return ResponseEntity.ok(shareCountsByMonth);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
 	// Cập nhật controller để lấy danh sách tất cả bài share của một userId cụ thể
 	@GetMapping("/listShare/{userId}")
 	public ResponseEntity<GenericResponseAdmin> getAllSharesByUserId(@RequestParam(defaultValue = "1") int page,
@@ -136,6 +149,92 @@ public class ShareManagerController {
 			pagination.setItemsPerPage(items);
 			pagination.setCount(totalShares);
 			pagination.setPages((int) Math.ceil((double) totalShares / items));
+
+			if (userSharesPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Shares Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Shares Successfully").result(userSharesPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+	}
+
+	// Cập nhật controller để lấy danh sách tất cả bài share của một userId trong 1
+	// tháng
+	@GetMapping("/listShareInMonthPage/{userId}")
+	public ResponseEntity<GenericResponseAdmin> getAllSharesInMonthByUserId(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "5") int items, @PathVariable("userId") String userId) {
+
+		// Sử dụng shareService để lấy danh sách tất cả bài share của một userId
+		Page<SharesResponse> userSharesPage = shareService.findAllSharesInMonthByUserId(page, items, userId);
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+			long totalShares = shareRepository.countSharesByUser(user);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage(items);
+			pagination.setCount(totalShares);
+			pagination.setPages((int) Math.ceil((double) totalShares / items));
+
+			if (userSharesPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Shares Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Shares Successfully").result(userSharesPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+	}
+
+	// Cập nhật controller để lấy danh sách tất cả bài share của một userId trong 1
+	// tháng không có phân trang
+	@GetMapping("/listShareInMonth/{userId}")
+	public ResponseEntity<GenericResponseAdmin> getAllSharesInMonthByUserId(@RequestParam(defaultValue = "1") int page,
+			@PathVariable("userId") String userId) {
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+
+			// Tính tổng số lượng bài share của người dùng trong tháng
+			long totalShares = shareRepository.countSharesByUser(user);
+			
+			// Kiểm tra nếu totalShares là 0, trả về result rỗng
+	        if (totalShares == 0) {
+	            PaginationInfo pagination = new PaginationInfo();
+	            pagination.setPage(page);
+	            pagination.setItemsPerPage(0); // Số lượng mục trên trang là 0 khi không có bài share
+	            pagination.setCount(0);
+	            pagination.setPages(0);
+
+	            return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+	                    .message("No Shares Found for User").result("")
+	                    .pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+	        }
+
+			// Sử dụng totalShares cho items để lấy tất cả bài share trong một trang
+			Page<SharesResponse> userSharesPage = shareService.findAllSharesInMonthByUserId(page, (int) totalShares,
+					userId);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage((int) totalShares);
+			pagination.setCount(totalShares);
+			pagination.setPages(1); // Chỉ có 1 trang
 
 			if (userSharesPage.isEmpty()) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)

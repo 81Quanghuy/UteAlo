@@ -117,4 +117,7 @@ public interface UserService {
 	List<Top3UserOfMonth> getTop3UsersWithMostActivityInMonth();
 
 	ResponseEntity<Object> createAccount(String authorizationHeader, AccountManager request) throws IOException, ParseException;
+
+	UserStatisticsDTO getUserStatistics(String userId);
+
 }
