@@ -60,6 +60,9 @@ public interface ShareRepository extends JpaRepository<Share, Integer> {
 	// thời gian đăng bài giảm dần
 	Page<Share> findAllByUser_UserIdOrderByCreateAtDesc(String userId, Pageable pageable);
 	
+	// Tìm tất cả bài post của 1 user trong 1 tháng
+	Page<Share> findByUserAndCreateAtBetween(User user, Date start, Date end, Pageable pageable);
+	
 	// Đếm số lượng bài share của người dùng trong 1 tháng
 	 long countByUserAndCreateAtBetween(User user, Date start, Date end);
 

@@ -565,6 +565,32 @@ public class ShareServiceImpl implements ShareService {
 	}
 
 	@Override
+	public Map<String, Long> countSharesByUserMonthInYear(String userId) {
+		LocalDateTime now = LocalDateTime.now();
+		int currentYear = now.getYear();
+		
+		Optional<User> userOp = userService.findById(userId);
+		User user = userOp.get();
+
+		// Tạo một danh sách các tháng
+		List<Month> months = Arrays.asList(Month.values());
+		Map<String, Long> postCountsByMonth = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để duy trì thứ tự
+
+		for (Month month : months) {
+			LocalDateTime startDate = LocalDateTime.of(currentYear, month, 1, 0, 0);
+			LocalDateTime endDate = startDate.plusMonths(1).minusSeconds(1);
+
+			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+			long postCount = shareRepository.countByUserAndCreateAtBetween(user, startDateAsDate, endDateAsDate);
+			postCountsByMonth.put(month.toString(), postCount);
+		}
+
+		return postCountsByMonth;
+	}
+
+	@Override
 	public List<SharesResponse> getSharesIn1Month() {
 		Date startDate = getStartOfDay(getNDaysAgo(30));
 		Date endDate = getEndOfDay(new Date());
@@ -589,7 +615,22 @@ public class ShareServiceImpl implements ShareService {
 	public Page<SharesResponse> findAllSharesByUserId(int page, int itemsPerPage, String userId) {
 		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
 		Page<Share> userSharesPage = shareRepository.findAllByUser_UserIdOrderByCreateAtDesc(userId, pageable);
+		return userSharesPage.map(share -> {
+			SharesResponse sharesResponse = new SharesResponse(share);
+			sharesResponse.setComments(getIdComment(share.getComments()));
+			sharesResponse.setLikes(getIdLikes(share.getLikes()));
+			return sharesResponse;
+		});
+	}
 
+	@Override
+	public Page<SharesResponse> findAllSharesInMonthByUserId(int page, int itemsPerPage, String userId) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Date startDate = getStartOfDay(getNDaysAgo(30));
+		Date endDate = getEndOfDay(new Date());
+		Optional<User> user = userService.findById(userId);
+		Page<Share> userSharesPage = shareRepository.findByUserAndCreateAtBetween(user.get(), startDate, endDate,
+				pageable);
 		return userSharesPage.map(share -> {
 			SharesResponse sharesResponse = new SharesResponse(share);
 			sharesResponse.setComments(getIdComment(share.getComments()));

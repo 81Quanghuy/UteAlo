@@ -38,10 +38,10 @@ public class CommentManagerController {
 
 	@Autowired
 	CommentService commentService;
-	
+
 	@Autowired
 	UserService userService;
-	
+
 	@Autowired
 	CommentRepository commentRepository;
 
@@ -81,7 +81,7 @@ public class CommentManagerController {
 		}
 	}
 
-	// Đếm số lượng group
+	// Đếm số lượng comment
 	@GetMapping("/countComment")
 	public ResponseEntity<CountDTO> countCommentsToday() {
 		try {
@@ -116,7 +116,7 @@ public class CommentManagerController {
 		// Trả về null hoặc danh sách rỗng tùy theo logic của bạn
 		return null;
 	}
-	
+
 	// Cập nhật controller để lấy danh sách tất cả bình luận của một userId cụ thể
 	@GetMapping("/listComment/{userId}")
 	public ResponseEntity<GenericResponseAdmin> getAllCommentsByUserId(@RequestParam(defaultValue = "1") int page,
@@ -148,6 +148,66 @@ public class CommentManagerController {
 			// Xử lý trường hợp không tìm thấy User
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
 					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+	}
+
+	// Cập nhật controller để lấy danh sách tất cả bình luận của một userId cụ thể
+	@GetMapping("/listCommentInMonth/{userId}")
+	public ResponseEntity<GenericResponseAdmin> getAllCommentsInMonthByUserId(
+			@RequestParam(defaultValue = "1") int page, @PathVariable("userId") String userId) {
+
+		Optional<User> userOptional = userService.findById(userId);
+		if (userOptional.isPresent()) {
+			User user = userOptional.get();
+
+			// Tính tổng số lượng bình luận của người dùng trong tháng
+			long totalComments = commentRepository.countCommentsByUser(user);
+
+			// Kiểm tra nếu totalShares là 0, trả về result rỗng
+			if (totalComments == 0) {
+				PaginationInfo pagination = new PaginationInfo();
+				pagination.setPage(page);
+				pagination.setItemsPerPage(0); // Số lượng mục trên trang là 0 khi không có bài share
+				pagination.setCount(0);
+				pagination.setPages(0);
+
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true).message("No Comments Found for User")
+						.result("").pagination(pagination).statusCode(HttpStatus.OK.value()).build());
+			}
+
+			// Sử dụng totalComments cho items để lấy tất cả bình luận trong một trang
+			Streamable<Object> userCommentsPage = commentService.findAllCommentsByUserId(page, (int) totalComments,
+					userId);
+
+			PaginationInfo pagination = new PaginationInfo();
+			pagination.setPage(page);
+			pagination.setItemsPerPage((int) totalComments);
+			pagination.setCount(totalComments);
+			pagination.setPages(1); // Chỉ có 1 trang
+
+			if (userCommentsPage.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+						.message("No Comments Found for User").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.ok(GenericResponseAdmin.builder().success(true)
+						.message("Retrieved List Comments Successfully").result(userCommentsPage).pagination(pagination)
+						.statusCode(HttpStatus.OK.value()).build());
+			}
+		} else {
+			// Xử lý trường hợp không tìm thấy User
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponseAdmin.builder().success(false)
+					.message("User Not Found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+	}
+
+	// Đếm số lượng comment từng tháng trong năm
+	@GetMapping("/countCommentsByMonthInYear/{userId}")
+	public ResponseEntity<Map<String, Long>> countCommentsByUserMonthInYear(@PathVariable("userId") String userId) {
+		try {
+			Map<String, Long> commentCountsByMonth = commentService.countCommentsByUserMonthInYear(userId);
+			return ResponseEntity.ok(commentCountsByMonth);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 

@@ -1,5 +1,6 @@
 package vn.iostar.controller.admin;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import vn.iostar.dto.CombinedGroupResponse;
 import vn.iostar.dto.CountDTO;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.GenericResponseAdmin;
+import vn.iostar.dto.GroupPostResponse;
 import vn.iostar.dto.PostGroupDTO;
 import vn.iostar.dto.SearchPostGroup;
+import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.service.PostGroupService;
 
 @RestController
@@ -31,6 +35,9 @@ public class GroupManagerController {
 
 	@Autowired
 	PostGroupService postGroupService;
+
+	@Autowired
+	PostGroupRepository postGroupRepository;
 
 	// Lấy danh sách tất cả các nhóm trong hệ thống
 	@GetMapping("/list")
@@ -77,24 +84,22 @@ public class GroupManagerController {
 			long groupCountIn9Month = postGroupService.countGroupsInNineMonthsFromNow();
 			long groupCountIn1Year = postGroupService.countGroupsInOneYearFromNow();
 
-			CountDTO groupCountDTO = new CountDTO(groupCountToDay, groupCountInWeek, groupCountIn1Month, groupCountIn3Month,
-					groupCountIn6Month, groupCountIn9Month, groupCountIn1Year);
+			CountDTO groupCountDTO = new CountDTO(groupCountToDay, groupCountInWeek, groupCountIn1Month,
+					groupCountIn3Month, groupCountIn6Month, groupCountIn9Month, groupCountIn1Year);
 			return ResponseEntity.ok(groupCountDTO);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 		}
 	}
-	
+
 	// Lấy danh sách nhóm mà 1 user tham gia có phân trang
 	@GetMapping("/listGroup/{userId}")
-	public ResponseEntity<GenericResponseAdmin> getPostGroupJoinByUserId(
-	        @PathVariable("userId") String userId,
-	        @RequestParam(defaultValue = "1") int page,
-	        @RequestParam(defaultValue = "10") int itemsPerPage) {
+	public ResponseEntity<GenericResponseAdmin> getPostGroupJoinByUserId(@PathVariable("userId") String userId,
+			@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int itemsPerPage) {
 
-	    return postGroupService.getPostGroupJoinByUserId(userId, page, itemsPerPage);
+		return postGroupService.getPostGroupJoinByUserId(userId, page, itemsPerPage);
 	}
-	
+
 	// Thống kê bài post trong ngày hôm nay
 	// Thống kê bài post trong 1 ngày
 	// Thống kê bài post trong 7 ngày
@@ -116,6 +121,54 @@ public class GroupManagerController {
 		}
 		// Trả về null hoặc danh sách rỗng tùy theo logic của bạn
 		return null;
+	}
+
+	@GetMapping("/userJoin/{userId}")
+	public ResponseEntity<GenericResponse> getPostGroupJoinByUserId(@PathVariable("userId") String userId) {
+		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserId(userId);
+		return ResponseEntity.ok(GenericResponse.builder().success(true).message("Get list group join successfully!")
+				.result(list).statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@GetMapping("/userOwner/{userId}")
+	public ResponseEntity<GenericResponse> getPostGroupOwnerByUserId(@PathVariable("userId") String userId) {
+		List<GroupPostResponse> list = postGroupRepository.findPostGroupInfoByUserIdOfUser(userId);
+		return ResponseEntity
+				.ok(GenericResponse.builder().success(true).message("Get list group post owner successfully!")
+						.result(list).statusCode(HttpStatus.OK.value()).build());
+	}
+	
+//	@GetMapping("/combinedGroups/{userId}")
+//	public ResponseEntity<GenericResponse> getCombinedGroupsByUserId(@PathVariable("userId") String userId) {
+//	    List<GroupPostResponse> joinGroups = postGroupRepository.findPostGroupInfoByUserId(userId);
+//	    List<GroupPostResponse> ownerGroups = postGroupRepository.findPostGroupInfoByUserIdOfUser(userId);
+//
+//	    CombinedGroupResponse combinedResponse = new CombinedGroupResponse();
+//	    combinedResponse.setJoinGroups(joinGroups);
+//	    combinedResponse.setOwnerGroups(ownerGroups);
+//
+//	    return ResponseEntity.ok(GenericResponse.builder()
+//	            .success(true)
+//	            .message("Get combined list of groups successfully!")
+//	            .result(combinedResponse)
+//	            .statusCode(HttpStatus.OK.value())
+//	            .build());
+//	}
+	@GetMapping("/combinedGroups/{userId}")
+	public ResponseEntity<GenericResponse> getCombinedGroupsByUserId(@PathVariable("userId") String userId) {
+	    List<GroupPostResponse> joinGroups = postGroupRepository.findPostGroupInfoByUserId(userId);
+	    List<GroupPostResponse> ownerGroups = postGroupRepository.findPostGroupInfoByUserIdOfUser(userId);
+
+	    List<GroupPostResponse> combinedGroups = new ArrayList<>();
+	    combinedGroups.addAll(joinGroups);
+	    combinedGroups.addAll(ownerGroups);
+
+	    return ResponseEntity.ok(GenericResponse.builder()
+	            .success(true)
+	            .message("Get combined list of groups successfully!")
+	            .result(combinedGroups)
+	            .statusCode(HttpStatus.OK.value())
+	            .build());
 	}
 
 }

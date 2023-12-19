@@ -353,7 +353,6 @@ public class PostServiceImpl implements PostService {
 		});
 	}
 
-
 	@Override
 	public ResponseEntity<GenericResponseAdmin> getAllPosts(String authorizationHeader, int page, int itemsPerPage) {
 		String token = authorizationHeader.substring(7);
@@ -754,17 +753,60 @@ public class PostServiceImpl implements PostService {
 	// Thay đổi phương thức findAllPosts để lấy tất cả bài post của một userId
 	@Override
 	public Page<PostsResponse> findAllPostsByUserId(int page, int itemsPerPage, String userId) {
-	    Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
-	    // Sử dụng postRepository để tìm tất cả bài post của một userId cụ thể
-	    Page<Post> userPostsPage = postRepository.findAllByUser_UserIdOrderByPostTimeDesc(userId, pageable);
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		// Sử dụng postRepository để tìm tất cả bài post của một userId cụ thể
+		Page<Post> userPostsPage = postRepository.findAllByUser_UserIdOrderByPostTimeDesc(userId, pageable);
 
-	    return userPostsPage.map(post -> {
-	        PostsResponse postsResponse = new PostsResponse(post);
-	        postsResponse.setComments(getIdComment(post.getComments()));
-	        postsResponse.setLikes(getIdLikes(post.getLikes()));
-	        return postsResponse;
-	    });
+		return userPostsPage.map(post -> {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			return postsResponse;
+		});
 	}
 
+	@Override
+	public Page<PostsResponse> findAllPostsInMonthByUserId(int page, int itemsPerPage, String userId) {
+		Pageable pageable = PageRequest.of(page - 1, itemsPerPage);
+		Optional<User> user = userService.findById(userId);
+		Date startDate = getStartOfDay(getNDaysAgo(30));
+		Date endDate = getEndOfDay(new Date());
+		// Sử dụng postRepository để tìm tất cả bài post của một userId cụ thể
+		Page<Post> userPostsPage = postRepository.findByUserAndPostTimeBetween(user.get(), startDate, endDate,
+				pageable);
+
+		return userPostsPage.map(post -> {
+			PostsResponse postsResponse = new PostsResponse(post);
+			postsResponse.setComments(getIdComment(post.getComments()));
+			postsResponse.setLikes(getIdLikes(post.getLikes()));
+			return postsResponse;
+		});
+	}
+
+	@Override
+	public Map<String, Long> countPostsByUserMonthInYear(String userId) {
+		LocalDateTime now = LocalDateTime.now();
+		int currentYear = now.getYear();
+		
+		Optional<User> userOp = userService.findById(userId);
+		User user = userOp.get();
+
+		// Tạo một danh sách các tháng
+		List<Month> months = Arrays.asList(Month.values());
+		Map<String, Long> postCountsByMonth = new LinkedHashMap<>(); // Sử dụng LinkedHashMap để duy trì thứ tự
+
+		for (Month month : months) {
+			LocalDateTime startDate = LocalDateTime.of(currentYear, month, 1, 0, 0);
+			LocalDateTime endDate = startDate.plusMonths(1).minusSeconds(1);
+
+			Date startDateAsDate = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+			Date endDateAsDate = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+			long postCount = postRepository.countByUserAndPostTimeBetween(user, startDateAsDate, endDateAsDate);
+			postCountsByMonth.put(month.toString(), postCount);
+		}
+
+		return postCountsByMonth;
+	}
 
 }

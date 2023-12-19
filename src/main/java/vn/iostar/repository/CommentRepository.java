@@ -48,6 +48,9 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 	// thời gian đăng bài giảm dần
 	Page<Comment> findAllByUser_UserIdOrderByCreateTimeDesc(String userId, Pageable pageable);
 	
+	 // Định nghĩa hàm lấy những bài post của 1 user trong 1 tháng
+    Page<Comment> findByUserAndCreateTimeBetween(User user, Date start, Date end, Pageable pageable);
+	
 	// Đếm số lượng bình luận của người dùng trong 1 tháng
 	long countByUserAndCreateTimeBetween(User user, Date start, Date end);
 
