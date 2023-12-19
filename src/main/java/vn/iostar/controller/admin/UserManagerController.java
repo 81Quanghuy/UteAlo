@@ -36,8 +36,7 @@ import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin/userManager")
-public class
-UserManagerController {
+public class UserManagerController {
 
 	@Autowired
 	UserService userService;
@@ -143,19 +142,22 @@ UserManagerController {
 		return ResponseEntity.ok(top3Users);
 	}
 
-	
 	@GetMapping("/getCountPostShareComment/{userId}")
-    public ResponseEntity<UserStatisticsDTO> getCountPostShareComment(@PathVariable("userId") String userId) {
+	public ResponseEntity<UserStatisticsDTO> getCountPostShareComment(@PathVariable("userId") String userId) {
 		UserStatisticsDTO userStatisticsDTO = userService.getUserStatistics(userId);
-        return ResponseEntity.ok(userStatisticsDTO);
-    }
-	
-	
+		return ResponseEntity.ok(userStatisticsDTO);
+	}
+
 	@GetMapping("/getIsOnline/{userId}")
-    public Boolean getIsOnlineOfUser(@PathVariable("userId") String userId) {
+	public Boolean getIsOnlineOfUser(@PathVariable("userId") String userId) {
 		Optional<User> user = userService.findById(userId);
 		return user.get().getIsOnline();
-    }
+	}
 
-
+	// Tìm kiếm người dùng theo userName,address,email
+	@GetMapping("/search")
+	public ResponseEntity<Object> searchUsers(@RequestParam(name = "fields") String fields,
+			@RequestParam(name = "q") String query) {
+		return userService.searchUser(fields, query);
+	}
 }

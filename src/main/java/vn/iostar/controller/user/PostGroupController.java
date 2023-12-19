@@ -357,4 +357,20 @@ public class PostGroupController {
 		}
 	}
 
+	// thêm quyền admin cho thành viên trong nhóm
+	// Các trường hợp : 1 Nó chưa tham gia nhóm đó và nhóm đó chưa có admin : Thêm
+	// thẳng thành viên đó vào nhóm là admin
+	// 2 : Nó chưa tham gia và đã có admin: Chuyển quyền admin cho user này
+	// 3 Nó đã tham gia và chưa có admin: Thay đổi quyền
+	// 4 Nó đã tham gia và đã có admin : Chuyển quyền
+	
+	@PostMapping("/addAdmin")
+	public ResponseEntity<GenericResponse> addAdminRoleInGroup(
+			@RequestHeader("Authorization") String authorizationHeader, @RequestParam int groupId,
+			@RequestParam String userId) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		return groupService.addAdminRoleInGroup(groupId, userId, userIdToken);
+	}
+
 }

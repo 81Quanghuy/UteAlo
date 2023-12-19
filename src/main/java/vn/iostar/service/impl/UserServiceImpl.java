@@ -66,6 +66,7 @@ import vn.iostar.entity.Role;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
 import vn.iostar.exception.wrapper.BadRequestException;
+import vn.iostar.exception.wrapper.ForbiddenException;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.FriendRepository;
 import vn.iostar.repository.PasswordResetOtpRepository;
@@ -909,6 +910,20 @@ public class UserServiceImpl implements UserService {
 						.statusCode(HttpStatus.OK.value()).build());
 	}
 
+	@Override
+	public ResponseEntity<Object> searchUser(String fields, String query) {
+
+		List<UserResponse> users = userRepository.searchUser(query);
+		if (users.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No user found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(GenericResponse.builder().success(true).message("Tìm thấy thông tin người dùng!!!")
+							.result(users).statusCode(HttpStatus.OK.value()).build());
+		}
+	}
+
 	private String notFormat(int i) {
 		return " cột thứ " + i + " không đúng định dạng !!!";
 	}
@@ -1046,6 +1061,7 @@ public class UserServiceImpl implements UserService {
 			return userFileDTO;
 
 		}
+	}
 
 	public UserStatisticsDTO getUserStatistics(String userId) {
 		Optional<User> userOp = findById(userId);
