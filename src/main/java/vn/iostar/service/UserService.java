@@ -118,7 +118,7 @@ public interface UserService {
 
 	ResponseEntity<Object> createAccount(String authorizationHeader, AccountManager request) throws IOException, ParseException;
 
-	ResponseEntity<Object> searchUser(String fields, String query, String currentUserId);
+	ResponseEntity<Object> searchUser(String fields, String query);
 	UserStatisticsDTO getUserStatistics(String userId);
 
 }

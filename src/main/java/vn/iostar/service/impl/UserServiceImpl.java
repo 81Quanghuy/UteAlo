@@ -911,23 +911,17 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<Object> searchUser(String fields, String query, String currentUserId) {
-		Optional<User> admin = userRepository.findById(currentUserId);
-		if(admin.isPresent() && admin.get().getRole().getRoleName().equals(RoleName.Admin)){
-			List<UserResponse> users = userRepository.searchUser(query);
-			if (users.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-						.message("No user found").statusCode(HttpStatus.NOT_FOUND.value()).build());
-			} else {
-				return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder().success(true)
-						.message("Tìm thấy thông tin người dùng!!!").result(users).statusCode(HttpStatus.OK.value())
-						.build());
-			}
-		}
-		else{
-			throw new ForbiddenException("No access");
-		}
+	public ResponseEntity<Object> searchUser(String fields, String query) {
 
+		List<UserResponse> users = userRepository.searchUser(query);
+		if (users.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No user found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(GenericResponse.builder().success(true).message("Tìm thấy thông tin người dùng!!!")
+							.result(users).statusCode(HttpStatus.OK.value()).build());
+		}
 	}
 
 	private String notFormat(int i) {

@@ -141,25 +141,23 @@ public class UserManagerController {
 		List<Top3UserOfMonth> top3Users = userService.getTop3UsersWithMostActivityInMonth();
 		return ResponseEntity.ok(top3Users);
 	}
-	
+
 	@GetMapping("/getCountPostShareComment/{userId}")
-    public ResponseEntity<UserStatisticsDTO> getCountPostShareComment(@PathVariable("userId") String userId) {
+	public ResponseEntity<UserStatisticsDTO> getCountPostShareComment(@PathVariable("userId") String userId) {
 		UserStatisticsDTO userStatisticsDTO = userService.getUserStatistics(userId);
-        return ResponseEntity.ok(userStatisticsDTO);
-    }
-	
-	
+		return ResponseEntity.ok(userStatisticsDTO);
+	}
+
 	@GetMapping("/getIsOnline/{userId}")
-    public Boolean getIsOnlineOfUser(@PathVariable("userId") String userId) {
+	public Boolean getIsOnlineOfUser(@PathVariable("userId") String userId) {
 		Optional<User> user = userService.findById(userId);
 		return user.get().getIsOnline();
-    }
+	}
+
 	// Tìm kiếm người dùng theo userName,address,email
 	@GetMapping("/search")
-	public ResponseEntity<Object> searchUsers(@RequestHeader("Authorization") String authorizationHeader,
-											  @RequestParam(name = "fields") String fields, @RequestParam(name = "q") String query) {
-		String token = authorizationHeader.substring(7);
-		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
-		return userService.searchUser(fields, query, currentUserId);
+	public ResponseEntity<Object> searchUsers(@RequestParam(name = "fields") String fields,
+			@RequestParam(name = "q") String query) {
+		return userService.searchUser(fields, query);
 	}
 }

@@ -1,5 +1,6 @@
 package vn.iostar.dto;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.annotations.Nationalized;
@@ -29,4 +30,11 @@ public class PostGroupDTO {
 
 	@Nationalized
 	private MultipartFile background;
+
+	public PostGroupDTO(Integer postGroupId, String userId) {
+		this.postGroupId = postGroupId;
+		Set<String> list = new HashSet<>();
+		list.add(userId);
+		this.userId = list;
+	}
 }
