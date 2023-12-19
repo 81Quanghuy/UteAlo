@@ -97,6 +97,9 @@ public interface ShareService {
 	// Đếm số lượng bài Shares từng tháng trong năm
 	Map<String, Long> countSharesByMonthInYear();
 
+	// Đếm số lượng bài Shares của user từng tháng trong năm
+	Map<String, Long> countSharesByUserMonthInYear(String userId);
+
 	// Thống kê bài Shares trong 1 tháng
 	List<SharesResponse> getSharesIn1Month();
 
@@ -106,4 +109,7 @@ public interface ShareService {
 
 	// Lấy tất cả bài share của 1 user có phân trang
 	Page<SharesResponse> findAllSharesByUserId(int page, int itemsPerPage, String userId);
+
+	// Lấy tất cả bài share của 1 user trong 1 tháng có phân trang
+	Page<SharesResponse> findAllSharesInMonthByUserId(int page, int itemsPerPage, String userId);
 }

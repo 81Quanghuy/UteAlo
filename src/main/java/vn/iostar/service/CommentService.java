@@ -73,6 +73,9 @@ public interface CommentService {
 	// Đếm số lượng comment từng tháng trong năm
 	Map<String, Long> countCommentsByMonthInYear();
 
+	// Đếm số lượng comment của 1 user từng tháng trong năm
+	Map<String, Long> countCommentsByUserMonthInYear(String userId);
+
 	// Đếm số lượng comment trong 1 năm
 	long countCommentsInOneYearFromNow();
 
@@ -87,4 +90,7 @@ public interface CommentService {
 
 	// Lấy tất cả bình luận của 1 user có phân trang
 	Streamable<Object> findAllCommentsByUserId(int page, int itemsPerPage, String userId);
+
+	// Lấy tất cả bài comment của 1 user trong 1 tháng có phân trang
+	Streamable<Object> findAllCommentsInMonthByUserId(int page, int itemsPerPage, String userId);
 }
