@@ -26,14 +26,14 @@ import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.Top3UserOfMonth;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserResponse;
+import vn.iostar.entity.User;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/admin/userManager")
-public class
-UserManagerController {
+public class UserManagerController {
 
 	@Autowired
 	UserService userService;
@@ -139,4 +139,12 @@ UserManagerController {
 		return ResponseEntity.ok(top3Users);
 	}
 
+	// Tìm kiếm người dùng theo userName,address,email
+	@GetMapping("/search")
+	public ResponseEntity<Object> searchUsers(@RequestHeader("Authorization") String authorizationHeader,
+			@RequestParam(name = "fields") String fields, @RequestParam(name = "q") String query) {
+		String token = authorizationHeader.substring(7);
+		String currentUserId = jwtTokenProvider.getUserIdFromJwt(token);
+		return userService.searchUser(fields, query, currentUserId);
+	}
 }

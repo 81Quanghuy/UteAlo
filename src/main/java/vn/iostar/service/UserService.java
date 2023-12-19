@@ -117,4 +117,6 @@ public interface UserService {
 	List<Top3UserOfMonth> getTop3UsersWithMostActivityInMonth();
 
 	ResponseEntity<Object> createAccount(String authorizationHeader, AccountManager request) throws IOException, ParseException;
+
+	ResponseEntity<Object> searchUser(String fields, String query, String currentUserId);
 }

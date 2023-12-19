@@ -65,6 +65,7 @@ import vn.iostar.entity.Role;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
 import vn.iostar.exception.wrapper.BadRequestException;
+import vn.iostar.exception.wrapper.ForbiddenException;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.FriendRepository;
 import vn.iostar.repository.PasswordResetOtpRepository;
@@ -906,6 +907,26 @@ public class UserServiceImpl implements UserService {
 				.body(GenericResponseAdmin.builder().success(true)
 						.message("Có " + countMember + " dòng đã được thêm vào hệ thống!!!")
 						.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<Object> searchUser(String fields, String query, String currentUserId) {
+		Optional<User> admin = userRepository.findById(currentUserId);
+		if(admin.isPresent() && admin.get().getRole().getRoleName().equals(RoleName.Admin)){
+			List<UserResponse> users = userRepository.searchUser(query);
+			if (users.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+						.message("No user found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			} else {
+				return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder().success(true)
+						.message("Tìm thấy thông tin người dùng!!!").result(users).statusCode(HttpStatus.OK.value())
+						.build());
+			}
+		}
+		else{
+			throw new ForbiddenException("No access");
+		}
+
 	}
 
 	private String notFormat(int i) {
