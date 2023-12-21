@@ -2,6 +2,7 @@ package vn.iostar.controller.user;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -10,6 +11,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import vn.iostar.contants.RoleName;
 import vn.iostar.dto.MessageDTO;
 import vn.iostar.dto.NotificationDTO;
 import vn.iostar.dto.ReactDTO;
@@ -17,6 +19,8 @@ import vn.iostar.dto.UserDTO;
 import vn.iostar.entity.Message;
 import vn.iostar.entity.Notification;
 import vn.iostar.entity.ReactMessage;
+import vn.iostar.entity.Role;
+import vn.iostar.entity.User;
 import vn.iostar.service.MessageService;
 import vn.iostar.service.NotificationService;
 import vn.iostar.service.ReactMessageService;
@@ -46,7 +50,27 @@ public class ChatController {
 	@MessageMapping("/userNotify/{userId}")
 	public void sendNotifyUser(@Payload NotificationDTO notification, @DestinationVariable String userId) {
 		NotificationDTO entity = notificationService.saveNotificationDTO(notification);
-		simpMessagingTemplate.convertAndSendToUser(notification.getUserId(), pathNotification, entity);
+		simpMessagingTemplate.convertAndSendToUser(entity.getUserId(), pathNotification, entity);
+	}
+
+	@MessageMapping("/adminNotify")
+	public void sendUserAll(@Payload NotificationDTO notification) {
+		List<User> user = userService.findAll();
+
+		for (User user2 : user) {
+			if (!user2.getRole().getRoleName().equals(RoleName.Admin)) {
+				NotificationDTO notificationDTO = new NotificationDTO();
+				notificationDTO.setUserId(user2.getUserId());
+				notificationDTO.setContent(notification.getContent());
+				notificationDTO.setLink(notification.getLink());
+				notificationDTO.setIsRead(false);
+				notificationDTO.setCreateAt(new Date());
+				notificationDTO.setUpdateAt(new Date());
+				NotificationDTO entity = notificationService.saveNotificationDTO(notificationDTO);
+				simpMessagingTemplate.convertAndSendToUser(entity.getUserId(), pathNotification, entity);
+			}
+
+		}
 	}
 
 	// Nhắn tin giữa các nhóm với nhau

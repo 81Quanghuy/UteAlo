@@ -20,4 +20,6 @@ public interface ReportService {
 	<S extends Report> S save(S entity);
 
 	ResponseEntity<Object> createUserReport(String token, CreatePostRequestDTO requestDTO);
+
+	ResponseEntity<Object> getReportById(String currentUserId, Integer reportId);
 }
