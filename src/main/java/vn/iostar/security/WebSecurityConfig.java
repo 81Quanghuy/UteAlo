@@ -81,7 +81,7 @@ public class WebSecurityConfig {
 
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3001","http://localhost:3000")); // Điều chỉnh các nguồn mà bạn muốn cho phép truy cập
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3001","http://192.168.102.36:3000")); // Điều chỉnh các nguồn mà bạn muốn cho phép truy cập
         configuration.setAllowedMethods(List.of("HEAD",
                 "GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowCredentials(true);

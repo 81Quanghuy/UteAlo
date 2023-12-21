@@ -751,7 +751,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 		if (user.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
 					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
-
+		RoleName roleName = user.get().getRole().getRoleName();
 		Optional<PostGroup> groupPost = postGroupRepository.findById(postGroup.getPostGroupId());
 		if (groupPost.isEmpty())
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
@@ -760,7 +760,8 @@ public class PostGroupServiceImpl implements PostGroupService {
 				.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
 
 		// user dang nhap phai la admin
-		if (postGroupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(postGroupMember.get())) {
+		if ((postGroupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(postGroupMember.get()))
+				|| roleName.name().equals("Admin")) {
 
 			// Check user muon thanh admin ton tai khong
 			String userIdToAdmin = postGroup.getUserId().stream().findFirst().orElse(null);
@@ -1027,8 +1028,10 @@ public class PostGroupServiceImpl implements PostGroupService {
 		Optional<PostGroupMember> postGroupMember = groupMemberRepository
 				.findByUserUserIdAndRoleUserGroup(currentUserId, RoleUserGroup.Admin);
 
+		RoleName roleName = user.get().getRole().getRoleName();
 		// user dang nhap phai la admin
-		if (postGroupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(postGroupMember.get())) {
+		if ((postGroupMember.isPresent() && groupPost.get().getPostGroupMembers().contains(postGroupMember.get()))
+				|| roleName.name().equals("Admin")) {
 
 			// Check user muon thanh admin ton tai khong
 			String userIdRemove = postGroup.getUserId().stream().findFirst().orElse(null);
