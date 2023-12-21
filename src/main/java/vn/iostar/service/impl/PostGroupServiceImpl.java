@@ -48,6 +48,7 @@ import vn.iostar.entity.PostGroup;
 import vn.iostar.entity.PostGroupMember;
 import vn.iostar.entity.PostGroupRequest;
 import vn.iostar.entity.User;
+import vn.iostar.exception.wrapper.BadRequestException;
 import vn.iostar.repository.FriendRepository;
 import vn.iostar.repository.PostGroupMemberRepository;
 import vn.iostar.repository.PostGroupRepository;
@@ -1473,6 +1474,75 @@ public class PostGroupServiceImpl implements PostGroupService {
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.DAY_OF_MONTH, -days);
 		return calendar.getTime();
+	}
+
+	// Thêm người dùng làm admin của nho
+	@Override
+	public ResponseEntity<GenericResponse> addAdminRoleInGroup(Integer groupId, String userId, String userIdToken) {
+		Optional<User> userAmdin = userRepository.findById(userIdToken);
+		if (userAmdin.isEmpty() || !userAmdin.get().getRole().getRoleName().equals(RoleName.Admin)) {
+			throw new BadRequestException("Không thể thực hiện chức năng này!!!");
+		}
+		Optional<PostGroup> group = postGroupRepository.findById(groupId);
+		if (group.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found group").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+		Optional<User> user = userRepository.findById(userId);
+		if (user.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("Not found user").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		}
+
+		PostGroupMember admin = group.get().getPostGroupMembers().stream()
+				.filter(member -> member.getRoleUserGroup().equals(RoleUserGroup.Admin)).findFirst().orElse(null);
+		if (admin != null) {
+			return assignAdminByUserIdAndGroupId(new PostGroupDTO(groupId, userId), admin.getUser().getUserId());
+		} else {
+
+			// Check user do co trong group chua
+			boolean check = true;
+			Optional<PostGroupMember> adminMember = postGroupMemberRepository.findByUserUserIdAndRoleUserGroup(userId,
+					RoleUserGroup.Admin);
+			for (PostGroupMember postGroupMember : group.get().getPostGroupMembers()) {
+				if (postGroupMember.getUser().getUserId().equals(userId)) {
+					check = false;
+					if (adminMember.isPresent()) {
+						group.get().getPostGroupMembers().remove(postGroupMember);
+						group.get().getPostGroupMembers().add(adminMember.get());
+						adminMember.get().getPostGroup().add(group.get());
+						groupMemberRepository.save(adminMember.get());
+
+					} else {
+						PostGroupMember postGroupMember2 = new PostGroupMember();
+						postGroupMember2.setUser(user.get());
+						postGroupMember2.setRoleUserGroup(RoleUserGroup.Admin);
+						postGroupMember2.getPostGroup().add(group.get());
+						group.get().getPostGroupMembers().add(postGroupMember2);
+						groupMemberRepository.save(postGroupMember2);
+
+					}
+					break;
+				}
+			}
+			if (check) {
+				if (adminMember.isPresent()) {
+					group.get().getPostGroupMembers().add(adminMember.get());
+					adminMember.get().getPostGroup().add(group.get());
+					groupMemberRepository.save(adminMember.get());
+				} else {
+					PostGroupMember postGroupMember3 = new PostGroupMember();
+					postGroupMember3.setUser(user.get());
+					postGroupMember3.setRoleUserGroup(RoleUserGroup.Admin);
+					postGroupMember3.getPostGroup().add(group.get());
+					group.get().getPostGroupMembers().add(postGroupMember3);
+					groupMemberRepository.save(postGroupMember3);
+				}
+			}
+
+			return ResponseEntity.ok(GenericResponse.builder().success(true).message("Add admin successfully")
+					.statusCode(HttpStatus.OK.value()).build());
+		}
 	}
 
 }

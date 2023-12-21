@@ -38,4 +38,12 @@ public interface UserRepository extends JpaRepository<User, String> {
 	
 	// Đếm lượng người dùng online
 	long countByIsOnlineTrue();
+
+	//Tìm kiếm người dùng theo username, email, phone của người dùng
+
+	@Query("SELECT new vn.iostar.dto.UserResponse(u.userId, u.userName, u.address,u.phone, u.gender, u.dayOfBirth,a.isActive) FROM User u " +
+			"JOIN u.account a " +
+			"WHERE u.userName LIKE %:query% " +
+			"OR u.phone LIKE %:query% " + "OR a.email LIKE %:query% ")
+    List<UserResponse> searchUser( String query);
 }

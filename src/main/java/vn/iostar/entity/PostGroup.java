@@ -70,6 +70,6 @@ public class PostGroup implements Serializable {
 	@OneToMany(mappedBy = "postGroup", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Notification> notifications;
 
-	private Date createDate;
-	private Date updateDate;
+	private Date createDate =new Date();
+	private Date updateDate = new Date();
 }

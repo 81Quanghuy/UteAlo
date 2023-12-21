@@ -133,4 +133,5 @@ public interface PostGroupService {
 	// Thống kê bài post trong 1 tháng
 	List<SearchPostGroup> getGroupsInMonth();
 
+	ResponseEntity<GenericResponse> addAdminRoleInGroup(Integer groupId, String userId, String userIdToken);
 }

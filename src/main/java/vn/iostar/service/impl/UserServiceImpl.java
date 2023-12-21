@@ -1,5 +1,8 @@
 package vn.iostar.service.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
@@ -13,7 +16,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -24,9 +33,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import vn.iostar.contants.DateFilter;
+import vn.iostar.contants.Gender;
 import vn.iostar.contants.RoleName;
+import vn.iostar.contants.RoleUserGroup;
+import vn.iostar.dto.AccountManager;
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.FriendResponse;
 import vn.iostar.dto.GenericResponse;
@@ -36,26 +50,36 @@ import vn.iostar.dto.ListUsers;
 import vn.iostar.dto.PaginationInfo;
 import vn.iostar.dto.Top3UserOfMonth;
 import vn.iostar.dto.UserDTO;
+import vn.iostar.dto.UserFileDTO;
 import vn.iostar.dto.UserManagerRequest;
 import vn.iostar.dto.UserMessage;
 import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserResponse;
 import vn.iostar.dto.UserStatisticsDTO;
 import vn.iostar.dto.UserUpdateRequest;
+import vn.iostar.entity.Account;
 import vn.iostar.entity.PasswordResetOtp;
+import vn.iostar.entity.PostGroup;
+import vn.iostar.entity.PostGroupMember;
 import vn.iostar.entity.Profile;
+import vn.iostar.entity.Role;
 import vn.iostar.entity.User;
 import vn.iostar.entity.VerificationToken;
-import vn.iostar.repository.AccountRepository;
+import vn.iostar.exception.wrapper.BadRequestException;
+import vn.iostar.exception.wrapper.ForbiddenException;
 import vn.iostar.repository.CommentRepository;
 import vn.iostar.repository.FriendRepository;
 import vn.iostar.repository.PasswordResetOtpRepository;
+import vn.iostar.repository.PostGroupMemberRepository;
 import vn.iostar.repository.PostGroupRepository;
 import vn.iostar.repository.PostRepository;
+import vn.iostar.repository.ProfileRepository;
 import vn.iostar.repository.ShareRepository;
 import vn.iostar.repository.UserRepository;
 import vn.iostar.repository.VerificationTokenRepository;
 import vn.iostar.security.JwtTokenProvider;
+import vn.iostar.service.AccountService;
+import vn.iostar.service.RoleService;
 import vn.iostar.service.UserService;
 
 @Service
@@ -65,10 +89,13 @@ public class UserServiceImpl implements UserService {
 	UserRepository userRepository;
 
 	@Autowired
+	RoleService roleService;
+
+	@Autowired
 	PostGroupRepository postGroupRepository;
 
 	@Autowired
-	AccountRepository accountRepository;
+	AccountService accountService;
 
 	@Autowired
 	VerificationTokenRepository tokenRepository;
@@ -91,10 +118,18 @@ public class UserServiceImpl implements UserService {
 	PostRepository postRepository;
 
 	@Autowired
+	ProfileRepository profileRepository;
+
+	@Autowired
+	PostGroupMemberRepository groupMemberRepository;
+
+	@Autowired
 	ShareRepository shareRepository;
 
 	@Autowired
 	CommentRepository commentRepository;
+
+	final String indexCell = "Tại dòng ";
 
 	@Override
 	public <S extends User> S save(S entity) {
@@ -119,6 +154,10 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public long count() {
 		return userRepository.count();
+	}
+
+	public <S extends User> List<S> saveAll(Iterable<S> entities) {
+		return userRepository.saveAll(entities);
 	}
 
 	@Override
@@ -719,6 +758,311 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
+	public ResponseEntity<Object> createAccount(String authorizationHeader, AccountManager request)
+			throws IOException, ParseException {
+		// Tạo đối tượng MultipartFile
+		MultipartFile multipartFile = request.getFile();
+		// Lấy input stream của file
+		InputStream inputStream = multipartFile.getInputStream();
+		int countMember = 0;
+		try (// Tạo đối tượng XSSFWorkbook để đọc file Excel
+				XSSFWorkbook workbook = new XSSFWorkbook(inputStream)) {
+			// Lấy sheet đầu tiên
+			XSSFSheet sheet = workbook.getSheetAt(0);
+			List<User> listUsers = new ArrayList<>();
+			List<Account> listAccounts = new ArrayList<>();
+			List<PostGroup> listGroups = new ArrayList<>();
+			List<Profile> listProfiles = new ArrayList<>();
+			List<PostGroupMember> listMember = new ArrayList<>();
+
+			// Duyệt qua các hàng trong sheet
+			for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+				User user = new User();
+				UserFileDTO userDTO = mapRowToUserDTO(sheet, i, inputStream);
+
+				// Nếu người dùng chưa tồn tại trong hệ thống
+				if (userDTO.getAccount() == null) {
+					countMember += 1;
+					user.setActive(true);
+					if (userDTO.getAddress() != null) {
+						user.setAddress(userDTO.getAddress());
+					}
+					if (userDTO.getDateOfBirth() != null) {
+						user.setDayOfBirth(userDTO.getDateOfBirth());
+					}
+
+					if (userDTO.getPhone() != null) {
+						user.setPhone(String.format("%011.0f", userDTO.getPhone()));
+					}
+
+					user.setVerified(false);
+					user.setUserName(userDTO.getUserName());
+					Optional<Role> role = roleService.findByRoleName(userDTO.getRoleGroup());
+					role.ifPresent(user::setRole);
+
+					if (userDTO.getGender() != null) {
+						if (userDTO.getGender().equals("Nam")) {
+							user.setGender(Gender.MALE);
+						} else if (userDTO.getGender().equals("Nữ")) {
+							user.setGender(Gender.FEMALE);
+						} else {
+							user.setGender(Gender.OTHER);
+						}
+					}
+
+					// Hàm thêm tài khoản
+					Account account = new Account();
+					account.setVerified(false);
+					if (userDTO.getPhone() != null) {
+						account.setPhone(String.format("%011.0f", userDTO.getPhone()));
+					}
+					account.setEmail(userDTO.getEmail());
+					account.setActive(true);
+					account.setUser(user);
+					account.setCreatedAt(new Date());
+
+					// Hàm thêm profile
+					Profile profile = new Profile();
+					profile.setUser(user);
+					if (userDTO.getGender() != null) {
+						if (userDTO.getGender().equals("Nữ")) {
+							profile.setAvatar(
+									"https://i.pinimg.com/736x/01/48/0f/01480f29ce376005edcbec0b30cf367d.jpg");
+
+						} else {
+							profile.setAvatar(
+									"https://www.prettywoman.vn/wp-content/uploads/2023/06/hinh-anh-avatar-nam-1-600x600.jpg");
+						}
+					}
+					listProfiles.add(profile);
+					listAccounts.add(account);
+					listUsers.add(user);
+
+					// Hàm thêm nhóm và thành viên nhóm
+					List<PostGroup> listPostGroups = new ArrayList<>();
+					Boolean checkGroup = true;
+					PostGroup group = new PostGroup();
+
+					// Kiểm tra đã thêm postGroup vào mảng cần tạo chưa
+					for (PostGroup postGroup : listGroups) {
+						if (postGroup.getPostGroupName().equals(userDTO.getClassUser())) {
+							group = postGroup;
+							listPostGroups.add(group);
+							checkGroup = false;
+							break;
+						}
+					}
+
+					// Chưa thêm postGroup vào mảng cần tạo
+					if (Boolean.TRUE.equals(checkGroup)) {
+
+						Optional<PostGroup> postGroupOptional = postGroupRepository
+								.findByPostGroupName(userDTO.getClassUser());
+						if (postGroupOptional.isPresent()) {
+							Set<PostGroupMember> listMembers = postGroupOptional.get().getPostGroupMembers();
+							for (PostGroupMember postGroupMember : listMembers) {
+								if (postGroupMember.getRoleUserGroup().equals(RoleUserGroup.Admin)) {
+									throw new BadRequestException(
+											"Nhóm của người dùng tại dòng " + i + " đã có nhóm trưởng");
+								}
+							}
+							group = postGroupOptional.get();
+							listPostGroups.add(group);
+						} else {
+							group.setPostGroupName(userDTO.getClassUser());
+							group.setCreateDate(new Date());
+							listPostGroups.add(group);
+						}
+					}
+
+					// Thêm thành viên trong nhóm
+					if (!group.getPostGroupMembers().isEmpty()
+							&& userDTO.getRoleUserGroup().equals(RoleUserGroup.Admin)) {
+						for (PostGroupMember member : group.getPostGroupMembers()) {
+							if (member.getRoleUserGroup().equals(RoleUserGroup.Admin)) {
+								throw new BadRequestException(indexCell + i
+										+ " có trên một Admin trong nhóm của người dùng này trong file!!!");
+							}
+						}
+					}
+					PostGroupMember groupMember = new PostGroupMember();
+					groupMember.setUser(user);
+					groupMember.setRoleUserGroup(userDTO.getRoleUserGroup());
+					groupMember.setPostGroup(listPostGroups);
+					group.getPostGroupMembers().add(groupMember);
+					listGroups.add(group);
+					listMember.add(groupMember);
+				}
+			}
+			// Đóng file Excel
+			saveAll(listUsers);
+			accountService.saveAll(listAccounts);
+			profileRepository.saveAll(listProfiles);
+			postGroupRepository.saveAll(listGroups);
+			groupMemberRepository.saveAll(listMember);
+		}
+
+		inputStream.close();
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(GenericResponseAdmin.builder().success(true)
+						.message("Có " + countMember + " dòng đã được thêm vào hệ thống!!!")
+						.statusCode(HttpStatus.OK.value()).build());
+	}
+
+	@Override
+	public ResponseEntity<Object> searchUser(String fields, String query) {
+
+		List<UserResponse> users = userRepository.searchUser(query);
+		if (users.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
+					.message("No user found").statusCode(HttpStatus.NOT_FOUND.value()).build());
+		} else {
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(GenericResponse.builder().success(true).message("Tìm thấy thông tin người dùng!!!")
+							.result(users).statusCode(HttpStatus.OK.value()).build());
+		}
+	}
+
+	private String notFormat(int i) {
+		return " cột thứ " + i + " không đúng định dạng !!!";
+	}
+
+	public static boolean isCellEmpty(final Cell cell) {
+		if (cell == null) { // use row.getCell(x, Row.CREATE_NULL_AS_BLANK) to avoid null cells
+			return true;
+		} else if (cell.getCellType() == CellType.BLANK) {
+			return true;
+		} else if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().trim().isEmpty()) {
+			return true;
+		} else
+			return false;
+	}
+
+	private UserFileDTO mapRowToUserDTO(XSSFSheet sheet, int i, InputStream inputStream) throws IOException {
+		UserFileDTO userFileDTO = new UserFileDTO();
+		String cell8 = " cột thứ 8 : Chức vụ hệ thống không đúng !!!";
+		Cell cell = sheet.getRow(i).getCell(0);
+
+		if (cell != null && cell.getCellType() == CellType.STRING) {
+			if (cell.getStringCellValue().contains("@student.hcmute.edu.vn")) {
+				if (!sheet.getRow(i).getCell(8).getStringCellValue().contains("Sinh viên")) {
+					inputStream.close();
+					throw new BadRequestException(indexCell + i + cell8);
+				}
+			} else {
+				if (cell.getStringCellValue().contains("@hcmute.edu.vn")) {
+					if (!sheet.getRow(i).getCell(8).getStringCellValue().contains("Giảng viên")
+							&& !sheet.getRow(i).getCell(8).getStringCellValue().contains("Nhân viên")) {
+						inputStream.close();
+						throw new BadRequestException(indexCell + i + cell8);
+					}
+
+				} else {
+					inputStream.close();
+					throw new BadRequestException(indexCell + i + " cột thứ 7 không đúng định dạng !!!");
+				}
+			}
+		} else {
+			inputStream.close();
+			throw new BadRequestException(indexCell + i + notFormat(0));
+		}
+		userFileDTO.setEmail(cell.getStringCellValue());
+		Optional<Account> acOptional = accountService.findByEmail(userFileDTO.getEmail());
+		if (acOptional.isPresent()) {
+			userFileDTO.setAccount(acOptional.get());
+			return userFileDTO;
+		} else {
+			cell = sheet.getRow(i).getCell(1);
+			if (cell != null && cell.getCellType() == CellType.STRING) {
+				userFileDTO.setUserName(cell.getStringCellValue());
+			} else {
+				inputStream.close();
+				throw new BadRequestException(indexCell + i + notFormat(1));
+			}
+
+			cell = sheet.getRow(i).getCell(2);
+			if (isCellEmpty(cell)) {
+				userFileDTO.setAddress(null);
+			} else if (cell.getCellType() == CellType.STRING) {
+				userFileDTO.setAddress(cell.getStringCellValue());
+			} else {
+				inputStream.close();
+				throw new BadRequestException(indexCell + i + notFormat(2));
+			}
+
+			cell = sheet.getRow(i).getCell(3);
+			if (isCellEmpty(cell)) {
+				userFileDTO.setDateOfBirth(null);
+			} else if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+				userFileDTO.setDateOfBirth(cell.getDateCellValue());
+			} else {
+				inputStream.close();
+				throw new BadRequestException(indexCell + i + notFormat(3));
+			}
+
+			cell = sheet.getRow(i).getCell(4);
+			if (isCellEmpty(cell)) {
+				userFileDTO.setGender(null);
+			} else if (cell.getCellType() == CellType.STRING) {
+				userFileDTO.setGender(cell.getStringCellValue());
+			} else {
+				inputStream.close();
+				throw new BadRequestException(indexCell + i + notFormat(4));
+			}
+
+			cell = sheet.getRow(i).getCell(5);
+			if (isCellEmpty(cell)) {
+				userFileDTO.setPhone(null);
+			} else if (cell.getCellType() == CellType.NUMERIC) {
+				userFileDTO.setPhone(cell.getNumericCellValue());
+			} else {
+				inputStream.close();
+				throw new BadRequestException(indexCell + i + notFormat(5));
+			}
+			cell = sheet.getRow(i).getCell(6);
+
+			if (cell != null && cell.getCellType() == CellType.STRING) {
+				userFileDTO.setClassUser(cell.getStringCellValue());
+			} else {
+				inputStream.close();
+				throw new BadRequestException(indexCell + i + notFormat(6));
+			}
+			cell = sheet.getRow(i).getCell(7);
+			if (cell != null && cell.getCellType() == CellType.STRING) {
+				if (cell.getStringCellValue().equals("Thành viên")) {
+					userFileDTO.setRoleUserGroup(RoleUserGroup.Member);
+				} else if (cell.getStringCellValue().equals("Quản trị viên")) {
+					userFileDTO.setRoleUserGroup(RoleUserGroup.Admin);
+				} else if (cell.getStringCellValue().equals("Phó quản trị viên")) {
+					userFileDTO.setRoleUserGroup(RoleUserGroup.Deputy);
+				} else {
+					inputStream.close();
+					throw new BadRequestException(indexCell + i + notFormat(7));
+				}
+
+				cell = sheet.getRow(i).getCell(8);
+				if (cell != null && cell.getCellType() == CellType.STRING) {
+					if (cell.getStringCellValue().equals("Sinh viên")) {
+						userFileDTO.setRoleGroup(RoleName.SinhVien);
+					} else if (cell.getStringCellValue().equals("Giảng viên")) {
+						userFileDTO.setRoleGroup(RoleName.GiangVien);
+					} else if (cell.getStringCellValue().equals("Nhân viên")) {
+						userFileDTO.setRoleGroup(RoleName.NhanVien);
+					} else {
+						inputStream.close();
+						throw new BadRequestException(indexCell + i + notFormat(8));
+					}
+				} else {
+					inputStream.close();
+					throw new BadRequestException(indexCell + i + notFormat(8));
+				}
+			}
+			return userFileDTO;
+
+		}
+	}
+
 	public UserStatisticsDTO getUserStatistics(String userId) {
 		Optional<User> userOp = findById(userId);
 		User user = userOp.get();
@@ -737,6 +1081,7 @@ public class UserServiceImpl implements UserService {
 		userStatisticsDTO.setCommentCount(commentCount);
 
 		return userStatisticsDTO;
+
 	}
 
 }
