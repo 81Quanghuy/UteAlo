@@ -1519,6 +1519,7 @@ public class PostGroupServiceImpl implements PostGroupService {
 						postGroupMember2.setRoleUserGroup(RoleUserGroup.Admin);
 						postGroupMember2.getPostGroup().add(group.get());
 						group.get().getPostGroupMembers().add(postGroupMember2);
+						group.get().getPostGroupMembers().remove(postGroupMember);
 						groupMemberRepository.save(postGroupMember2);
 
 					}

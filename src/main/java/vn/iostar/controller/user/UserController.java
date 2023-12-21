@@ -16,6 +16,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -34,6 +35,7 @@ import jakarta.validation.Valid;
 import vn.iostar.dto.ChangePasswordRequest;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.PasswordResetRequest;
+import vn.iostar.dto.UpdateIsActiveRequest;
 import vn.iostar.dto.UserProfileResponse;
 import vn.iostar.dto.UserUpdateRequest;
 import vn.iostar.entity.PasswordResetOtp;
@@ -245,6 +247,45 @@ public class UserController {
 		String token = authorizationHeader.substring(7);
 		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
 		return groupService.searchGroupAndUserContainingIgnoreCase(search, userIdToken);
+	}
+
+	@GetMapping("/getIsActiveOfUser/{userId}")
+	public boolean getIsActiveOfUser(@PathVariable("userId") String userId) {
+		Optional<User> user = userService.findById(userId);
+		return user.get().isActive();
+	}
+
+	@GetMapping("/getIsActive")
+	public boolean getIsActive(@RequestHeader("Authorization") String authorizationHeader) {
+		String token = authorizationHeader.substring(7);
+		String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+		Optional<User> user = userService.findById(userIdToken);
+		return user.get().isActive();
+	}
+
+	@PutMapping("/updateIsActive")
+	public ResponseEntity<String> updateIsActive(@RequestHeader("Authorization") String authorizationHeader,
+			@ModelAttribute UpdateIsActiveRequest request) {
+		try {
+			String token = authorizationHeader.substring(7);
+			String userIdToken = jwtTokenProvider.getUserIdFromJwt(token);
+			Optional<User> userOP = userService.findById(userIdToken);
+			// Lấy trạng thái isActive từ request body
+			Boolean isActive = request.getIsActive();
+
+			if (userOP.isPresent()) {
+				User user = userOP.get();
+				// Cập nhật trạng thái isActive cho người dùng
+				user.setActive(isActive);
+				userService.save(user); // Lưu thay đổi vào cơ sở dữ liệu
+				return ResponseEntity.ok("Cập nhật trạng thái isActive thành công!");
+			} else {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Đã xảy ra lỗi khi cập nhật trạng thái isActive");
+		}
 	}
 
 }
