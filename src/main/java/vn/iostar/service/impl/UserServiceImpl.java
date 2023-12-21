@@ -268,6 +268,9 @@ public class UserServiceImpl implements UserService {
 	public void changeUserPassword(User user, String newPassword, String confirmPassword) {
 		if (!newPassword.equals(confirmPassword))
 			throw new RuntimeException("Password and confirm password do not match");
+		user.setActive(true);
+		user.setVerified(true);
+		user.getAccount().setVerified(true);
 		user.getAccount().setPassword(passwordEncoder.encode(newPassword));
 		save(user);
 	}
@@ -1082,6 +1085,11 @@ public class UserServiceImpl implements UserService {
 
 		return userStatisticsDTO;
 
+	}
+
+	@Override
+	public List<User> findByRoleRoleName(RoleName roleName) {
+		return userRepository.findByRoleRoleName(roleName);
 	}
 
 }

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
+import vn.iostar.contants.RoleName;
 import vn.iostar.dto.*;
 import vn.iostar.entity.PasswordResetOtp;
 import vn.iostar.entity.User;
@@ -120,5 +121,7 @@ public interface UserService {
 
 	ResponseEntity<Object> searchUser(String fields, String query);
 	UserStatisticsDTO getUserStatistics(String userId);
+
+	List<User> findByRoleRoleName(RoleName roleName);
 
 }

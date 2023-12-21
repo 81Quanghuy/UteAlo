@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import vn.iostar.contants.RoleName;
 import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.NotificationDTO;
 import vn.iostar.entity.*;
@@ -163,8 +165,17 @@ public class NotificationServiceImpl implements NotificationService {
 		entity.setIsRead(notification.getIsRead());
 		entity.setLink(notification.getLink());
 		entity.setPhoto(notification.getPhoto());
-		Optional<User> receiver = userService.findById(notification.getUserId());
-		receiver.ifPresent(entity::setUser);
+		if (Boolean.TRUE.equals(notification.getIsAdmin())) {
+			List<User> user = userService.findByRoleRoleName(RoleName.Admin);
+			if (!user.isEmpty()) {
+				for (User user2 : user) {
+					entity.setUser(user2);
+				}
+			}
+		} else {
+			Optional<User> receiver = userService.findById(notification.getUserId());
+			receiver.ifPresent(entity::setUser);
+		}
 
 		if (notification.getPostId() != null) {
 			Optional<Post> post = postService.findById(notification.getPostId());

@@ -20,11 +20,11 @@ public class NotificationDTO extends DateEntity {
 	private Integer groupId;
 	private String userId;
 	private String photo;
+	private Boolean isAdmin;
 
 	private String content;
 	private String link;
 	private Boolean isRead;
-	
 
 	public NotificationDTO(Notification entity) {
 		this.notificationId = entity.getNotificationId();
@@ -43,7 +43,7 @@ public class NotificationDTO extends DateEntity {
 		if (entity.getPostGroup() != null) {
 			this.groupId = entity.getPostGroup().getPostGroupId();
 		}
-		
+
 		this.userId = entity.getUser().getUserId();
 		this.photo = entity.getPhoto();
 		this.content = entity.getContent();
