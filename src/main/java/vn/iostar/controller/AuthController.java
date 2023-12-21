@@ -135,8 +135,7 @@ public class AuthController {
 			@RequestParam("refreshToken") String refreshToken) {
 		String accessToken = authorizationHeader.substring(7);
 
-		if (jwtTokenProvider.getUserIdFromJwt(accessToken)
-				.equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
+		if (jwtTokenProvider.getUserIdFromJwt(accessToken).equals(jwtTokenProvider.getUserIdFromJwt(refreshToken))) {
 			return refreshTokenService.logout(refreshToken);
 		}
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -148,9 +147,8 @@ public class AuthController {
 	public ResponseEntity<GenericResponse> logoutAll(@RequestHeader("Authorization") String authorizationHeader,
 			@RequestParam("refreshToken") String refreshToken) {
 		String accessToken = authorizationHeader.substring(7);
-		if (jwtTokenProvider.getUserIdFromJwt(accessToken)
-				.equals(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken))) {
-			String userId = jwtTokenProvider.getUserIdFromRefreshToken(refreshToken);
+		if (jwtTokenProvider.getUserIdFromJwt(accessToken).equals(jwtTokenProvider.getUserIdFromJwt(refreshToken))) {
+			String userId = jwtTokenProvider.getUserIdFromJwt(refreshToken);
 			refreshTokenService.revokeRefreshToken(userId);
 			SecurityContextHolder.clearContext();
 			return ResponseEntity.ok().body(GenericResponse.builder().success(true).message("Logout successfully!")

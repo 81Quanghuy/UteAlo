@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -16,6 +17,7 @@ import vn.iostar.dto.GenericResponse;
 import vn.iostar.dto.ReportsResponse;
 import vn.iostar.entity.Report;
 import vn.iostar.entity.User;
+import vn.iostar.exception.wrapper.NotFoundException;
 import vn.iostar.repository.ReportRepository;
 import vn.iostar.security.JwtTokenProvider;
 import vn.iostar.service.CloudinaryService;
@@ -116,6 +118,24 @@ public class ReportServiceImpl implements ReportService {
 				.result(postsResponse).statusCode(200).build();
 
 		return ResponseEntity.ok(response);
+	}
+
+	@Override
+	public ResponseEntity<Object> getReportById(String currentUserId, Integer reportId) {
+		Optional<User> user = userService.findById(currentUserId);
+		if (user.isEmpty()) {
+			throw new NotFoundException("User not found");
+		}
+		Optional<Report> repoOptional = reportRepository.findById(reportId);
+		if (repoOptional.isPresent()) {
+			ReportsResponse reportsResponse = new ReportsResponse(repoOptional.get());
+
+			return ResponseEntity
+					.ok(GenericResponse.builder().success(true).message("Retrieving user profile successfully")
+							.result(reportsResponse).statusCode(HttpStatus.OK.value()).build());
+		}
+		throw new NotFoundException("Report not found");
+
 	}
 
 }

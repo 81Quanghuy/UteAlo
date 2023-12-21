@@ -44,7 +44,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 	@Override
 	public ResponseEntity<GenericResponse> refreshAccessToken(String refreshToken) {
 		try {
-			String userId = jwtTokenProvider.getUserIdFromRefreshToken(refreshToken);
+			String userId = jwtTokenProvider.getUserIdFromJwt(refreshToken);
 			Optional<Account> optionalUser = accountRepository.findByUserUserId(userId);
 			if (optionalUser.isPresent() && optionalUser.get().isActive()) {
 				// List<RefreshToken> refreshTokens =
@@ -59,7 +59,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 										.statusCode(HttpStatus.NOT_FOUND.value()).build());
 					}
 					UserDetail userDetail = (UserDetail) userDetailService
-							.loadUserByUserId(jwtTokenProvider.getUserIdFromRefreshToken(refreshToken));
+							.loadUserByUserId(jwtTokenProvider.getUserIdFromJwt(refreshToken));
 					String accessToken = jwtTokenProvider.generateAccessToken(userDetail);
 					Map<String, String> resultMap = new HashMap<>();
 					resultMap.put("accessToken", accessToken);
@@ -85,7 +85,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 			if (optionalUser.isPresent() && optionalUser.get().isActive()) {
 				List<RefreshToken> refreshTokens = refreshTokenRepository
 						.findAllByUser_UserIdAndExpiredIsFalseAndRevokedIsFalse(userId);
-				
+
 				if (refreshTokens.isEmpty()) {
 					return;
 				}
@@ -103,27 +103,33 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 	@Override
 	public ResponseEntity<?> logout(String refreshToken) {
 		try {
-			if (jwtTokenProvider.validateToken(refreshToken)) {
-				Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository
-						.findByTokenAndExpiredIsFalseAndRevokedIsFalse(refreshToken);
-				if (optionalRefreshToken.isPresent()) {
-					optionalRefreshToken.get().setRevoked(true);
-					optionalRefreshToken.get().setExpired(true);
-					refreshTokenRepository.save(optionalRefreshToken.get());
-					SecurityContextHolder.clearContext();
-					return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.builder().success(true)
-							.message("Logout successfully!").result("").statusCode(HttpStatus.OK.value()).build());
-				}
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.builder().success(false)
-						.message("Logout failed!").result("").statusCode(HttpStatus.NOT_FOUND.value()).build());
+			if (!jwtTokenProvider.validateToken(refreshToken)) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+						.body(buildErrorResponse("Logout failed!", HttpStatus.UNAUTHORIZED));
 			}
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(GenericResponse.builder().success(false)
-					.message("Logout failed!").result("").statusCode(HttpStatus.UNAUTHORIZED.value()).build());
+
+			return refreshTokenRepository.findByTokenAndExpiredIsFalseAndRevokedIsFalse(refreshToken).map(token -> {
+				token.setRevoked(true);
+				token.setExpired(true);
+				refreshTokenRepository.save(token);
+				SecurityContextHolder.clearContext();
+				return ResponseEntity.ok(buildSuccessResponse("Logout successfully!"));
+			}).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(buildErrorResponse("Logout failed!", HttpStatus.NOT_FOUND)));
 
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericResponse.builder().success(false)
-					.message(e.getMessage()).result("").statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(buildErrorResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
 		}
+	}
+
+	private GenericResponse buildSuccessResponse(String message) {
+		return GenericResponse.builder().success(true).message(message).result("").statusCode(HttpStatus.OK.value())
+				.build();
+	}
+
+	private GenericResponse buildErrorResponse(String message, HttpStatus status) {
+		return GenericResponse.builder().success(false).message(message).result("").statusCode(status.value()).build();
 	}
 
 }
